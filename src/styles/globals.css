@@ -1,0 +1,303 @@
+@import "tailwindcss";
+
+@theme {
+  --color-hf-green: #22c55e;
+  --color-hf-dark: #0f172a;
+}
+
+/* Theme CSS Variables */
+:root {
+  /* Light Mode - Backgrounds */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --bg-hover: #f8fafc;
+
+  /* Light Mode - Text */
+  --text-primary: #0f172a;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --text-inverse: #ffffff;
+
+  /* Light Mode - Borders */
+  --border-color: #e2e8f0;
+  --border-light: #f1f5f9;
+  --border-dark: #cbd5e1;
+
+  /* Light Mode - Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+
+  /* Accent Colors (consistent across themes) */
+  --color-emerald: #22c55e;
+  --color-emerald-light: #86efac;
+  --color-emerald-dark: #16a34a;
+  --color-blue: #3b82f6;
+  --color-amber: #f59e0b;
+  --color-red: #ef4444;
+  --color-purple: #a855f7;
+
+  /* Scrollbar Theme */
+  --scrollbar-thumb: #cbd5e1;
+  --scrollbar-thumb-hover: #94a3b8;
+}
+
+[data-theme="dark"] {
+  /* Dark Mode - Backgrounds */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-hover: #1e293b;
+
+  /* Dark Mode - Text */
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-inverse: #0f172a;
+
+  /* Dark Mode - Borders */
+  --border-color: #334155;
+  --border-light: #475569;
+  --border-dark: #1e293b;
+
+  /* Dark Mode - Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+
+  /* Accent Colors - slightly adjusted for dark mode */
+  --color-emerald: #22c55e;
+  --color-emerald-light: #4ade80;
+  --color-emerald-dark: #16a34a;
+  --color-blue: #60a5fa;
+  --color-amber: #fbbf24;
+  --color-red: #f87171;
+  --color-purple: #c084fc;
+
+  /* Scrollbar Theme */
+  --scrollbar-thumb: #475569;
+  --scrollbar-thumb-hover: #64748b;
+}
+
+/* Ensure consistent MUI component sizing on mobile */
+@media (max-width: 600px) {
+  .MuiMenu-paper {
+    min-width: 140px !important;
+  }
+
+  .MuiMenuItem-root {
+    min-height: 40px !important;
+    font-size: 0.875rem !important;
+  }
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none !important; /* IE & Edge */
+  scrollbar-width: none !important; /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+}
+
+.thin-scrollbar::-webkit-scrollbar {
+  width: 6px !important;
+  height: 6px !important;
+}
+
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb) !important;
+  border-radius: 20px !important;
+  border: 1.5px solid transparent !important;
+  background-clip: content-box !important;
+}
+
+.thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover) !important;
+}
+
+/* For Firefox */
+.thin-scrollbar {
+  scrollbar-width: thin !important;
+  scrollbar-color: var(--scrollbar-thumb) transparent !important;
+}
+
+/* Hide scrollbar on HeroUI Drawer overlay */
+[class*="overflow-x-auto"][class*="fixed"][class*="inset-0"] {
+  overflow-x: hidden !important;
+}
+
+[class*="overflow-x-auto"][class*="fixed"][class*="inset-0"]::-webkit-scrollbar {
+  display: none !important;
+  width: 0px !important;
+  background: transparent !important;
+}
+
+body {
+  background-color: var(--bg-secondary);
+  font-family: "Inter", sans-serif;
+  color: var(--text-primary);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+html,
+body {
+  overflow-x: hidden !important;
+}
+
+.heading-font {
+  font-family: "Outfit", sans-serif;
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.stagger-1 {
+  animation-delay: 0.1s;
+}
+.stagger-2 {
+  animation-delay: 0.2s;
+}
+.stagger-3 {
+  animation-delay: 0.3s;
+}
+.stagger-4 {
+  animation-delay: 0.4s;
+}
+
+.sidebar-item {
+  transition: all 0.2s ease;
+}
+
+.erp-card {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.erp-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+/* Remove black focus outline from all buttons and interactive elements */
+button:focus,
+button:focus-visible,
+select:focus,
+select:focus-visible,
+input:focus,
+input:focus-visible,
+a:focus,
+a:focus-visible {
+  outline: none;
+}
+
+button:focus-visible,
+button:focus,
+[data-slot="tab"]:focus,
+[data-slot="tab"]:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Global button styles removed - causing conflicts with HeroUI components */
+/* Optional: Add a subtle custom focus style for accessibility */
+/* button:focus-visible {
+  box-shadow: 0 0 0 2px var(--color-emerald);
+}
+
+select:focus-visible {
+  box-shadow: 0 0 0 2px var(--color-emerald);
+} */
+
+/* Checkbox styling - white checkmark inside */
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #d1d5db;
+  border-radius: 4px;
+  cursor: pointer;
+  position: relative;
+  background-color: white;
+}
+
+input[type="checkbox"]:checked {
+  background-color: var(--color-emerald);
+  border-color: var(--color-emerald);
+}
+
+input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+input[type="checkbox"]:hover {
+  border-color: #22c55e;
+}
+
+.heroui-tab-button {
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Removed the global [data-hover="true"] rule that was hiding borders on all hover states */
+/* Pagination button styles - only for table pagination */
+.pagination-btn {
+  background-color: white !important;
+  color: #4b5563 !important;
+}
+
+.pagination-btn:hover {
+  background-color: #f3f4f6 !important;
+}
+
+/* Pagination arrow hover effects */
+[data-slot="prev"]:hover,
+[data-slot="next"]:hover {
+  background-color: #f3f4f6 !important;
+}
+/* Custom Number Input Spinner Styling */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  opacity: 1;
+  cursor: pointer;
+  filter: invert(0.5);
+}
+
+[data-theme="dark"] input[type="number"]::-webkit-inner-spin-button,
+[data-theme="dark"] input[type="number"]::-webkit-outer-spin-button {
+  filter: invert(1);
+}
+
+/* Hide Spinner Utility */
+.no-spinner::-webkit-inner-spin-button,
+.no-spinner::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.no-spinner {
+  -moz-appearance: textfield;
+  appearance: none;
+}

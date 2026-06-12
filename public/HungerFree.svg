@@ -1,0 +1,82 @@
+<svg
+  width="260"
+  height="80"
+  viewBox="0 0 260 80"
+  xmlns="http://www.w3.org/2000/svg"
+  role="img"
+  aria-labelledby="title desc"
+>
+  <title id="title">Hunger Free Logo</title>
+  <desc id="desc">A bowl with a leaf symbolizing healthy food and hunger-free world.</desc>
+
+  <rect x="0" y="0" width="260" height="80" rx="16" fill="#0f172a" />
+
+  <path
+    d="M40 52 Q64 70 88 52 L88 48 Q88 46 86 46 L42 46 Q40 46 40 48 Z"
+    fill="#f97316"
+  />
+
+  <path
+    d="M44 49 Q64 62 84 49"
+    fill="none"
+    stroke="#fed7aa"
+    stroke-width="2"
+    stroke-linecap="round"
+  />
+
+  <path
+    d="M64 22
+       C56 24 50 32 50 40
+       C58 38 64 32 66 24
+       C68 30 72 34 78 36
+       C76 30 72 24 64 22Z"
+    fill="#22c55e"
+  />
+
+  <path
+    d="M60 34 L68 26"
+    stroke="#15803d"
+    stroke-width="2"
+    stroke-linecap="round"
+  />
+
+  <path
+    d="M52 20 C50 16 52 12 54 10"
+    stroke="#e5e7eb"
+    stroke-width="2"
+    stroke-linecap="round"
+  />
+  <path
+    d="M64 18 C62 14 64 10 66 8"
+    stroke="#e5e7eb"
+    stroke-width="2"
+    stroke-linecap="round"
+  />
+  <path
+    d="M76 20 C74 16 76 12 78 10"
+    stroke="#e5e7eb"
+    stroke-width="2"
+    stroke-linecap="round"
+  />
+
+  <text
+    x="110"
+    y="35"
+    fill="#f9fafb"
+    font-size="20"
+    font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    font-weight="700"
+  >
+    Hunger Free
+  </text>
+
+  <text
+    x="110"
+    y="55"
+    fill="#9ca3af"
+    font-size="11"
+    font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+  >
+    One plate. Zero hunger.
+  </text>
+</svg>
