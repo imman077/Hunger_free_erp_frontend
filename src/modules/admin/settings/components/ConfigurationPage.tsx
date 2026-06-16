@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Pencil, Trash2, Settings, Check, X } from "lucide-react";
-import { useConfigStore } from "../store/config-store";
+import { useConfigStore } from "../store/config_store";
 import { Spinner } from "@heroui/react";
-import type { ConfigItem } from "../store/config-schemas";
+import type { ConfigItem } from "../model/config_schemas";
 
 type ConfigSection = {
   key:

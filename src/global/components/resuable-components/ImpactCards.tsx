@@ -3,7 +3,6 @@ import {
   type LucideIcon,
   TrendingUp,
   AlertCircle,
-  CheckCircle2,
 } from "lucide-react";
 
 export interface ImpactCardData {

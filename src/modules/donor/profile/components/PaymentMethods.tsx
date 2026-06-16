@@ -611,14 +611,14 @@ const PaymentMethods = () => {
                 label="Institution Name"
                 placeholder="e.g. HDFC BANK"
                 value={bankForm.bankName}
-                onChange={(val) => setBankForm({ ...bankForm, bankName: val })}
+                onChange={(val: any) => setBankForm({ ...bankForm, bankName: val })}
                 required
               />
               <ResuableInput
                 label="Account Holder"
                 placeholder="Legal Name as per Records"
                 value={bankForm.accountHolder}
-                onChange={(val) =>
+                onChange={(val: any) =>
                   setBankForm({ ...bankForm, accountHolder: val })
                 }
                 required
@@ -627,7 +627,7 @@ const PaymentMethods = () => {
                 label="Account Number"
                 placeholder="Primary Settlement Account"
                 value={bankForm.accountNumber}
-                onChange={(val) =>
+                onChange={(val: any) =>
                   setBankForm({ ...bankForm, accountNumber: val })
                 }
                 required
@@ -636,7 +636,7 @@ const PaymentMethods = () => {
                 label="IFSC Identifier"
                 placeholder="e.g. HDFC0001234"
                 value={bankForm.ifscCode}
-                onChange={(val) => setBankForm({ ...bankForm, ifscCode: val })}
+                onChange={(val: any) => setBankForm({ ...bankForm, ifscCode: val })}
                 required
               />
 
@@ -655,14 +655,14 @@ const PaymentMethods = () => {
                 label="VPA ADDRESS"
                 placeholder="e.g. user@okaxis"
                 value={upiForm.vpa}
-                onChange={(val) => setUpiForm({ ...upiForm, vpa: val })}
+                onChange={(val: any) => setUpiForm({ ...upiForm, vpa: val })}
                 required
               />
               <ResuableInput
                 label="Identity Label"
                 placeholder="e.g. PRIMARY, BUSINESS"
                 value={upiForm.label}
-                onChange={(val) => setUpiForm({ ...upiForm, label: val })}
+                onChange={(val: any) => setUpiForm({ ...upiForm, label: val })}
                 required
               />
               <div className="pt-4">
@@ -697,14 +697,14 @@ const PaymentMethods = () => {
                 label="Institution Name"
                 placeholder="e.g. HDFC BANK"
                 value={bankForm.bankName}
-                onChange={(val) => setBankForm({ ...bankForm, bankName: val })}
+                onChange={(val: any) => setBankForm({ ...bankForm, bankName: val })}
                 required
               />
               <ResuableInput
                 label="Account Holder"
                 placeholder="Legal Name as per Records"
                 value={bankForm.accountHolder}
-                onChange={(val) =>
+                onChange={(val: any) =>
                   setBankForm({ ...bankForm, accountHolder: val })
                 }
                 required
@@ -713,7 +713,7 @@ const PaymentMethods = () => {
                 label="Account Number"
                 placeholder="Primary Settlement Account"
                 value={bankForm.accountNumber}
-                onChange={(val) =>
+                onChange={(val: any) =>
                   setBankForm({ ...bankForm, accountNumber: val })
                 }
                 required
@@ -722,7 +722,7 @@ const PaymentMethods = () => {
                 label="IFSC Identifier"
                 placeholder="e.g. HDFC0001234"
                 value={bankForm.ifscCode}
-                onChange={(val) => setBankForm({ ...bankForm, ifscCode: val })}
+                onChange={(val: any) => setBankForm({ ...bankForm, ifscCode: val })}
                 required
               />
 
@@ -766,14 +766,14 @@ const PaymentMethods = () => {
                 label="VPA ADDRESS"
                 placeholder="e.g. user@okaxis"
                 value={upiForm.vpa}
-                onChange={(val) => setUpiForm({ ...upiForm, vpa: val })}
+                onChange={(val: any) => setUpiForm({ ...upiForm, vpa: val })}
                 required
               />
               <ResuableInput
                 label="Identity Label"
                 placeholder="e.g. PRIMARY, BUSINESS"
                 value={upiForm.label}
-                onChange={(val) => setUpiForm({ ...upiForm, label: val })}
+                onChange={(val: any) => setUpiForm({ ...upiForm, label: val })}
                 required
               />
 

@@ -6,31 +6,31 @@ import AdminLayout from "./global/layouts/AdminLayout";
 import DonorLayout from "./global/layouts/DonorLayout";
 import NGOLayout from "./global/layouts/NGOLayout";
 import VolunteerLayout from "./global/layouts/VolunteerLayout";
-import DonorPage from "./modules/admin/users/donors/components/DonorsPage";
-import NGOsPage from "./modules/admin/users/ngos/components/NGOsPage";
-import VolunteersPage from "./modules/admin/users/volunteers/components/VolunteersPage";
-import DonationsPage from "./modules/admin/donations/components/DonationsPage";
+import DonorPage from "./modules/admin/users/components/DonorsPage";
+import NGOsPage from "./modules/admin/users/components/NGOsPage";
+import VolunteersPage from "./modules/admin/users/components/VolunteersPage";
+import DonationsPage from "./modules/admin/donations/page";
 import DonationTrackingPage from "./modules/admin/donations/components/DonationTrackingPage";
 import PendingDonationsPage from "./modules/admin/donations/components/PendingDonationsPage";
-import AnalyticsPage from "./modules/admin/analytics/components/AnalyticsPage";
+import AnalyticsPage from "./modules/admin/analytics/page";
 import AnalyticsReportsPage from "./modules/admin/analytics/components/AnalyticsReportsPage";
-import UsersPage from "./modules/admin/users/components/UsersPage";
-import AdminDashboard from "./modules/admin/dashboard/components/DashboardPage";
+import UsersPage from "./modules/admin/users/page";
+import AdminDashboard from "./modules/admin/dashboard/page";
 import PointsTiersView from "./modules/admin/rewards/components/PointsTiersView";
 import RedemptionsView from "./modules/admin/rewards/components/RedemptionsView";
 import RewardsConfig from "./modules/admin/rewards/components/RewardsConfig";
 import MilestonesConfig from "./modules/admin/rewards/components/MilestonesConfig";
-import RewardsPage from "./modules/admin/rewards/components/RewardsPage";
-import CreateDonor from "./modules/admin/users/donors/components/CreateDonorPage.tsx";
-import CreateNgo from "./modules/admin/users/ngos/components/CreateNgoPage.tsx";
-import CreateVolunteer from "./modules/admin/users/volunteers/components/CreateVolunteerPage.tsx";
+import RewardsPage from "./modules/admin/rewards/page";
+import CreateDonor from "./modules/admin/users/components/CreateDonorPage.tsx";
+import CreateNgo from "./modules/admin/users/components/CreateNgoPage.tsx";
+import CreateVolunteer from "./modules/admin/users/components/CreateVolunteerPage.tsx";
 import ConfigurationPage from "./modules/admin/settings/components/ConfigurationPage";
 import NGOEnquiryPage from "./modules/admin/enquiries/components/NGOEnquiryPage";
 import VolunteerEnquiryPage from "./modules/admin/enquiries/components/VolunteerEnquiryPage";
 import RewardEnquiryPage from "./modules/admin/enquiries/components/RewardEnquiryPage";
 import DonorEnquiryPage from "./modules/admin/enquiries/components/DonorEnquiryPage";
-import EnquiriesHub from "./modules/admin/enquiries/components/EnquiriesHub";
-import SettingsPage from "./modules/admin/settings/components/SettingsPage";
+import EnquiriesHub from "./modules/admin/enquiries/page";
+import SettingsPage from "./modules/admin/settings/page";
 
 // Donor Imports
 import DonorDashboard from "./modules/donor/dashboard/components/Dashboard";
@@ -43,26 +43,26 @@ import DonorRewards from "./modules/donor/rewards/components/Rewards";
 import DonorBenefits from "./modules/donor/rewards/components/Benefits";
 
 // NGO Imports
-import NGODashboard from "./modules/ngo/dashboard/components/Dashboard";
-import NGODonationRequests from "./modules/ngo/donations/components/DonationRequests";
-import NGOInventory from "./modules/ngo/inventory/components/Inventory";
-import NGOAddItem from "./modules/ngo/inventory/components/AddItem";
-import NGOProfile from "./modules/ngo/profile/components/Profile";
+import NGODashboard from "./modules/ngo/dashboard/page";
+import NGODonationRequests from "./modules/ngo/requests/page";
+import NGOInventory from "./modules/ngo/my_inventory/page";
+import NGOAddItem from "./modules/ngo/add_item/page";
+import NGOProfile from "./modules/ngo/profile/page";
 import NGOPaymentMethods from "./modules/ngo/profile/components/PaymentMethods";
-import PostNewNeed from "./modules/ngo/needs/components/PostNewNeed";
-import NGORewards from "./modules/ngo/rewards/components/Rewards";
+import PostNewNeed from "./modules/ngo/post_need/page";
+import NGORewards from "./modules/ngo/rewards/page";
 import NGOBenefits from "./modules/ngo/rewards/components/Benefits";
 
 // Volunteer Imports
-import VolunteerDashboard from "./modules/volunteer/dashboard/components/Dashboard";
-import VolunteerTasks from "./modules/volunteer/tasks/components/Tasks";
-import VolunteerProfile from "./modules/volunteer/profile/components/Profile";
+import VolunteerDashboard from "./modules/volunteer/dashboard/page";
+import VolunteerTasks from "./modules/volunteer/tasks/page";
+import VolunteerProfile from "./modules/volunteer/profile/page";
 import VolunteerPaymentMethods from "./modules/volunteer/profile/components/PaymentMethods";
-import VolunteerRewards from "./modules/volunteer/rewards/components/Rewards";
+import VolunteerRewards from "./modules/volunteer/rewards/page";
 import VolunteerBenefits from "./modules/volunteer/rewards/components/Benefits";
 
 // Auth
-import AuthPage from "./modules/auth/components/AuthPage";
+import AuthPage from "./modules/auth/page";
 
 function App() {
   return (

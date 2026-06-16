@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useRewardsStore } from "../store/rewards-store";
+import { useRewardsStore } from "../store/rewards_store";
 import { Spinner } from "@heroui/react";
 import {
   Check,

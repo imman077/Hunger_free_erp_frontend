@@ -3,7 +3,6 @@ import {
   Plus,
   Trash2,
   Gift,
-  Settings,
   ChevronRight,
   ShieldCheck,
   Zap,
@@ -20,8 +19,8 @@ import {
   Switch,
   Spinner,
 } from "@heroui/react";
-import { useRewardsStore } from "../store/rewards-store";
-import type { RewardConfig, RewardCatalog } from "../store/rewards-schemas";
+import { useRewardsStore } from "../store/rewards_store";
+import type { RewardConfig, RewardCatalog } from "../model/rewards_schemas";
 
 const RewardsConfig: React.FC = () => {
   const { catalog, fetchRewards, isLoading } = useRewardsStore();

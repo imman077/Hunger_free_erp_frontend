@@ -1,8 +1,8 @@
 import axiosInstance from "../../../../../global/utils/axios-instance";
-import { GetNeedByIdInputSchema } from "./needs.input";
-import type { GetNeedByIdInput } from "./needs.input";
-import { NGONeedSchema, GetNeedsResponseSchema } from "./needs.output";
-import type { NGONeed, GetNeedsResponse } from "./needs.output";
+import { GetNeedByIdInputSchema } from "./needs_input_model";
+import type { GetNeedByIdInput } from "./needs_input_model";
+import { NGONeedSchema, GetNeedsResponseSchema } from "./needs_output_model";
+import type { NGONeed, GetNeedsResponse } from "./needs_output_model";
 
 export const ngoNeedsService = {
   /**

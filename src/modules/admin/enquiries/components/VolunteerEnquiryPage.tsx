@@ -20,8 +20,8 @@ import ReusableTable from "../../../../global/components/resuable-components/tab
 import ResuableDrawer from "../../../../global/components/resuable-components/drawer";
 import DocumentPreviewModal from "../../../../global/components/resuable-components/DocumentPreviewModal";
 
-import { useEnquiries } from "../hooks/useEnquiries";
-import { VOLUNTEER_ENQUIRY_COLUMNS } from "../store/enquiry-constants";
+import { useEnquiries } from "../controller/enquiries_controller";
+import { VOLUNTEER_ENQUIRY_COLUMNS } from "../model/enquiry_constants";
 
 const VolunteerEnquiryPage = ({
   hideHeader = false,

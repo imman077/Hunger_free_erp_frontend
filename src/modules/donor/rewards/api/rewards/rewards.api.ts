@@ -1,13 +1,13 @@
 import axiosInstance from "../../../../../global/utils/axios-instance";
-import { ClaimRewardInputSchema } from "./rewards.input";
+import { ClaimRewardInputSchema } from "./rewards_input_model";
 import {
   GetRewardsResponseSchema,
   GetTiersResponseSchema,
   GetLuckySpinPrizesResponseSchema,
   GetDonorProfileResponseSchema,
   ClaimRewardResponseSchema,
-} from "./rewards.output";
-import type { GetRewardsResponse, GetTiersResponse, GetLuckySpinPrizesResponse } from "./rewards.output";
+} from "./rewards_output_model";
+import type { GetRewardsResponse, GetTiersResponse, GetLuckySpinPrizesResponse } from "./rewards_output_model";
 
 export const donorRewardsService = {
   getRewards: async (): Promise<GetRewardsResponse> => {

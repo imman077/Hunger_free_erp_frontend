@@ -6,7 +6,7 @@ import { GET_NEEDS } from "../../donations/api/needs/needs.graphql";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
-import type { NGONeed } from "../api/needs/needs.output";
+import type { NGONeed } from "../api/needs/needs_output_model";
 import { getCategoryImage } from "../../../../global/constants/donation_config";
 
 

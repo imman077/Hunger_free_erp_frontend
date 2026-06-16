@@ -19,7 +19,7 @@ import ResuableTextarea from "../../../../global/components/resuable-components/
 import { useDonorRewards } from "../hooks/useDonorRewards";
 
 export interface Prize {
-  id: number;
+  id: number | string;
   label: string;
   icon: string | React.ReactNode;
   color: string;
@@ -337,7 +337,7 @@ const DonorRewards = () => {
   const [selectedReward, setSelectedReward] = useState<any>(null);
   const [isSubmittingClaim, setIsSubmittingClaim] = useState(false);
   const [showClaimSuccess, setShowClaimSuccess] = useState(false);
-  const [pendingClaims, setPendingClaims] = useState<number[]>([]);
+  const [pendingClaims, setPendingClaims] = useState<(string | number)[]>([]);
 
   // Mock Primary Payment Methods
   const primaryBank = {
