@@ -10,8 +10,8 @@ import {
   Legend,
 } from "chart.js";
 import { Line } from "react-chartjs-2";
-import { useDashboardStore } from "../../modules/admin/dashboard/store/dashboard_store";
-import type { ChartDataset } from "../../modules/admin/dashboard/model/dashboard_schemas";
+import { useDashboardStore } from "../../features/admin/dashboard/store/dashboard_store";
+import type { ChartDataset } from "../../features/admin/dashboard/model/dashboard_schemas";
 
 ChartJS.register(
   CategoryScale,
