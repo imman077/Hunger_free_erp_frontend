@@ -39,7 +39,7 @@ import {
   ShieldCheck,
   ChevronDown,
 } from "lucide-react";
-import { useVolunteers } from "../volunteers/controller/volunteers_controller";
+import { useVolunteers } from "../controller/volunteers_controller";
 import type { Volunteer, VolunteerStatus } from "../model/user_schemas";
 
 const STATUS_OPTIONS: VolunteerStatus[] = ["available", "on-leave", "busy"];

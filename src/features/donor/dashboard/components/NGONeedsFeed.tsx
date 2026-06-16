@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Package, ArrowRight, Heart, Users, ShieldCheck, MapPin, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@apollo/client";
-import { GET_NEEDS } from "../../donations/api/needs/needs.graphql";
+import { GET_NEEDS } from "../api/needs/needs_api";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 

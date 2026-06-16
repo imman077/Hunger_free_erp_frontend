@@ -14,7 +14,7 @@ import {
   Navigation,
 } from "lucide-react";
 import { Modal, ModalContent, ModalBody } from "@heroui/react";
-import { useVolunteers } from "../volunteers/controller/volunteers_controller";
+import { useVolunteers } from "../controller/volunteers_controller";
 import type { Volunteer } from "../model/user_schemas";
 import ResuableInput from "../../../../global/components/resuable-components/input";
 import ReusableButton from "../../../../global/components/resuable-components/button";

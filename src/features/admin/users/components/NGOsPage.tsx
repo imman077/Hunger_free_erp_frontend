@@ -25,7 +25,7 @@ import {
   Target,
   Zap,
 } from "lucide-react";
-import { useNgos } from "../ngos/controller/ngos_controller";
+import { useNgos } from "../controller/ngos_controller";
 import type { Ngo, NgoStatus } from "../model/user_schemas";
 
 const STATUS_OPTIONS: NgoStatus[] = ["Active", "Pending", "Deactivated"];

@@ -13,7 +13,6 @@ import DonationsPage from "./features/admin/donations/page";
 import DonationTrackingPage from "./features/admin/donations/components/DonationTrackingPage";
 import PendingDonationsPage from "./features/admin/donations/components/PendingDonationsPage";
 import AnalyticsPage from "./features/admin/analytics/page";
-import AnalyticsReportsPage from "./features/admin/analytics/components/AnalyticsReportsPage";
 import UsersPage from "./features/admin/users/page";
 import AdminDashboard from "./features/admin/dashboard/page";
 import PointsTiersView from "./features/admin/rewards/components/PointsTiersView";
@@ -33,10 +32,10 @@ import EnquiriesHub from "./features/admin/enquiries/page";
 import SettingsPage from "./features/admin/settings/page";
 
 // Donor Imports
-import DonorDashboard from "./features/donor/dashboard/components/Dashboard";
-import DonorMyDonations from "./features/donor/donations/components/MyDonations";
-import DonorCreateDonation from "./features/donor/donations/components/CreateDonation";
-import DonorNGOPosts from "./features/donor/donations/components/NGOPosts";
+import DonorDashboard from "./features/donor/dashboard/page";
+import DonorMyDonations from "./features/donor/my_donations/page";
+import DonorCreateDonation from "./features/donor/create_donation/page";
+import DonorNGOPosts from "./features/donor/ngo_posts/page";
 import DonorProfile from "./features/donor/profile/components/Profile";
 import DonorPaymentMethods from "./features/donor/profile/components/PaymentMethods";
 import DonorRewards from "./features/donor/rewards/components/Rewards";
@@ -129,7 +128,7 @@ function App() {
             <Route path="analytics" element={<AnalyticsPage />} />
             <Route
               path="analytics/reports"
-              element={<AnalyticsReportsPage />}
+              element={<AnalyticsPage />}
             />
 
             {/* Rewards Section */}

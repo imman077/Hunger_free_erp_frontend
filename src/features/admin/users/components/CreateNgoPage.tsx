@@ -4,7 +4,7 @@ import { ArrowLeft, CheckCircle, Building2, Users } from "lucide-react";
 import ResuableInput from "../../../../global/components/resuable-components/input";
 import ResuableButton from "../../../../global/components/resuable-components/button";
 import ResuableDropdown from "../../../../global/components/resuable-components/dropdown";
-import { useNgos } from "../ngos/controller/ngos_controller";
+import { useNgos } from "../controller/ngos_controller";
 import type { Ngo } from "../model/user_schemas";
 
 interface CategoryField {

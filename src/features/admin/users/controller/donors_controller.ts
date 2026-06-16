@@ -1,4 +1,4 @@
-import { useUserStore } from "../../store/user_store";
+import { useUserStore } from "../store/user_store";
 
 export const useDonors = () => {
   const { data, updateDonor, setUserData } = useUserStore();

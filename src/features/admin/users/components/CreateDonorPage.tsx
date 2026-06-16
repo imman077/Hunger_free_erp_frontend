@@ -11,7 +11,7 @@ import ResuableInput from "../../../../global/components/resuable-components/inp
 import ResuableButton from "../../../../global/components/resuable-components/button";
 import ResuableDropdown from "../../../../global/components/resuable-components/dropdown";
 import FileUploadSlot from "../../../../global/components/resuable-components/FileUploadSlot";
-import { useDonors } from "../donors/controller/donors_controller";
+import { useDonors } from "../controller/donors_controller";
 import type { Donor } from "../model/user_schemas";
 
 const DONOR_PROOF_CONFIG: Record<

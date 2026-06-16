@@ -26,7 +26,7 @@ import {
   Settings,
 } from "lucide-react";
 
-import { useDonors } from "../donors/controller/donors_controller";
+import { useDonors } from "../controller/donors_controller";
 import type { Donor } from "../model/user_schemas";
 
 const DonorPage = () => {

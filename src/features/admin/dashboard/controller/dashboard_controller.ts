@@ -11,3 +11,11 @@ export const useDashboard = () => {
     error,
   };
 };
+
+export const onInit = () => {
+  useDashboardStore.getState().fetchDashboardData();
+};
+
+export const onDestroy = () => {
+  useDashboardStore.getState().setError(null);
+};
