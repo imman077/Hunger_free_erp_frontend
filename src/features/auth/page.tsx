@@ -1,9 +1,8 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff, ArrowRight, Check, Building2 } from "lucide-react";
-import { useAuthStore } from "../../global/contexts/auth-store";
-import { toast } from "sonner";
-import { AuthAPI } from "./api/auth_api";
+import { ArrowRight, Check, Building2 } from "lucide-react";
+import { useAuthApiStore } from "./store/auth_store";
+import { handleAuthSubmit } from "./controller/auth_controller";
+import { AuthInput } from "./components/AuthInput";
 
 // ─── Role Config ────────────────────────────────────────────────────────────
 type Role = "donor" | "ngo" | "volunteer" | "admin";
@@ -48,133 +47,16 @@ const roleConfig: Record<
   },
 };
 
-// ─── Input ───────────────────────────────────────────────────────────────────
-const AuthInput = ({
-  label,
-  type = "text",
-  placeholder,
-  value,
-  onChange,
-}: {
-  label: string;
-  type?: string;
-  placeholder: string;
-  value: string;
-  onChange: (v: string) => void;
-}) => {
-  const [show, setShow] = useState(false);
-  const isPassword = type === "password";
-
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label
-        className="text-[10px] font-black uppercase tracking-[0.15em]"
-        style={{ color: "var(--text-muted)" }}
-      >
-        {label}
-      </label>
-      <div className="relative">
-        <input
-          type={isPassword && show ? "text" : type}
-          placeholder={placeholder}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-full px-4 py-3.5 text-sm font-medium rounded-sm border transition-all duration-200 outline-none placeholder:text-[var(--text-muted)] focus:border-[#22c55e] focus:ring-2 focus:ring-[#22c55e]/10"
-          style={{
-            backgroundColor: "var(--bg-secondary)",
-            borderColor: "var(--border-color)",
-            color: "var(--text-primary)",
-          }}
-        />
-        {isPassword && (
-          <button
-            type="button"
-            onClick={() => setShow(!show)}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors"
-            style={{ color: "var(--text-muted)" }}
-          >
-            {show ? <EyeOff size={16} /> : <Eye size={16} />}
-          </button>
-        )}
-      </div>
-    </div>
-  );
-};
-
 // ─── Main Page ────────────────────────────────────────────────────────────────
 const AuthPage = () => {
-  const navigate = useNavigate();
   const [activeRole, setActiveRole] = useState<Role>("donor");
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
-  const [isLoading, setIsLoading] = useState(false);
+  const isLoading = useAuthApiStore((state) => state.isLoading);
+  const [errors, setErrors] = useState<string[]>([]);
 
   // Login form
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
-
-  const auth = useAuthStore();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const { token, user } = await AuthAPI.login({
-        email: loginEmail,
-        password: loginPassword,
-        role: activeRole,
-      });
-
-      // Login in store
-      auth.login(
-        {
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          first_name: "",
-          last_name: "",
-          profile: {
-            role: user.role as any,
-            phone: user.phone || null,
-            address: null,
-          },
-          donor_profile: user.role === "DONOR" && user.donorProfile
-            ? {
-                total_donations: 0,
-                reliability_score: 100,
-              }
-            : undefined,
-          ngo_profile: user.role === "NGO" && user.ngoProfile
-            ? {
-                name: user.ngoProfile.name || "",
-                registration_id: "",
-                contact_number: user.phone || "",
-              }
-            : undefined,
-        },
-        token,
-        token
-      );
-
-      toast.success(`Welcome back, ${user.username}!`);
-
-      // Role-based redirect
-      const backendRoleToFrontendRoute: Record<string, string> = {
-        ADMIN: "/admin/dashboard",
-        DONOR: "/donor/dashboard",
-        NGO: "/ngo/dashboard",
-        VOLUNTEER: "/volunteer/dashboard",
-      };
-
-      navigate(backendRoleToFrontendRoute[user.role] || "/auth");
-    } catch (error: any) {
-      console.error("Auth Error:", error);
-      const msg = error.message || error.response?.data?.detail || "Invalid credentials. Please try again.";
-      toast.error(msg);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div
@@ -391,8 +273,19 @@ const AuthPage = () => {
 
           {/* ─── Form / Signup Message ─── */}
           {activeTab === "login" ? (
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <form onSubmit={(e) => handleAuthSubmit(e, setErrors)} className="flex flex-col gap-4">
+              <input type="hidden" name="role" value={activeRole} />
+
+              {errors.length > 0 && (
+                <div className="p-3 text-xs bg-red-50 text-red-600 rounded border border-red-100 space-y-1 text-left">
+                  {errors.map((err, idx) => (
+                    <div key={idx}>{err}</div>
+                  ))}
+                </div>
+              )}
+
               <AuthInput
+                name="email"
                 label="Email Address"
                 type="email"
                 placeholder="Enter your email"
@@ -401,6 +294,7 @@ const AuthPage = () => {
               />
 
               <AuthInput
+                name="password"
                 label="Password"
                 type="password"
                 placeholder="Enter your password"

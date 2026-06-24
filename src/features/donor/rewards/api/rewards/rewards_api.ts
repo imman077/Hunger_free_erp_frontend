@@ -24,13 +24,6 @@ export const GET_DONOR_REWARDS = gql`
       amount
       available
     }
-    prizes(role: $role) {
-      id
-      label
-      icon
-      prizeType
-      value
-    }
   }
 `;
 
@@ -49,13 +42,11 @@ export const donorRewardsService = {
 
       const meRes = response.data?.me;
       const rewardsRes = response.data?.rewards || [];
-      const prizesRes = response.data?.prizes || [];
 
       useDonorRewardsStore.getState().setLoading(false);
       return {
         currentPoints: meRes?.gamification?.points ?? 0,
         rewards: rewardsRes,
-        prizes: prizesRes,
       };
     } catch (error: any) {
       useDonorRewardsStore.getState().setError(error.message || "Failed to load rewards");
@@ -64,7 +55,7 @@ export const donorRewardsService = {
     }
   },
 
-  claimReward: async (rewardId: number, claimDetails: any): Promise<any> => {
+  claimReward: async (rewardId: string | number, claimDetails: any): Promise<any> => {
     try {
       const validatedInput = ClaimRewardInputSchema.parse({ rewardId, claimDetails });
       // In GraphQL we would use a mutation, but since the original claimed reward REST endpoint was used, we can call client.mutate or axiosInstance.

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import { Icon } from "./resuable-components/Icon";
+import { Icon } from "./reusable-components/Icon";
 import { useSidebar } from "../contexts/SidebarContext";
 import { Link, useLocation } from "react-router-dom";
 import {

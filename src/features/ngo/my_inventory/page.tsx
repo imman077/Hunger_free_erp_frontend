@@ -2,11 +2,11 @@ import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Eye } from "lucide-react";
 import { Button } from "@heroui/react";
-import { ImpactCards } from "../../../global/components/resuable-components/ImpactCards";
+import { ImpactCards } from "../../../global/components/reusable-components/ImpactCards";
 import ReusableTable, {
   TableChip,
-} from "../../../global/components/resuable-components/table";
-import ResuableButton from "../../../global/components/resuable-components/button";
+} from "../../../global/components/reusable-components/Table";
+import ResuableButton from "../../../global/components/reusable-components/Button";
 
 import { myInventoryInputModel } from "./store/my_inventory_store";
 import {

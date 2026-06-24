@@ -47,6 +47,9 @@ export const GET_MY_DONATIONS_QUERY = gql`
       }
       isNgoNeed
       relatedNeed
+      donor
+      expiryTime
+      createdAt
     }
     donationStats {
       totalDonations

@@ -1,4 +1,4 @@
-import type { ColumnDef } from "../../../../global/components/resuable-components/table";
+import type { ColumnDef } from "../../../../global/components/reusable-components/Table";
 
 export const DONATION_COLUMNS: ColumnDef[] = [
   { uid: "id", name: "#", sortable: true },

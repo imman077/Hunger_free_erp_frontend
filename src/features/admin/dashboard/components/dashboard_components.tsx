@@ -2,7 +2,7 @@ import React from "react";
 import LineChart from "../../../../global/charts/LineChart";
 import BarChart from "../../../../global/charts/BarChart";
 import { Spinner } from "@heroui/react";
-import ImpactCards from "../../../../global/components/resuable-components/ImpactCards";
+import ImpactCards from "../../../../global/components/reusable-components/ImpactCards";
 import { useDashboardStore } from "../store/dashboard_store";
 
 export const DonationsChartCard: React.FC = () => {

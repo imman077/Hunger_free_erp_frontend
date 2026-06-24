@@ -17,10 +17,10 @@ import {
   useDisclosure,
 } from "@heroui/react";
 import { toast } from "sonner";
-import type { ColumnDef } from "../../../../global/components/resuable-components/table";
-import ReusableTable from "../../../../global/components/resuable-components/table";
-import ResuableButton from "../../../../global/components/resuable-components/button";
-import ResuableDrawer from "../../../../global/components/resuable-components/drawer";
+import type { ColumnDef } from "../../../../global/components/reusable-components/Table";
+import ReusableTable from "../../../../global/components/reusable-components/Table";
+import ResuableButton from "../../../../global/components/reusable-components/Button";
+import ResuableDrawer from "../../../../global/components/reusable-components/Drawer";
 
 const redemptionColumns: ColumnDef[] = [
   { name: "REQ ID", uid: "id", sortable: true, align: "start" },

@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import ResuableButton from "../../../global/components/resuable-components/button";
-import ResuableDrawer from "../../../global/components/resuable-components/drawer";
-import FilePreviewModal from "../../../global/components/resuable-components/FilePreviewModal";
-import ImpactCards from "../../../global/components/resuable-components/ImpactCards";
+import ResuableButton from "../../../global/components/reusable-components/Button";
+import ResuableDrawer from "../../../global/components/reusable-components/Drawer";
+import FilePreviewModal from "../../../global/components/reusable-components/FilePreviewModal";
+import ImpactCards from "../../../global/components/reusable-components/ImpactCards";
 import {
   ShieldCheck,
   User,
@@ -20,6 +20,10 @@ import {
   Edit,
   Eye,
   Download,
+  HelpCircle,
+  Clock,
+  Lock,
+  ArrowRight,
 } from "lucide-react";
 
 import { useNgoProfile } from "./controller/profile_controller";
@@ -47,11 +51,23 @@ const NGOProfile = () => {
 
   const CATEGORIES_CONFIG: Record<
     string,
-    { label: string; icon: any; fields: string[] }
+    {
+      label: string;
+      description: string;
+      icon: any;
+      iconColor: string;
+      bgColor: string;
+      borderColor: string;
+      fields: string[];
+    }
   > = {
     contact: {
       label: "Contact Info",
-      icon: <User size={16} />,
+      description: "Update contact details and information",
+      icon: <User size={18} />,
+      iconColor: "text-emerald-500",
+      bgColor: "bg-emerald-50 dark:bg-emerald-950/35",
+      borderColor: "border-emerald-100/50 dark:border-emerald-900/20",
       fields: [
         "Manager Name",
         "Primary Email",
@@ -61,7 +77,11 @@ const NGOProfile = () => {
     },
     legal: {
       label: "Legal Details",
-      icon: <Building2 size={16} />,
+      description: "Manage legal entity and documents",
+      icon: <Building2 size={18} />,
+      iconColor: "text-blue-500",
+      bgColor: "bg-blue-50 dark:bg-blue-950/35",
+      borderColor: "border-blue-100/50 dark:border-blue-900/20",
       fields: [
         "NGO Legal Name",
         "Registration ID",
@@ -72,7 +92,11 @@ const NGOProfile = () => {
     },
     payout: {
       label: "Payout System",
-      icon: <Wallet size={16} />,
+      description: "Update payout method and bank details",
+      icon: <Wallet size={18} />,
+      iconColor: "text-purple-500",
+      bgColor: "bg-purple-50 dark:bg-purple-950/35",
+      borderColor: "border-purple-100/50 dark:border-purple-900/20",
       fields: [
         "Bank Account",
         "Primary UPI ID",
@@ -82,7 +106,11 @@ const NGOProfile = () => {
     },
     other: {
       label: "General Help",
-      icon: <MessageSquare size={16} />,
+      description: "Get help with other questions",
+      icon: <HelpCircle size={18} />,
+      iconColor: "text-amber-500",
+      bgColor: "bg-amber-50 dark:bg-amber-950/35",
+      borderColor: "border-amber-100/50 dark:border-amber-900/20",
       fields: [
         "Grant Inquiry",
         "Technical Support",
@@ -448,9 +476,9 @@ const NGOProfile = () => {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`flex-1 w-0 py-2 px-1 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all duration-300 relative text-center leading-snug ${
+                      className={`flex-1 w-0 py-2.5 px-2 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all duration-300 relative text-center leading-snug ${
                         activeTab === tab.id
-                          ? "shadow-sm border z-10"
+                          ? "shadow-sm border z-10 bg-white dark:bg-slate-800"
                           : "opacity-40 hover:opacity-100"
                       }`}
                       style={{
@@ -765,8 +793,8 @@ const NGOProfile = () => {
       <ResuableDrawer
         isOpen={isRequestDrawerOpen}
         onClose={() => setIsRequestDrawerOpen(false)}
-        title="NGO Support Hub"
-        subtitle="Submit updates or requests for your profile"
+        title="Support & Compliance Hub"
+        subtitle="Manage secure inquiries and information update requests"
         size="md"
       >
         <div className="p-8 h-full flex flex-col">
@@ -874,80 +902,76 @@ const NGOProfile = () => {
             </div>
           ) : (
             <div className="space-y-6 flex-grow flex flex-col text-start">
+              {/* Direct Compliance Channel Banner */}
               <div
-                className="flex items-start gap-3 p-3 rounded-lg border"
+                className="flex items-start gap-4 p-4 rounded-2xl border text-start"
                 style={{
                   backgroundColor: "rgba(59, 130, 246, 0.03)",
                   borderColor: "rgba(59, 130, 246, 0.1)",
                 }}
               >
                 <div
-                  className="p-1.5 rounded-md border shrink-0 text-blue-500"
+                  className="p-2 rounded-xl border shrink-0 text-blue-500"
                   style={{
                     backgroundColor: "rgba(59, 130, 246, 0.08)",
                     borderColor: "rgba(59, 130, 246, 0.2)",
                   }}
                 >
-                  <MessageSquare size={14} />
+                  <MessageSquare size={16} />
                 </div>
-                <div className="space-y-0.5">
+                <div className="space-y-1">
                   <h4
-                    className="text-[9px] font-black uppercase tracking-widest"
-                    style={{ color: "var(--text-primary)" }}
+                    className="text-[10px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200"
                   >
-                    Security Note
+                    Direct Compliance Channel
                   </h4>
                   <p
-                    className="text-[10px] font-bold leading-relaxed tracking-tight"
-                    style={{ color: "var(--text-secondary)" }}
+                    className="text-[11px] font-medium leading-relaxed tracking-tight text-slate-500 dark:text-slate-400"
                   >
-                    We manually check all updates to keep your NGO profile safe
-                    and verified for grants. Review usually takes 24 hours.
+                    For security reasons, changing legal identifiers or payout
+                    methods requires manual validation by our auditing team.
                   </p>
                 </div>
               </div>
 
               {!requestCategory ? (
+                /* CATEGORY GRID VIEW */
                 <div className="space-y-3">
                   <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 px-1">
-                    What would you like to update?
+                    What do you need help with?
                   </p>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {Object.entries(CATEGORIES_CONFIG).map(([id, item]) => (
                       <button
                         key={id}
                         onClick={() => switchCategory(id)}
-                        className="flex flex-col items-center justify-center h-28 rounded-xl border transition-all group shadow-sm active:scale-95"
+                        className="flex items-center gap-4 p-4 min-h-[88px] rounded-2xl border transition-all group shadow-sm active:scale-98 text-left hover:shadow-md hover:border-blue-500/30 dark:hover:border-blue-500/40"
                         style={{
                           backgroundColor: "var(--bg-primary)",
                           borderColor: "var(--border-color)",
                         }}
                       >
                         <div
-                          className="w-10 h-10 rounded-full flex items-center justify-center transition-colors mb-2"
-                          style={{
-                            backgroundColor: "var(--bg-secondary)",
-                            borderColor: "var(--border-color)",
-                          }}
+                          className={`w-12 h-12 rounded-full border flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${item.bgColor} ${item.borderColor}`}
                         >
-                          <div
-                            className="text-slate-400 group-hover:text-[#22c55e]"
-                            style={{ color: "var(--text-muted)" }}
-                          >
+                          <div className={item.iconColor}>
                             {item.icon}
                           </div>
                         </div>
-                        <span
-                          className="text-[9px] font-black uppercase tracking-widest text-center px-3 group-hover:text-[#22c55e]"
-                          style={{ color: "var(--text-muted)" }}
-                        >
-                          {item.label}
-                        </span>
+                        <div className="space-y-0.5 min-w-0">
+                          <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                            {item.label}
+                          </h4>
+                          <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium leading-relaxed">
+                            {item.description}
+                          </p>
+                        </div>
                       </button>
                     ))}
                   </div>
                 </div>
               ) : (
+                /* SUB-FIELD SELECTION VIEW */
                 <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
                   <div className="flex items-center justify-between px-1">
                     <p className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">
@@ -1008,19 +1032,40 @@ const NGOProfile = () => {
                 </div>
               )}
 
-              <div className="mt-auto pt-6">
-                <ResuableButton
-                  variant="primary"
+              {/* Bottom Actions Row */}
+              <div className="mt-auto pt-6 space-y-4">
+                <button
                   disabled={!requestCategory}
-                  className={`w-full h-11 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg transition-all ${
-                    requestCategory
-                      ? "shadow-emerald-500/20"
-                      : "opacity-50 grayscale cursor-not-allowed"
-                  }`}
                   onClick={handleSubmit}
+                  className={`w-full h-12 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 relative px-6 text-white ${
+                    !requestCategory
+                      ? "bg-blue-600/50 cursor-not-allowed opacity-60"
+                      : "bg-blue-600 hover:bg-blue-700 active:scale-98 shadow-md hover:shadow-lg shadow-blue-500/10"
+                  }`}
                 >
-                  Send Request
-                </ResuableButton>
+                  <span>Submit Verification Request</span>
+                  <ArrowRight size={14} className="absolute right-6" />
+                </button>
+
+                {/* Standard Review Time Box */}
+                <div
+                  className="p-3.5 rounded-xl border flex items-center gap-3 transition-colors text-left"
+                  style={{
+                    backgroundColor: "rgba(59, 130, 246, 0.04)",
+                    borderColor: "rgba(59, 130, 246, 0.1)",
+                  }}
+                >
+                  <Clock size={15} className="text-blue-500 shrink-0" />
+                  <span className="text-[10px] font-bold text-blue-600/90 tracking-wide">
+                    Standard review time: 12 – 24 business hours
+                  </span>
+                </div>
+
+                {/* Secure Information Note */}
+                <div className="flex items-center justify-center gap-1.5 pt-1 text-[10px] font-medium text-slate-400">
+                  <Lock size={12} className="shrink-0" />
+                  <span>Your information is secure and encrypted</span>
+                </div>
               </div>
             </div>
           )}

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Icon } from "./resuable-components/Icon";
+import { Icon } from "./reusable-components/Icon";
 import { useSidebar } from "../contexts/SidebarContext";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -156,6 +156,7 @@ const NGOSidebar: React.FC = () => {
   const rewardsSubItems: SubItem[] = [
     { label: "My Rewards", to: "/ngo/rewards" },
     { label: "Benefits", to: "/ngo/rewards/benefits" },
+    { label: "Lucky Prize", to: "/ngo/lucky-prize" },
   ];
 
   const profileSubItems: SubItem[] = [

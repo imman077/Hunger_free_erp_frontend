@@ -11,8 +11,8 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { Tabs, Tab } from "@heroui/react";
-import ReusableTable from "../../../../global/components/resuable-components/table";
-import ResuableDrawer from "../../../../global/components/resuable-components/drawer";
+import ReusableTable from "../../../../global/components/reusable-components/Table";
+import ResuableDrawer from "../../../../global/components/reusable-components/Drawer";
 
 import { useEnquiries } from "../controller/enquiries_controller";
 import { REWARD_ENQUIRY_COLUMNS } from "../model/enquiry_constants";

@@ -17,9 +17,9 @@ import {
   ChevronUp,
   ChevronDown,
 } from "lucide-react";
-import ResuableDrawer from "../../../../global/components/resuable-components/drawer";
-import ResuableModal from "../../../../global/components/resuable-components/modal";
-import ResuableButton from "../../../../global/components/resuable-components/button";
+import ResuableDrawer from "../../../../global/components/reusable-components/Drawer";
+import ResuableModal from "../../../../global/components/reusable-components/Modal";
+import ResuableButton from "../../../../global/components/reusable-components/Button";
 import { requestsInputModel } from "../store/requests_store";
 import {
   closeDrawer,

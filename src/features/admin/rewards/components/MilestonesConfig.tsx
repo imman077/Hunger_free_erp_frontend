@@ -11,18 +11,16 @@ import {
   Users as UsersIcon,
 } from "lucide-react";
 import { useDisclosure } from "@heroui/react";
-import ResuableModal from "../../../../global/components/resuable-components/modal";
-import ResuableInput from "../../../../global/components/resuable-components/input";
-import ResuableDropdown from "../../../../global/components/resuable-components/dropdown";
-import ResuableTabs from "../../../../global/components/resuable-components/tabs";
+import ResuableModal from "../../../../global/components/reusable-components/Modal";
+import ResuableInput from "../../../../global/components/reusable-components/Input";
+import ResuableDropdown from "../../../../global/components/reusable-components/Dropdown";
+import ResuableTabs from "../../../../global/components/reusable-components/Tabs";
 import { toast } from "sonner";
-import ResuableButton from "../../../../global/components/resuable-components/button";
+import ResuableButton from "../../../../global/components/reusable-components/Button";
 import {
-  INITIAL_MILESTONES as DEFAULT_MILESTONES,
   getIcon,
 } from "../../../../global/constants/milestone_config";
-
-const INITIAL_MILESTONES = DEFAULT_MILESTONES;
+import { milestonesService } from "../../../../features/donor/dashboard/api/milestones/milestones_api";
 
 const getRequirementOptions = (category: string) => {
   const options = [
@@ -48,7 +46,21 @@ const categoryOptions = [
 ];
 
 const MilestonesConfig: React.FC = () => {
-  const [milestones, setMilestones] = useState(INITIAL_MILESTONES);
+  const [milestones, setMilestones] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  React.useEffect(() => {
+    milestonesService.getDonorMilestones({})
+      .then((data) => {
+        setMilestones(data);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to load milestones:", err);
+        setIsLoading(false);
+      });
+  }, []);
+
   const [activeCategory, setActiveCategory] = useState("donors");
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [editingMilestone, setEditingMilestone] = useState<any>(null);
@@ -103,7 +115,7 @@ const MilestonesConfig: React.FC = () => {
     onOpenChange();
   };
 
-  const toggleActive = (id: number) => {
+  const toggleActive = (id: string | number) => {
     const milestone = milestones.find((m) => m.id === id);
     setMilestones((prev) =>
       prev.map((m) => (m.id === id ? { ...m, active: !m.active } : m)),
@@ -113,7 +125,7 @@ const MilestonesConfig: React.FC = () => {
     );
   };
 
-  const deleteMilestone = (id: number) => {
+  const deleteMilestone = (id: string | number) => {
     const milestone = milestones.find((m) => m.id === id);
     setMilestones((prev) => prev.filter((m) => m.id !== id));
     toast.success(`Deleted milestone "${milestone?.name}"`);
@@ -174,156 +186,162 @@ const MilestonesConfig: React.FC = () => {
         />
 
         <div className="space-y-12">
-          {(() => {
-            const sections = {
-              donors: [
-                {
-                  type: "donations",
-                  label: "Donation Milestones",
-                  color: "blue",
-                  Icon: Package,
-                },
-                {
-                  type: "points",
-                  label: "Point Milestones",
-                  color: "emerald",
-                  Icon: Zap,
-                },
-                {
-                  type: "streaks",
-                  label: "Streak Milestones",
-                  color: "orange",
-                  Icon: Flame,
-                },
-                {
-                  type: "others",
-                  label: "Community & Others",
-                  color: "purple",
-                  Icon: UsersIcon,
-                },
-              ],
-              ngos: [
-                {
-                  type: "deliveries",
-                  label: "Food Rescue Milestones",
-                  color: "blue",
-                  Icon: Package,
-                },
-                {
-                  type: "points",
-                  label: "Point Milestones",
-                  color: "emerald",
-                  Icon: Zap,
-                },
-                {
-                  type: "streaks",
-                  label: "Streak Milestones",
-                  color: "orange",
-                  Icon: Flame,
-                },
-              ],
-              volunteers: [
-                {
-                  type: "deliveries",
-                  label: "Delivery Milestones",
-                  color: "blue",
-                  Icon: Package,
-                },
-                {
-                  type: "points",
-                  label: "Point Milestones",
-                  color: "emerald",
-                  Icon: Zap,
-                },
-                {
-                  type: "streaks",
-                  label: "Streak Milestones",
-                  color: "orange",
-                  Icon: Flame,
-                },
-              ],
-            };
+          {isLoading ? (
+            <div className="text-center py-12 font-bold text-xs uppercase tracking-widest text-slate-400">
+              Loading Milestones...
+            </div>
+          ) : (
+            (() => {
+              const sections = {
+                donors: [
+                  {
+                    type: "donations",
+                    label: "Donation Milestones",
+                    color: "blue",
+                    Icon: Package,
+                  },
+                  {
+                    type: "points",
+                    label: "Point Milestones",
+                    color: "emerald",
+                    Icon: Zap,
+                  },
+                  {
+                    type: "streaks",
+                    label: "Streak Milestones",
+                    color: "orange",
+                    Icon: Flame,
+                  },
+                  {
+                    type: "others",
+                    label: "Community & Others",
+                    color: "purple",
+                    Icon: UsersIcon,
+                  },
+                ],
+                ngos: [
+                  {
+                    type: "deliveries",
+                    label: "Food Rescue Milestones",
+                    color: "blue",
+                    Icon: Package,
+                  },
+                  {
+                    type: "points",
+                    label: "Point Milestones",
+                    color: "emerald",
+                    Icon: Zap,
+                  },
+                  {
+                    type: "streaks",
+                    label: "Streak Milestones",
+                    color: "orange",
+                    Icon: Flame,
+                  },
+                ],
+                volunteers: [
+                  {
+                    type: "deliveries",
+                    label: "Delivery Milestones",
+                    color: "blue",
+                    Icon: Package,
+                  },
+                  {
+                    type: "points",
+                    label: "Point Milestones",
+                    color: "emerald",
+                    Icon: Zap,
+                  },
+                  {
+                    type: "streaks",
+                    label: "Streak Milestones",
+                    color: "orange",
+                    Icon: Flame,
+                  },
+                ],
+              };
 
-            const activeSections =
-              sections[activeCategory as keyof typeof sections] || [];
+              const activeSections =
+                sections[activeCategory as keyof typeof sections] || [];
 
-            return activeSections.map((section) => {
-              const sectionMilestones = milestones.filter((m) => {
-                if (m.category !== activeCategory) return false;
+              return activeSections.map((section) => {
+                const sectionMilestones = milestones.filter((m) => {
+                  if (m.category !== activeCategory) return false;
 
-                if (activeCategory === "donors") {
-                  if (section.type === "others") {
-                    return (
-                      !["donations", "points", "streaks"].includes(
-                        m.requirementType || "",
-                      ) ||
-                      ["Community Glue", "Local Guardian"].includes(
-                        m.name || "",
-                      )
-                    );
+                  if (activeCategory === "donors") {
+                    if (section.type === "others") {
+                      return (
+                        !["donations", "points", "streaks"].includes(
+                          m.requirementType || "",
+                        ) ||
+                        ["Community Glue", "Local Guardian"].includes(
+                          m.name || "",
+                        )
+                      );
+                    }
+                    if (
+                      section.type === "donations" &&
+                      ["Community Glue", "Local Guardian"].includes(m.name)
+                    )
+                      return false;
                   }
-                  if (
-                    section.type === "donations" &&
-                    ["Community Glue", "Local Guardian"].includes(m.name)
-                  )
-                    return false;
-                }
 
-                return m.requirementType === section.type;
-              });
+                  return m.requirementType === section.type;
+                });
 
-              if (sectionMilestones.length === 0) return null;
+                if (sectionMilestones.length === 0) return null;
 
-              return (
-                <div key={section.type} className="space-y-6 md:space-y-8">
-                  <div className="relative pt-4 md:pt-6">
-                    <div
-                      className="flex items-center justify-between p-3 md:p-4 rounded-sm border"
-                      style={{
-                        backgroundColor: "var(--bg-secondary)",
-                        borderColor: "var(--border-color)",
-                      }}
-                    >
-                      <div className="flex items-center gap-3 md:gap-4 text-start">
-                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-sm bg-[#22c55e] flex items-center justify-center border border-emerald-500 shadow-md shadow-emerald-500/10 transition-all duration-300">
-                          <section.Icon
-                            className="text-white"
-                            size={18}
-                            strokeWidth={2.5}
-                          />
-                        </div>
-                        <div className="flex flex-col">
-                          <h2
-                            className="text-xs md:text-sm font-black uppercase tracking-[0.2em] md:tracking-[0.3em] leading-none"
-                            style={{ color: "var(--text-primary)" }}
-                          >
-                            {section.label}
-                          </h2>
-                          <p
-                            className="text-[9px] md:text-[10px] font-bold mt-1.5 md:mt-2 uppercase tracking-widest"
-                            style={{ color: "var(--text-muted)" }}
-                          >
-                            {sectionMilestones.length} ACTIVE BADGES
-                          </p>
+                return (
+                  <div key={section.type} className="space-y-6 md:space-y-8">
+                    <div className="relative pt-4 md:pt-6">
+                      <div
+                        className="flex items-center justify-between p-3 md:p-4 rounded-sm border"
+                        style={{
+                          backgroundColor: "var(--bg-secondary)",
+                          borderColor: "var(--border-color)",
+                        }}
+                      >
+                        <div className="flex items-center gap-3 md:gap-4 text-start">
+                          <div className="w-10 h-10 md:w-12 md:h-12 rounded-sm bg-[#22c55e] flex items-center justify-center border border-emerald-500 shadow-md shadow-emerald-500/10 transition-all duration-300">
+                            <section.Icon
+                              className="text-white"
+                              size={18}
+                              strokeWidth={2.5}
+                            />
+                          </div>
+                          <div className="flex flex-col">
+                            <h2
+                              className="text-xs md:text-sm font-black uppercase tracking-[0.2em] md:tracking-[0.3em] leading-none"
+                              style={{ color: "var(--text-primary)" }}
+                            >
+                              {section.label}
+                            </h2>
+                            <p
+                              className="text-[9px] md:text-[10px] font-bold mt-1.5 md:mt-2 uppercase tracking-widest"
+                              style={{ color: "var(--text-muted)" }}
+                            >
+                              {sectionMilestones.length} ACTIVE BADGES
+                            </p>
+                          </div>
                         </div>
                       </div>
                     </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {sectionMilestones.map((milestone) => (
+                        <MilestoneCard
+                          key={milestone.id}
+                          milestone={milestone}
+                          handleEditOpen={handleEditOpen}
+                          toggleActive={toggleActive}
+                          deleteMilestone={deleteMilestone}
+                        />
+                      ))}
+                    </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {sectionMilestones.map((milestone) => (
-                      <MilestoneCard
-                        key={milestone.id}
-                        milestone={milestone}
-                        handleEditOpen={handleEditOpen}
-                        toggleActive={toggleActive}
-                        deleteMilestone={deleteMilestone}
-                      />
-                    ))}
-                  </div>
-                </div>
-              );
-            });
-          })()}
+                );
+              });
+            })()
+          )}
         </div>
       </div>
 

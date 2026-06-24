@@ -10,6 +10,8 @@ import {
   NgoPostsModals,
 } from "./components/ngo_posts_component";
 
+const EMPTY_ARRAY: any[] = [];
+
 export default function NgoPostsPage() {
   // onInit / onDestroy lifecycle hooks
   useEffect(() => {
@@ -30,7 +32,7 @@ export default function NgoPostsPage() {
   );
 
   const rawNeeds = getNeedsApiOutputModel.useSelector(
-    (state) => state.getNeedsApiData?.needs || []
+    (state) => state.getNeedsApiData?.data?.needs || EMPTY_ARRAY
   );
 
   // Map needs to align with view requirements

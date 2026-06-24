@@ -16,9 +16,9 @@ import {
   Download,
 } from "lucide-react";
 import { Tabs, Tab } from "@heroui/react";
-import ReusableTable from "../../../../global/components/resuable-components/table";
-import ResuableDrawer from "../../../../global/components/resuable-components/drawer";
-import DocumentPreviewModal from "../../../../global/components/resuable-components/DocumentPreviewModal";
+import ReusableTable from "../../../../global/components/reusable-components/Table";
+import ResuableDrawer from "../../../../global/components/reusable-components/Drawer";
+import DocumentPreviewModal from "../../../../global/components/reusable-components/DocumentPreviewModal";
 
 import { useEnquiries } from "../controller/enquiries_controller";
 import { VOLUNTEER_ENQUIRY_COLUMNS } from "../model/enquiry_constants";

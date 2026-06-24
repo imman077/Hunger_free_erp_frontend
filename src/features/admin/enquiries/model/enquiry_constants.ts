@@ -1,4 +1,4 @@
-import type { ColumnDef } from "../../../../global/components/resuable-components/table";
+import type { ColumnDef } from "../../../../global/components/reusable-components/Table";
 
 export const NGO_ENQUIRY_COLUMNS: ColumnDef[] = [
   { uid: "id", name: "ID", sortable: true },

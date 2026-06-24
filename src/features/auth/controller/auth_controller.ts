@@ -1,6 +1,6 @@
 import React from "react";
 import { AuthAPI } from "../api/auth_api";
-import { useAuthStore } from "../../../global/contexts/auth-store";
+import { useAuthStore } from "../../../global/store/auth-store";
 import { useAuthApiStore } from "../store/auth_store";
 import { toast } from "sonner";
 import { navigate } from "../../../core/navigation";
@@ -64,7 +64,7 @@ export const handleAuthSubmit = async (
         first_name: "",
         last_name: "",
         profile: {
-          role: user.role as any,
+          role: user.role as "ADMIN" | "DONOR" | "NGO" | "VOLUNTEER",
           phone: user.phone || null,
           address: null,
         },

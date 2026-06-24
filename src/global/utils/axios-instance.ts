@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useAuthStore } from "../contexts/auth-store";
+import { useAuthStore } from "../store/auth-store";
 
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:8000/api/", // Adjust based on your dev server

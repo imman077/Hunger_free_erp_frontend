@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 import { toast } from "sonner";
-import ResuableButton from "../../../global/components/resuable-components/button";
-import ResuableDrawer from "../../../global/components/resuable-components/drawer";
-import FilePreviewModal from "../../../global/components/resuable-components/FilePreviewModal";
-import ImpactCards from "../../../global/components/resuable-components/ImpactCards";
-import { INITIAL_TIERS } from "../../../global/constants/milestone_config";
+import ResuableButton from "../../../global/components/reusable-components/Button";
+import ResuableDrawer from "../../../global/components/reusable-components/Drawer";
+import FilePreviewModal from "../../../global/components/reusable-components/FilePreviewModal";
+import ImpactCards from "../../../global/components/reusable-components/ImpactCards";
+import { useDonorProfile } from "./hooks/useDonorProfile";
 import {
   ShieldCheck,
   User,
@@ -23,7 +23,7 @@ import {
   Download,
   Edit,
 } from "lucide-react";
-import { useDonorStore } from "../store/donor-store";
+
 import {
   onInit,
   onDestroy,
@@ -105,12 +105,7 @@ const DonorProfile = () => {
     },
   };
 
-  const { data } = useDonorStore();
-  const { profile, documents, currentPoints } = {
-    profile: data.profile,
-    documents: data.documents,
-    currentPoints: data.currentPoints,
-  };
+  const { profile, documents, currentPoints, tiers } = useDonorProfile();
 
   const handleDownloadDocument = async (doc: any) => {
     const url = doc.url || "/HungerFree Doc.pdf";
@@ -135,9 +130,9 @@ const DonorProfile = () => {
     });
   };
 
-  const currentTier =
-    INITIAL_TIERS.find((t) => currentPoints >= t.pointsRequired) ||
-    INITIAL_TIERS[0];
+  const currentTier = tiers.length > 0
+    ? [...tiers].sort((a, b) => b.pointsRequired - a.pointsRequired).find((t) => currentPoints >= t.pointsRequired) || tiers[0]
+    : { name: "Loading...", perks: "", color: "", bonus: "" };
 
   const profileStats = [
     {

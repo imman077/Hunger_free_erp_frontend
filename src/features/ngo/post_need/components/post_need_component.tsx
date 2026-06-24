@@ -1,9 +1,9 @@
 
 import { Loader2, Check } from "lucide-react";
-import ResuableInput from "../../../../global/components/resuable-components/input";
-import ResuableTextarea from "../../../../global/components/resuable-components/textarea";
-import ResuableButton from "../../../../global/components/resuable-components/button";
-import ResuableModal from "../../../../global/components/resuable-components/modal";
+import ResuableInput from "../../../../global/components/reusable-components/Input";
+import ResuableTextarea from "../../../../global/components/reusable-components/Textarea";
+import ResuableButton from "../../../../global/components/reusable-components/Button";
+import ResuableModal from "../../../../global/components/reusable-components/Modal";
 import { postNeedInputModel } from "../store/post_need_store";
 import {
   closeSuggestModal,

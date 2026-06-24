@@ -12,9 +12,9 @@ import {
   CreditCard,
 } from "lucide-react";
 import { toast } from "sonner";
-import ResuableInput from "../../../../global/components/resuable-components/input";
-import ResuableModal from "../../../../global/components/resuable-components/modal";
-import ResuableDrawer from "../../../../global/components/resuable-components/drawer";
+import ResuableInput from "../../../../global/components/reusable-components/Input";
+import ResuableModal from "../../../../global/components/reusable-components/Modal";
+import ResuableDrawer from "../../../../global/components/reusable-components/Drawer";
 import { useDonorProfile } from "../hooks/useDonorProfile";
 import type { BankAccount, UpiId } from "../../store/donor-schemas";
 

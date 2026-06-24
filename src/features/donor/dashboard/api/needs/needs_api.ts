@@ -4,7 +4,7 @@ import { GetNeedByIdInputSchema } from "./needs_input_model.ts";
 import type { GetNeedByIdInput } from "./needs_input_model.ts";
 import { NGONeedSchema, GetNeedsResponseSchema } from "./needs_output_model.ts";
 import type { NGONeed, GetNeedsResponse } from "./needs_output_model.ts";
-import { useDonorDashboardNeedsStore } from "./needs_store.ts";
+import { useDonorDashboardNeedsStore } from "../../store/needs_store.ts";
 
 export const GET_NEEDS = gql`
   query GetNeeds($status: String) {

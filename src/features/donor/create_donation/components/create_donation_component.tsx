@@ -11,17 +11,20 @@ import {
   Tag,
   Edit,
 } from "lucide-react";
-import ResuableInput from "../../../../global/components/resuable-components/input";
-import ResuableButton from "../../../../global/components/resuable-components/button";
-import ResuableDropdown from "../../../../global/components/resuable-components/dropdown";
-import ResuableDatePicker from "../../../../global/components/resuable-components/datepicker";
-import ResuableTimePicker from "../../../../global/components/resuable-components/TimePicker";
-import FileUploadSlot from "../../../../global/components/resuable-components/FileUploadSlot";
-import ResuableModal from "../../../../global/components/resuable-components/modal";
-import ResuableTextarea from "../../../../global/components/resuable-components/textarea";
+import ResuableInput from "../../../../global/components/reusable-components/Input";
+import ResuableButton from "../../../../global/components/reusable-components/Button";
+import ResuableDropdown from "../../../../global/components/reusable-components/Dropdown";
+import ResuableDatePicker from "../../../../global/components/reusable-components/DatePicker";
+import ResuableTimePicker from "../../../../global/components/reusable-components/TimePicker";
+import FileUploadSlot from "../../../../global/components/reusable-components/FileUploadSlot";
+import ResuableModal from "../../../../global/components/reusable-components/Modal";
+import ResuableTextarea from "../../../../global/components/reusable-components/Textarea";
 
 import { createDonationInputModel } from "../store/create_donation_store";
-import { getConfigItemsApiOutputModel } from "../api/get_config_items/get_config_items_store";
+import { getFoodCategoriesApiOutputModel } from "../api/get_food_categories/get_food_categories_store";
+import { getDonationUnitsApiOutputModel } from "../api/get_donation_units/get_donation_units_store";
+import { getDietaryTypesApiOutputModel } from "../api/get_dietary_types/get_dietary_types_store";
+import { getPreparationTypesApiOutputModel } from "../api/get_preparation_types/get_preparation_types_store";
 import {
   handleItemValueChange,
   addItem,
@@ -37,6 +40,8 @@ import {
   PREPARATION_TYPES,
 } from "../../../../global/constants/donation_config";
 
+const EMPTY_ARRAY: any[] = [];
+
 export const DonationFields = () => {
   const currentItem = createDonationInputModel.useSelector(
     (state) => state.createDonationData.currentItem
@@ -48,8 +53,20 @@ export const DonationFields = () => {
     (state) => state.createDonationData.editingId
   );
 
-  const configData = getConfigItemsApiOutputModel.useSelector(
-    (state) => state.getConfigItemsApiData?.configItems || []
+  const rawCategories = getFoodCategoriesApiOutputModel.useSelector(
+    (state) => state.getFoodCategoriesApiData?.data?.configItems || EMPTY_ARRAY
+  );
+
+  const rawUnits = getDonationUnitsApiOutputModel.useSelector(
+    (state) => state.getDonationUnitsApiData?.data?.configItems || EMPTY_ARRAY
+  );
+
+  const rawDietary = getDietaryTypesApiOutputModel.useSelector(
+    (state) => state.getDietaryTypesApiData?.data?.configItems || EMPTY_ARRAY
+  );
+
+  const rawPrep = getPreparationTypesApiOutputModel.useSelector(
+    (state) => state.getPreparationTypesApiData?.data?.configItems || EMPTY_ARRAY
   );
 
   const [isSuggestModalOpen, setIsSuggestModalOpen] = useState(false);
@@ -59,28 +76,37 @@ export const DonationFields = () => {
   const [isSuggestionSuccess, setIsSuggestionSuccess] = useState(false);
 
   // Map config items to drop-down options, fallback to static defaults
+  const activeCategories = rawCategories
+    .filter((c: any) => c.isActive !== false)
+    .sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0));
   const foodCategories =
-    configData
-      ?.filter((c: any) => c.key === "foodCategories")
-      ?.map((c: any) => ({ value: c.name, label: c.name })) || FOOD_CATEGORIES;
+    activeCategories.length > 0
+      ? activeCategories.map((c: any) => ({ value: c.name, label: c.name }))
+      : FOOD_CATEGORIES;
 
+  const activeUnits = rawUnits
+    .filter((c: any) => c.isActive !== false)
+    .sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0));
   const unitOptions =
-    configData
-      ?.filter((c: any) => c.key === "donationUnits")
-      ?.map((c: any) => ({ value: c.name, label: c.description || c.name })) ||
-    UNIT_OPTIONS;
+    activeUnits.length > 0
+      ? activeUnits.map((c: any) => ({ value: c.name, label: c.description || c.name }))
+      : UNIT_OPTIONS;
 
+  const activeDietary = rawDietary
+    .filter((c: any) => c.isActive !== false)
+    .sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0));
   const dietaryTypes =
-    configData
-      ?.filter((c: any) => c.key === "dietaryTypes")
-      ?.map((c: any) => ({ value: c.name, label: c.description || c.name })) ||
-    DIETARY_TYPES;
+    activeDietary.length > 0
+      ? activeDietary.map((c: any) => ({ value: c.name, label: c.description || c.name }))
+      : DIETARY_TYPES;
 
+  const activePrep = rawPrep
+    .filter((c: any) => c.isActive !== false)
+    .sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0));
   const preparationTypes =
-    configData
-      ?.filter((c: any) => c.key === "preparationTypes")
-      ?.map((c: any) => ({ value: c.name, label: c.description || c.name })) ||
-    PREPARATION_TYPES;
+    activePrep.length > 0
+      ? activePrep.map((c: any) => ({ value: c.name, label: c.description || c.name }))
+      : PREPARATION_TYPES;
 
   return (
     <>

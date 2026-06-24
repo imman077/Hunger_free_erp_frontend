@@ -7,10 +7,10 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@heroui/react";
-import ImpactCards from "../../../../global/components/resuable-components/ImpactCards";
-import ReusableTable from "../../../../global/components/resuable-components/table";
-import ReusableInput from "../../../../global/components/resuable-components/input";
-import ResuableDrawer from "../../../../global/components/resuable-components/drawer";
+import ImpactCards from "../../../../global/components/reusable-components/ImpactCards";
+import ReusableTable from "../../../../global/components/reusable-components/Table";
+import ReusableInput from "../../../../global/components/reusable-components/Input";
+import ResuableDrawer from "../../../../global/components/reusable-components/Drawer";
 import {
   Plus,
   Eye,

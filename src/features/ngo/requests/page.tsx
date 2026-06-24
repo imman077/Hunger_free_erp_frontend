@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "../../../global/contexts/auth-store";
+import { useAuthStore } from "../../../global/store/auth-store";
 import {
   MapPin,
   Plus,
@@ -20,7 +20,7 @@ import {
 import { Button } from "@heroui/react";
 import ReusableTable, {
   TableChip,
-} from "../../../global/components/resuable-components/table";
+} from "../../../global/components/reusable-components/Table";
 import { requestsInputModel } from "./store/requests_store";
 import {
   fetchDonations,

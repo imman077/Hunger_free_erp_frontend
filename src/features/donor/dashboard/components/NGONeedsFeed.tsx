@@ -210,102 +210,106 @@ const NGONeedsFeed = () => {
                   whileHover={{ y: -1 }}
                   className="group relative bg-white rounded-xl border border-slate-100 overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-slate-200/40 cursor-pointer"
                 >
-                  <div className="flex items-stretch min-h-[140px]">
-                    <div className="flex-1 flex p-3.5 gap-5">
-                      {/* Left Column: Category & Priority - Compact */}
-                      <div className="flex flex-col items-center gap-2.5 shrink-0 w-24 pr-4 justify-center">
-                        <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[7px] font-black uppercase tracking-wider ${styles.bg} ${styles.text} border ${styles.border}`}>
-                          <div className={`w-0.5 h-0.5 rounded-full ${styles.dot}`} />
-                          {need.urgency}
-                        </div>
-                        
-                        <div className={`w-14 h-14 rounded-full flex items-center justify-center ${styles.iconBg} overflow-hidden border border-slate-50 shadow-sm transition-all duration-300 group-hover:scale-110`}>
+                  <div className="flex flex-col md:flex-row lg:flex-col xl:flex-row items-stretch p-4 gap-4 md:gap-5">
+                    {/* Left Column: Category & Priority */}
+                    <div className="flex flex-row md:flex-col lg:flex-row xl:flex-col items-center gap-3 shrink-0 md:w-24 lg:w-full xl:w-24 justify-between md:justify-center lg:justify-between xl:justify-center border-b md:border-b-0 lg:border-b xl:border-b-0 pb-3 md:pb-0 lg:pb-3 xl:pb-0 md:pr-4 lg:pr-0 xl:pr-4 border-slate-100">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${styles.iconBg} overflow-hidden border border-slate-50 shadow-sm transition-all duration-300 group-hover:scale-110`}>
                           <img 
                             src={getCategoryImage(need.category)} 
                             alt={need.category}
-                            className="w-11 h-11 object-contain"
+                            className="w-9 h-9 object-contain"
                           />
                         </div>
-
-                        <div className="text-center">
+                        <div className="md:hidden lg:block xl:hidden text-start">
                           <p className="text-[6.5px] font-black text-slate-400 uppercase tracking-widest mb-0.5">CATEGORY</p>
-                          <h4 className="text-[9px] font-black text-slate-800 uppercase tracking-tight leading-none">{need.category}</h4>
+                          <h4 className="text-[10px] font-black text-slate-800 uppercase tracking-tight leading-none">{need.category}</h4>
                         </div>
                       </div>
 
-                      {/* Middle Column: Details */}
-                      <div className="flex-1 flex flex-col justify-center">
-                        <div className="mb-2.5">
-                          <h3 className="text-[15px] font-black text-slate-800 tracking-tight leading-tight mb-1 group-hover:text-green-600 transition-colors truncate">
-                            {need.title}
-                          </h3>
-                          
-                          <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-1.5">
-                              <div className="w-5 h-5 rounded-full bg-slate-50 flex items-center justify-center">
-                                <Users size={10} className="text-slate-400" />
-                              </div>
-                              <span className="text-[10px] font-black text-slate-500 uppercase tracking-tight">{need.ngo_name}</span>
-                            </div>
-                            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-green-50 text-green-600 border border-green-100">
-                              <ShieldCheck size={9} className="fill-green-600/10" />
-                              <span className="text-[7.5px] font-black uppercase tracking-widest">Verified</span>
-                            </div>
-                          </div>
-                        </div>
+                      <div className="hidden md:block lg:hidden xl:block text-center">
+                        <p className="text-[6.5px] font-black text-slate-400 uppercase tracking-widest mb-0.5">CATEGORY</p>
+                        <h4 className="text-[9px] font-black text-slate-800 uppercase tracking-tight leading-none">{need.category}</h4>
+                      </div>
 
-                        {/* Goal & Impact Card - Unified with Urgency Color */}
-                        <div className={`flex items-center rounded-lg p-2 mb-2.5 ${styles.bg}`}>
-                          <div className="flex-1 flex items-center gap-2.5">
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shadow-sm border bg-white ${styles.border}`}>
-                              <Package size={16} className={styles.text.replace('text-', 'text-')} />
-                            </div>
-                            <div>
-                              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Goal</p>
-                              <p className={`text-[10px] font-black leading-none ${styles.text}`}>{need.quantity_required}</p>
-                            </div>
-                          </div>
-                          <div className="w-px h-6 bg-slate-200/50 mx-3" />
-                          <div className="flex-1 flex items-center gap-2.5">
-                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shadow-sm border bg-white ${styles.border}`}>
-                              <Users size={16} className={styles.text.replace('text-', 'text-')} />
-                            </div>
-                            <div>
-                              <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Impact</p>
-                              <p className={`text-[10px] font-black leading-none ${styles.text}`}>{need.beneficiaries || "120 People"}</p>
-                            </div>
-                          </div>
-                        </div>
+                      <div className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-wider ${styles.bg} ${styles.text} border ${styles.border}`}>
+                        <div className={`w-1 h-1 rounded-full ${styles.dot}`} />
+                        {need.urgency}
+                      </div>
+                    </div>
 
-                        {/* Location & Time Footer - Compact */}
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center gap-1.5 text-slate-400">
-                            <MapPin size={12} className="stroke-[2.5]" />
-                            <span className="text-[9px] font-black uppercase tracking-tight">{need.location || "Koramangala, Bengaluru"}</span>
-                          </div>
-                          <div className="w-0.5 h-0.5 rounded-full bg-slate-200" />
+                    {/* Middle Column: Details */}
+                    <div className="flex-1 flex flex-col justify-center min-w-0">
+                      <div className="mb-2.5">
+                        <h3 className="text-[15px] font-black text-slate-800 tracking-tight leading-tight mb-1 group-hover:text-green-600 transition-colors truncate">
+                          {need.title}
+                        </h3>
+                        
+                        <div className="flex flex-wrap items-center gap-3">
                           <div className="flex items-center gap-1.5">
-                            <Clock size={12} className="text-slate-400 stroke-[2.5]" />
-                            <span className="text-[9px] font-black uppercase tracking-tight text-slate-400">
-                              Pickup: <span className={styles.text}>{need.pickup_by || "Today, 6:00 PM"}</span>
-                            </span>
+                            <div className="w-5 h-5 rounded-full bg-slate-50 flex items-center justify-center">
+                              <Users size={10} className="text-slate-400" />
+                            </div>
+                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-tight">{need.ngo_name}</span>
+                          </div>
+                          <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-green-50 text-green-600 border border-green-100">
+                            <ShieldCheck size={9} className="fill-green-600/10" />
+                            <span className="text-[7.5px] font-black uppercase tracking-widest">Verified</span>
                           </div>
                         </div>
                       </div>
 
-                      {/* Right Column: Actions - Scaled Down */}
-                      <div className="flex flex-col justify-center gap-2 shrink-0 w-28 pl-4">
-                        <button
-                          onClick={() => navigate(`/donor/donations/create?need_id=${need.id}&ngo_id=${need.ngo}`)}
-                          className="w-full h-8.5 bg-[#22c55e] hover:bg-[#1eb054] text-white rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95 group/btn"
-                        >
-                          Respond
-                          <ArrowRight size={13} className="transition-transform group-hover/btn:translate-x-1" />
-                        </button>
-                        <button className="w-full h-8.5 bg-white hover:bg-slate-50 text-[#22c55e] border border-[#22c55e]/10 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all active:scale-95">
-                          Details
-                        </button>
+                      {/* Goal & Impact Card - Unified with Urgency Color */}
+                      <div className={`flex items-center rounded-lg p-2 mb-2.5 ${styles.bg}`}>
+                        <div className="flex-1 flex items-center gap-2.5">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shadow-sm border bg-white ${styles.border}`}>
+                            <Package size={16} className={styles.text.replace('text-', 'text-')} />
+                          </div>
+                          <div>
+                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Goal</p>
+                            <p className={`text-[10px] font-black leading-none ${styles.text}`}>{need.quantity_required}</p>
+                          </div>
+                        </div>
+                        <div className="w-px h-6 bg-slate-200/50 mx-3" />
+                        <div className="flex-1 flex items-center gap-2.5">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shadow-sm border bg-white ${styles.border}`}>
+                            <Users size={16} className={styles.text.replace('text-', 'text-')} />
+                          </div>
+                          <div>
+                            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-0.5">Impact</p>
+                            <p className={`text-[10px] font-black leading-none ${styles.text}`}>{need.beneficiaries || "120 People"}</p>
+                          </div>
+                        </div>
                       </div>
+
+                      {/* Location & Time Footer - Compact */}
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                        <div className="flex items-center gap-1.5 text-slate-400">
+                          <MapPin size={12} className="stroke-[2.5]" />
+                          <span className="text-[9px] font-black uppercase tracking-tight">{need.location || "Koramangala, Bengaluru"}</span>
+                        </div>
+                        <div className="hidden sm:block md:hidden xl:block w-0.5 h-0.5 rounded-full bg-slate-200" />
+                        <div className="flex items-center gap-1.5">
+                          <Clock size={12} className="text-slate-400 stroke-[2.5]" />
+                          <span className="text-[9px] font-black uppercase tracking-tight text-slate-400">
+                            Pickup: <span className={styles.text}>{need.pickup_by || "Today, 6:00 PM"}</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right Column: Actions */}
+                    <div className="flex flex-row md:flex-col lg:flex-row xl:flex-col justify-center gap-2 shrink-0 w-full md:w-28 lg:w-full xl:w-28 pt-3 md:pt-0 lg:pt-3 xl:pt-0 border-t md:border-t-0 lg:border-t xl:border-t-0 border-slate-100 md:pl-4 lg:pl-0 xl:pl-4">
+                      <button
+                        onClick={() => navigate(`/donor/donations/create?need_id=${need.id}&ngo_id=${need.ngo}`)}
+                        className="flex-1 md:flex-none lg:flex-1 xl:flex-none h-8.5 bg-[#22c55e] hover:bg-[#1eb054] text-white rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95 group/btn"
+                      >
+                        Respond
+                        <ArrowRight size={13} className="transition-transform group-hover/btn:translate-x-1" />
+                      </button>
+                      <button className="flex-1 md:flex-none lg:flex-1 xl:flex-none h-8.5 bg-white hover:bg-slate-50 text-[#22c55e] border border-[#22c55e]/10 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all active:scale-95">
+                        Details
+                      </button>
                     </div>
                   </div>
                 </motion.div>

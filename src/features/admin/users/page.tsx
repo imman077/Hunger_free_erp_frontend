@@ -8,9 +8,9 @@ import {
   DropdownItem,
   Button,
 } from "@heroui/react";
-import ReusableTable from "../../../global/components/resuable-components/table";
-import type { ColumnDef } from "../../../global/components/resuable-components/table";
-import ImpactCards from "../../../global/components/resuable-components/ImpactCards";
+import ReusableTable from "../../../global/components/reusable-components/Table";
+import type { ColumnDef } from "../../../global/components/reusable-components/Table";
+import ImpactCards from "../../../global/components/reusable-components/ImpactCards";
 import { useUsers } from "./controller/users_controller";
 import type { UserItem } from "./model/user_schemas";
 

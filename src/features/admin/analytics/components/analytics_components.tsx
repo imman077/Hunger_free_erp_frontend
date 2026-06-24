@@ -14,11 +14,11 @@ import {
 import { Leaf, TrendingUp, Users, Building2, Heart, Download, Package } from "lucide-react";
 import { Spinner } from "@heroui/react";
 
-import { ImpactCards } from "../../../../global/components/resuable-components/ImpactCards";
+import { ImpactCards } from "../../../../global/components/reusable-components/ImpactCards";
 import { useAnalytics } from "../controller/analytics_controller";
 import ReusableTable, {
   type ColumnDef,
-} from "../../../../global/components/resuable-components/table";
+} from "../../../../global/components/reusable-components/Table";
 
 // ==========================================
 // 1. Analytics Overview Component

@@ -7,6 +7,8 @@ import { getMyDonationsApi } from "../api/get_my_donations/get_my_donations_api"
 import { verifyPickupApi } from "../api/verify_pickup/verify_pickup_api";
 import { cancelDonationApi } from "../api/cancel_donation/cancel_donation_api";
 import { deleteDonationApi } from "../api/delete_donation/delete_donation_api";
+import { useAuthStore } from "../../../../global/store/auth-store";
+import { saveDonationDraftApi } from "../../create_donation/api/save_donation_draft/save_donation_draft_api";
 
 export const refreshData = async () => {
   const state = myDonationsInputModel.useStore.getState().myDonationsData;
@@ -187,8 +189,40 @@ export const confirmRedonate = () => {
     isRedonateModalOpen: false,
   });
 
+  try {
+    localStorage.setItem("redonate_draft", JSON.stringify(redonateDonation));
+    localStorage.setItem("redonate_id", String(redonateDonation.id));
+  } catch (err) {
+    console.error("Failed to save redonate draft to localStorage:", err);
+  }
+
+  // Save draft in the backend database draft API
+  const user = useAuthStore.getState().user;
+  const userId = user?.id;
+  if (userId) {
+    saveDonationDraftApi({
+      userId: String(userId),
+      input: {
+        foodType: redonateDonation.foodType || "",
+        category: redonateDonation.category || "",
+        dietaryType: redonateDonation.dietaryType || "Veg",
+        preparationType: redonateDonation.preparationType || "Restaurant",
+        quantity: redonateDonation.quantity || "",
+        ngo: redonateDonation.ngo || null,
+        donor: redonateDonation.donor || null,
+        date: redonateDonation.date || "",
+        pickupAddress: redonateDonation.pickupAddress || "",
+        deliveryAddress: redonateDonation.deliveryAddress || null,
+        description: redonateDonation.description || "",
+        expiryTime: redonateDonation.expiryTime || null,
+        image: redonateDonation.image || null,
+        relatedNeed: redonateDonation.relatedNeed || null,
+      },
+    }).catch((err) => console.error("Failed to save draft to backend:", err));
+  }
+
   useDonorStore.getState().setRedonatePayload(redonateDonation);
-  navigate("/donor/donations/create");
+  navigate(`/donor/donations/create?redonate_id=${redonateDonation.id}`);
 
   myDonationsInputModel.update({
     redonateDonation: null,

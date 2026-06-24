@@ -15,8 +15,8 @@ import {
   Chip,
   Spinner,
 } from "@heroui/react";
-import ReusableTable from "../../../../global/components/resuable-components/table";
-import ImpactCards from "../../../../global/components/resuable-components/ImpactCards";
+import ReusableTable from "../../../../global/components/reusable-components/Table";
+import ImpactCards from "../../../../global/components/reusable-components/ImpactCards";
 
 import { useDonations } from "../controller/donations_controller";
 import {

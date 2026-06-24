@@ -4,7 +4,7 @@ import { ngoPostsInputModel } from "../store/ngo_posts_store";
 import { getNeedsApi } from "../api/get_needs/get_needs_api";
 import { createDonationApi } from "../api/create_donation/create_donation_api";
 import { getCategoryImage } from "../../../../global/constants/donation_config";
-import { useAuthStore } from "../../../../global/contexts/auth-store";
+import { useAuthStore } from "../../../../global/store/auth-store";
 
 export const fetchNeeds = async () => {
   try {

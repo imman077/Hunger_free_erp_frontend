@@ -7,10 +7,10 @@ import {
   MapPin,
   ShieldCheck,
 } from "lucide-react";
-import ResuableInput from "../../../../global/components/resuable-components/input";
-import ResuableButton from "../../../../global/components/resuable-components/button";
-import ResuableDropdown from "../../../../global/components/resuable-components/dropdown";
-import FileUploadSlot from "../../../../global/components/resuable-components/FileUploadSlot";
+import ResuableInput from "../../../../global/components/reusable-components/Input";
+import ResuableButton from "../../../../global/components/reusable-components/Button";
+import ResuableDropdown from "../../../../global/components/reusable-components/Dropdown";
+import FileUploadSlot from "../../../../global/components/reusable-components/FileUploadSlot";
 import { useDonors } from "../controller/donors_controller";
 import type { Donor } from "../model/user_schemas";
 

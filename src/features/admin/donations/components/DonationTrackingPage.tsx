@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import { divIcon } from "leaflet";
 import "leaflet/dist/leaflet.css";
-import ImpactCards from "../../../../global/components/resuable-components/ImpactCards";
+import ImpactCards from "../../../../global/components/reusable-components/ImpactCards";
 import {
   MapPin,
   TrendingUp,

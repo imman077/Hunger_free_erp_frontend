@@ -32,7 +32,9 @@ export function createCompleteStore<S extends z.ZodTypeAny>(
   // Generate initial state from Zod schema defaults or fallback values
   const getInitialValue = (schemaType: z.ZodTypeAny): any => {
     if (schemaType instanceof z.ZodDefault) {
-      return (schemaType._def as any).defaultValue();
+      return typeof (schemaType._def as any).defaultValue === "function"
+        ? (schemaType._def as any).defaultValue()
+        : (schemaType._def as any).defaultValue;
     }
     if (schemaType instanceof z.ZodObject) {
       const shape = schemaType.shape;
@@ -112,6 +114,18 @@ export function createCompleteStore<S extends z.ZodTypeAny>(
           }
           return {
             [dataPath]: persistedData,
+          };
+        },
+        merge: (persistedState: any, currentState: any) => {
+          if (!persistedState) return currentState;
+          const mergedData = {
+            ...(currentState?.[dataPath] || {}),
+            ...(persistedState?.[dataPath] || {}),
+          };
+          return {
+            ...currentState,
+            ...persistedState,
+            [dataPath]: mergedData,
           };
         },
       }

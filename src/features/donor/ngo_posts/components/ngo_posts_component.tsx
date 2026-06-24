@@ -18,13 +18,13 @@ import {
 import { Button } from "@heroui/react";
 import ReusableTable, {
   TableChip,
-} from "../../../../global/components/resuable-components/table";
-import ResuableDrawer from "../../../../global/components/resuable-components/drawer";
-import ResuableModal from "../../../../global/components/resuable-components/modal";
+} from "../../../../global/components/reusable-components/Table";
+import ResuableDrawer from "../../../../global/components/reusable-components/Drawer";
+import ResuableModal from "../../../../global/components/reusable-components/Modal";
 import { getCategoryImage } from "../../../../global/constants/donation_config";
-import ResuableInput from "../../../../global/components/resuable-components/input";
-import ResuableButton from "../../../../global/components/resuable-components/button";
-import { useAuthStore } from "../../../../global/contexts/auth-store";
+import ResuableInput from "../../../../global/components/reusable-components/Input";
+import ResuableButton from "../../../../global/components/reusable-components/Button";
+import { useAuthStore } from "../../../../global/store/auth-store";
 import { ngoPostsInputModel } from "../store/ngo_posts_store";
 import { getNeedsApiOutputModel } from "../api/get_needs/get_needs_store";
 import {
@@ -33,9 +33,11 @@ import {
   handleValueChange,
 } from "../controller/ngo_posts_controller";
 
+const EMPTY_ARRAY: any[] = [];
+
 export const NgoPostsHeader = () => {
   const needs = getNeedsApiOutputModel.useSelector(
-    (state) => state.getNeedsApiData?.needs || []
+    (state) => state.getNeedsApiData?.data?.needs || EMPTY_ARRAY
   );
 
   return (
@@ -83,7 +85,7 @@ export const NgoPostsControls = () => {
   );
 
   const needs = getNeedsApiOutputModel.useSelector(
-    (state) => state.getNeedsApiData?.needs || []
+    (state) => state.getNeedsApiData?.data?.needs || EMPTY_ARRAY
   );
 
   const categories = [

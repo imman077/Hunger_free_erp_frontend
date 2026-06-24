@@ -13,7 +13,7 @@ import {
   DropdownItem,
 } from "@heroui/react";
 import { useNavigate } from "react-router-dom";
-import { Icon } from "./resuable-components/Icon";
+import { Icon } from "./reusable-components/Icon";
 
 /* ---------------- Interfaces ---------------- */
 

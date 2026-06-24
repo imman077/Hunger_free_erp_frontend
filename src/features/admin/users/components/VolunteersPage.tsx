@@ -13,14 +13,14 @@ import {
   DropdownMenu,
   DropdownItem,
 } from "@heroui/react";
-import ResuableDrawer from "../../../../global/components/resuable-components/drawer";
+import ResuableDrawer from "../../../../global/components/reusable-components/Drawer";
 import ReusableTable, {
   TableChip,
-} from "../../../../global/components/resuable-components/table";
-import { ImpactCards } from "../../../../global/components/resuable-components/ImpactCards";
-import ReusableButton from "../../../../global/components/resuable-components/button";
-import ReusableInput from "../../../../global/components/resuable-components/input";
-import MultiSelectDropdown from "../../../../global/components/resuable-components/multi_select_dropdown";
+} from "../../../../global/components/reusable-components/Table";
+import { ImpactCards } from "../../../../global/components/reusable-components/ImpactCards";
+import ReusableButton from "../../../../global/components/reusable-components/Button";
+import ReusableInput from "../../../../global/components/reusable-components/Input";
+import MultiSelectDropdown from "../../../../global/components/reusable-components/MultiSelectDropdown";
 import {
   Plus,
   Filter,

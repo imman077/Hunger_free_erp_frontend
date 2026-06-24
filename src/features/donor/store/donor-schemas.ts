@@ -24,19 +24,20 @@ export const DonationDetailSchema = z.object({
   dietaryType: z.string(),
   preparationType: z.string(),
   quantity: z.string(),
-  ngo: z.string(),
+  ngo: z.string().optional().nullable(),
   date: z.string(),
   status: z.string(),
   pickupAddress: z.string(),
-  deliveryAddress: z.string(),
-  description: z.string(),
+  deliveryAddress: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
   volunteer: z
     .object({
       name: z.string(),
       phone: z.string(),
       rating: z.string(),
     })
-    .optional(),
+    .optional()
+    .nullable(),
   pickupCoords: z
     .object({
       lat: z.number(),
@@ -58,7 +59,7 @@ export const DonationDetailSchema = z.object({
     })
     .optional()
     .nullable(),
-  image: z.string().optional(),
+  image: z.string().optional().nullable(),
   timeline: z.array(
     z.object({
       status: z.string(),
@@ -70,6 +71,9 @@ export const DonationDetailSchema = z.object({
   ),
   isNgoNeed: z.boolean().optional().nullable(),
   relatedNeed: z.string().optional().nullable(),
+  donor: z.string().optional().nullable(),
+  expiryTime: z.string().optional().nullable(),
+  createdAt: z.string().optional().nullable(),
 });
 
 export const BankAccountSchema = z.object({

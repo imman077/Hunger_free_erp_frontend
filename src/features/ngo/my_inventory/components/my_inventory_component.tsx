@@ -1,9 +1,9 @@
 
 import { Package, MapPin, ClipboardList, Calendar, ArrowLeft, Loader2 } from "lucide-react";
-import ResuableDrawer from "../../../../global/components/resuable-components/drawer";
-import ResuableInput from "../../../../global/components/resuable-components/input";
-import ResuableDropdown from "../../../../global/components/resuable-components/dropdown";
-import ResuableButton from "../../../../global/components/resuable-components/button";
+import ResuableDrawer from "../../../../global/components/reusable-components/Drawer";
+import ResuableInput from "../../../../global/components/reusable-components/Input";
+import ResuableDropdown from "../../../../global/components/reusable-components/Dropdown";
+import ResuableButton from "../../../../global/components/reusable-components/Button";
 import { myInventoryInputModel } from "../store/my_inventory_store";
 import {
   setIsDrawerOpen,

@@ -57,12 +57,22 @@ export const useNgoRewards = () => {
             };
 
         // Map prizes
-        const mappedPrizes = prizesResponse.map((p: any) => ({
-          id: p.id,
-          label: p.label,
-          icon: p.icon || "🎁",
-          color: p.prize_type === "GRANT" ? "#22c55e" : "var(--bg-secondary)",
-        }));
+        const mappedPrizes = prizesResponse.map((p: any, idx: number) => {
+          const isJackpot = p.label.toUpperCase() === "GRAND JACKPOT" || p.prizeType === "GRANT" || p.prize_type === "GRANT";
+          let color;
+          if (isJackpot) {
+            color = "#22c55e";
+          } else {
+            color = idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-tertiary)";
+          }
+          return {
+            id: p.id,
+            label: p.label,
+            icon: p.icon || "🎁",
+            color: color,
+            isJackpot: isJackpot,
+          };
+        });
 
         // Map tiers
         const mappedTiers = tiersResponse.map((t: any) => ({

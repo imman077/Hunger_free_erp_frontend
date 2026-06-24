@@ -8,12 +8,14 @@ import {
   Package,
   ShieldCheck,
 } from "lucide-react";
-import ImpactCards from "../../../global/components/resuable-components/ImpactCards";
+import ImpactCards from "../../../global/components/reusable-components/ImpactCards";
+import { useEffect, useState } from "react";
 import {
-  INITIAL_TIERS,
-  INITIAL_MILESTONES,
   getIcon,
+  getScallopedCirclePath,
 } from "../../../global/constants/milestone_config";
+import { tiersService } from "../../donor/dashboard/api/tiers/tiers_api";
+import { milestonesService } from "../../donor/dashboard/api/milestones/milestones_api";
 
 import { useVolunteerDashboard } from "./controller/dashboard_controller";
 
@@ -23,14 +25,48 @@ const VolunteerDashboard = () => {
     recentTasks,
     activities,
     currentPoints,
-    isLoading,
+    isLoading: isStoreLoading,
   } = useVolunteerDashboard();
 
-  const currentTier =
-    INITIAL_TIERS.find((t) => currentPoints >= t.pointsRequired) ||
-    INITIAL_TIERS[0];
-  const nextTier = INITIAL_TIERS[INITIAL_TIERS.indexOf(currentTier) + 1];
-  const progressToNext = nextTier
+  const [tiers, setTiers] = useState<any[]>([]);
+  const [milestones, setMilestones] = useState<any[]>([]);
+  const [isLoadingConfig, setIsLoadingConfig] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      tiersService.getGamificationTiers(),
+      milestonesService.getDonorMilestones({ category: "volunteers" }),
+    ])
+      .then(([fetchedTiers, fetchedMilestones]) => {
+        if (active) {
+          setTiers(fetchedTiers);
+          setMilestones(fetchedMilestones);
+          setIsLoadingConfig(false);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load config:", err);
+        if (active) {
+          setIsLoadingConfig(false);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const sortedTiersAsc = [...tiers].sort((a, b) => a.pointsRequired - b.pointsRequired);
+
+  const currentTier = sortedTiersAsc.length > 0
+    ? [...sortedTiersAsc].reverse().find((t) => currentPoints >= t.pointsRequired) || sortedTiersAsc[0]
+    : null;
+
+  const nextTier = currentTier
+    ? sortedTiersAsc[sortedTiersAsc.indexOf(currentTier) + 1] || null
+    : null;
+
+  const progressToNext = nextTier && currentTier
     ? ((currentPoints - currentTier.pointsRequired) /
         (nextTier.pointsRequired - currentTier.pointsRequired)) *
       100
@@ -50,7 +86,7 @@ const VolunteerDashboard = () => {
       ),
   }));
 
-  if (isLoading) {
+  if (isStoreLoading || isLoadingConfig) {
     return (
       <div className="w-full flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500" />
@@ -88,72 +124,78 @@ const VolunteerDashboard = () => {
           </div>
 
           <div className="shrink-0 w-full md:w-auto">
-            <div
-              className="group/hero-stat flex flex-col gap-3 p-4 rounded-md border w-full md:min-w-[280px] shadow-inner transition-colors duration-300 hover:bg-green-500/5"
-              style={{
-                backgroundColor: "var(--bg-secondary)",
-                borderColor: "var(--border-color)",
-              }}
-            >
-              <div className="flex items-center gap-4">
-                <div
-                  className={`w-10 h-10 rounded-sm flex items-center justify-center shadow-lg shadow-green-500/10 transition-transform duration-300 group-hover/hero-stat:-translate-y-1`}
-                  style={{ backgroundColor: `${currentTier.color}20` }}
-                >
-                  <Trophy
-                    className="w-5 h-5"
-                    style={{ color: currentTier.color }}
-                  />
-                </div>
-                <div className="text-start">
-                  <p
-                    className="text-[8px] font-black uppercase tracking-widest mb-0.5"
-                    style={{ color: "var(--text-muted)" }}
+            {currentTier ? (
+              <div
+                className="group/hero-stat flex flex-col gap-3 p-4 rounded-md border w-full md:min-w-[280px] shadow-inner transition-colors duration-300 hover:bg-green-500/5"
+                style={{
+                  backgroundColor: "var(--bg-secondary)",
+                  borderColor: "var(--border-color)",
+                }}
+              >
+                <div className="flex items-center gap-4">
+                  <div
+                    className={`w-10 h-10 rounded-sm flex items-center justify-center shadow-lg shadow-green-500/10 transition-transform duration-300 group-hover/hero-stat:-translate-y-1`}
+                    style={{ backgroundColor: `${currentTier.color}20` }}
                   >
-                    My Rank
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <h3
-                      className="text-base font-black tracking-tight"
-                      style={{ color: "var(--text-primary)" }}
+                    <Trophy
+                      className="w-5 h-5"
+                      style={{ color: currentTier.color }}
+                    />
+                  </div>
+                  <div className="text-start">
+                    <p
+                      className="text-[8px] font-black uppercase tracking-widest mb-0.5"
+                      style={{ color: "var(--text-muted)" }}
                     >
-                      {currentTier.name}
-                    </h3>
-                    <div className="p-1 px-1.5 rounded-sm bg-green-500/10">
-                      <TrendingUp className="text-green-500 w-2.5 h-2.5" />
+                      My Rank
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <h3
+                        className="text-base font-black tracking-tight"
+                        style={{ color: "var(--text-primary)" }}
+                      >
+                        {currentTier.name}
+                      </h3>
+                      <div className="p-1 px-1.5 rounded-sm bg-green-500/10">
+                        <TrendingUp className="text-green-500 w-2.5 h-2.5" />
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {nextTier && (
-                <div className="space-y-2">
-                  <div className="flex justify-between items-end">
-                    <span
-                      className="text-[8px] font-black uppercase tracking-widest"
-                      style={{ color: "var(--text-muted)" }}
-                    >
-                      Next Rank: {nextTier.name}
-                    </span>
-                    <span
-                      className="text-[8px] font-black uppercase tabular-nums"
-                      style={{ color: "#22c55e" }}
-                    >
-                      {Math.round(progressToNext)}%
-                    </span>
-                  </div>
-                  <div
-                    className="h-1 w-full rounded-full overflow-hidden"
-                    style={{ backgroundColor: "var(--border-color)" }}
-                  >
+                {nextTier && (
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-end">
+                      <span
+                        className="text-[8px] font-black uppercase tracking-widest"
+                        style={{ color: "var(--text-muted)" }}
+                      >
+                        Next Rank: {nextTier.name}
+                      </span>
+                      <span
+                        className="text-[8px] font-black uppercase tabular-nums"
+                        style={{ color: "#22c55e" }}
+                      >
+                        {Math.round(progressToNext)}%
+                      </span>
+                    </div>
                     <div
-                      className="h-full bg-green-500 transition-all duration-1000"
-                      style={{ width: `${progressToNext}%` }}
-                    />
+                      className="h-1 w-full rounded-full overflow-hidden"
+                      style={{ backgroundColor: "var(--border-color)" }}
+                    >
+                      <div
+                        className="h-full bg-green-500 transition-all duration-1000"
+                        style={{ width: `${progressToNext}%` }}
+                      />
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            ) : (
+              <div className="group/hero-stat flex flex-col justify-center p-4 rounded-md border w-full md:min-w-[280px] shadow-inner text-center">
+                <span className="text-xs font-bold text-slate-400">Loading Rank...</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -308,9 +350,7 @@ const VolunteerDashboard = () => {
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-1 overflow-y-auto pr-2 max-h-[300px] thin-scrollbar">
-              {INITIAL_MILESTONES.filter(
-                (badge: any) => badge.category === "volunteers",
-              )
+              {milestones
                 .map((badge: any, i: number) => ({
                   badge,
                   i,
@@ -335,15 +375,35 @@ const VolunteerDashboard = () => {
                           : "var(--border-color)",
                       }}
                     >
-                      <div
-                        className={`w-10 h-10 md:w-11 md:h-11 shrink-0 rounded-sm flex items-center justify-center transition-transform duration-500 group-hover:-translate-y-1.5 ${
-                          isUnlocked
-                            ? "bg-green-500 text-white shadow-lg shadow-green-500/20"
-                            : "bg-slate-500/10 text-slate-500"
-                        }`}
-                      >
-                        <BadgeIcon size={16} className="md:hidden" />
-                        <BadgeIcon size={18} className="hidden md:block" />
+                      <div className="relative w-12 h-12 md:w-14 md:h-14 shrink-0 flex items-center justify-center transition-transform duration-500 group-hover:-translate-y-1.5">
+                        {/* Wavy Badge SVG Background */}
+                        <svg
+                          viewBox="0 0 56 56"
+                          className={`absolute inset-0 w-full h-full filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.12)] transition-all duration-300 ${
+                            isUnlocked
+                              ? "text-[#22c55e]"
+                              : "text-slate-300"
+                          }`}
+                        >
+                          <path
+                            d={getScallopedCirclePath(28, 28, 20.5, 7.0, 12)}
+                            fill="currentColor"
+                          />
+                          {/* Inner Bevel Accent Line */}
+                          <path
+                            d={getScallopedCirclePath(28, 28, 15.5, 5.5, 12)}
+                            fill="none"
+                            stroke={isUnlocked ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.08)"}
+                            strokeWidth="1.2"
+                          />
+                        </svg>
+                        {/* Icon */}
+                        <div className={`relative z-10 flex items-center justify-center transition-transform duration-350 group-hover:scale-110 ${
+                          isUnlocked ? "text-white" : "text-slate-400"
+                        }`}>
+                          <BadgeIcon size={16} className="md:hidden stroke-[2.2]" />
+                          <BadgeIcon size={18} className="hidden md:block stroke-[2.2]" />
+                        </div>
                       </div>
                       <div className="space-y-0.5">
                         <h3

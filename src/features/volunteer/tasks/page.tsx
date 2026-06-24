@@ -21,12 +21,12 @@ import {
   Building2,
   ShieldCheck,
 } from "lucide-react";
-import ResuableButton from "../../../global/components/resuable-components/button";
+import ResuableButton from "../../../global/components/reusable-components/Button";
 import ReusableTable, {
   type ColumnDef,
-} from "../../../global/components/resuable-components/table";
-import ResuableDrawer from "../../../global/components/resuable-components/drawer";
-import ResuableModal from "../../../global/components/resuable-components/modal";
+} from "../../../global/components/reusable-components/Table";
+import ResuableDrawer from "../../../global/components/reusable-components/Drawer";
+import ResuableModal from "../../../global/components/reusable-components/Modal";
 import React from "react";
 
 interface Task {

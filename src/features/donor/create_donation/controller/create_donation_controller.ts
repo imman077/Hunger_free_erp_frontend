@@ -3,13 +3,23 @@ import { toast } from "sonner";
 import { createDonationInputModel } from "../store/create_donation_store";
 import { createDonationApi } from "../api/create_donation/create_donation_api";
 import { deleteDonationApi } from "../api/delete_donation/delete_donation_api";
-import { getConfigItemsApi } from "../api/get_config_items/get_config_items_api";
+import { useAuthStore } from "../../../../global/store/auth-store";
+import { clearDonationDraftApi } from "../api/clear_donation_draft/clear_donation_draft_api";
+import { getFoodCategoriesApi } from "../api/get_food_categories/get_food_categories_api";
+import { getDonationUnitsApi } from "../api/get_donation_units/get_donation_units_api";
+import { getDietaryTypesApi } from "../api/get_dietary_types/get_dietary_types_api";
+import { getPreparationTypesApi } from "../api/get_preparation_types/get_preparation_types_api";
 import { navigate } from "../../../../core/navigation";
 
 // Initialize controller state, fetch dynamic categories
 export const onInit = async () => {
   try {
-    await getConfigItemsApi({ key: "foodCategories" });
+    await Promise.all([
+      getFoodCategoriesApi({ key: "foodCategories" }),
+      getDonationUnitsApi({ key: "donationUnits" }),
+      getDietaryTypesApi({ key: "dietaryTypes" }),
+      getPreparationTypesApi({ key: "preparationTypes" }),
+    ]);
   } catch (error) {
     console.error("Failed to load config categories:", error);
   }
@@ -18,6 +28,26 @@ export const onInit = async () => {
 // Reset store state on exit
 export const onDestroy = () => {
   createDonationInputModel.reset();
+};
+
+export const handleDiscard = () => {
+  try {
+    localStorage.removeItem("redonate_draft");
+    localStorage.removeItem("redonate_id");
+  } catch (err) {
+    console.error("Failed to clear localStorage draft on discard:", err);
+  }
+
+  // Clear backend draft
+  const user = useAuthStore.getState().user;
+  const userId = user?.id;
+  if (userId) {
+    clearDonationDraftApi({ userId: String(userId) }).catch((err) =>
+      console.error("Failed to clear draft from backend on discard:", err)
+    );
+  }
+
+  navigate("/donor/donations");
 };
 
 // Handle value changes in the item form
@@ -173,6 +203,8 @@ export const handleDonationSubmit = async (
 
   const state = createDonationInputModel.useStore.getState().createDonationData;
   const { items, currentItem, logistics, originalDonationId } = state;
+  const user = useAuthStore.getState().user;
+  const userId = user?.id;
 
   let finalItems = [...items];
 
@@ -213,6 +245,7 @@ export const handleDonationSubmit = async (
           preparationType: item.preparationType,
           quantity: `${item.quantity} ${item.unit}`,
           ngo: ngoId || null,
+          donor: userId ? String(userId) : null,
           date: new Date().toLocaleDateString("en-US", {
             year: "numeric",
             month: "short",
@@ -221,7 +254,7 @@ export const handleDonationSubmit = async (
           pickupAddress: logistics.pickupAddress,
           description: item.description || "Fresh food donation.",
           expiryTime: item.expiryDate && item.expiryTime ? `${item.expiryDate}T${item.expiryTime}` : null,
-          image: imageUrl,
+          image: imageUrl || (typeof item.foodPhoto === "string" ? item.foodPhoto : null),
           relatedNeed: needId || null,
         },
       };
@@ -235,6 +268,21 @@ export const handleDonationSubmit = async (
         await deleteDonationApi({ id: originalDonationId });
       } catch (err) {
         console.error("Failed to delete original donation:", err);
+      }
+    }
+
+    try {
+      localStorage.removeItem("redonate_draft");
+      localStorage.removeItem("redonate_id");
+    } catch (err) {
+      console.error("Failed to clear localStorage draft on submit:", err);
+    }
+
+    if (userId) {
+      try {
+        await clearDonationDraftApi({ userId: String(userId) });
+      } catch (err) {
+        console.error("Failed to clear draft from backend on submit:", err);
       }
     }
 

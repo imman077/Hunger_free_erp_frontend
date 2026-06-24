@@ -11,6 +11,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { ApolloProvider } from "@apollo/client";
 import client from "./global/api/apollo-client";
 
+console.log("main.tsx: calling createRoot");
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ApolloProvider client={client}>

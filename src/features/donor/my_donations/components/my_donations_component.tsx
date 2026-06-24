@@ -34,13 +34,15 @@ import {
   Trash2,
 } from "lucide-react";
 import { Modal, ModalContent } from "@heroui/react";
-import ResuableDrawer from "../../../../global/components/resuable-components/drawer";
-import ImpactCards from "../../../../global/components/resuable-components/ImpactCards";
+import ResuableDrawer from "../../../../global/components/reusable-components/Drawer";
+import ImpactCards from "../../../../global/components/reusable-components/ImpactCards";
+import PageHeader from "../../../../global/components/reusable-components/PageHeader";
 import { getCategoryImage } from "../../../../global/constants/donation_config";
 import { myDonationsInputModel } from "../store/my_donations_store";
 import { useDonorStore } from "../../store/donor-store";
 import { LiveGPSMap } from "./LiveGPSMap";
 import {
+  refreshData,
   handleDetailsClick,
   handleLiveTrackClick,
   handleCancelClick,
@@ -59,37 +61,11 @@ import { toast } from "sonner";
 export const MyDonationsHeader = () => {
   const navigate = useNavigate();
   return (
-    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shrink-0 mb-8">
-      <div className="text-start space-y-2">
-        <h1
-          className="text-4xl md:text-5xl font-black tracking-tighter leading-none flex items-center"
-          style={{ color: "var(--text-primary)" }}
-        >
-          <span className="mr-3">
-            <span className="relative">
-              M
-              <div className="absolute -bottom-1 left-0 w-full h-[3px] bg-[#22c55e] rounded-full opacity-80" />
-            </span>
-            y
-          </span>
-          <span className="relative mr-12 md:mr-14">
-            Donations
-            <img
-              src="/heart_dec1.png"
-              className="absolute left-full -bottom-1 w-12 h-auto md:w-14 animate-in fade-in zoom-in duration-700"
-              alt="Heart Decoration"
-            />
-          </span>
-        </h1>
-        <div className="flex items-center gap-2">
-          <p
-            className="text-[12px] md:text-[13px] mt-1 font-medium tracking-normal opacity-60"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            Track and manage your community contributions
-          </p>
-        </div>
-      </div>
+    <PageHeader
+      title="My Donations"
+      subtitle="Track and manage your community contributions"
+      className="mb-8"
+    >
       <button
         onClick={() => navigate("/donor/donations/create")}
         className="group relative w-full sm:w-auto px-7 py-3 bg-[#22c55e] text-white rounded-2xl text-[13px] md:text-[14px] font-bold hover:bg-[#16a34a] transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl shadow-green-500/20 shrink-0"
@@ -109,7 +85,7 @@ export const MyDonationsHeader = () => {
         </div>
         <span className="tracking-tight">Create New Donation</span>
       </button>
-    </div>
+    </PageHeader>
   );
 };
 
@@ -217,9 +193,10 @@ export const MyDonationsList = () => {
             <div className="relative group w-full md:w-auto">
               <select
                 value={statusFilter}
-                onChange={(e) =>
-                  myDonationsInputModel.update({ statusFilter: e.target.value })
-                }
+                onChange={(e) => {
+                  myDonationsInputModel.update({ statusFilter: e.target.value });
+                  refreshData();
+                }}
                 className="appearance-none bg-white border border-slate-200 rounded-xl px-5 py-2.5 pr-10 text-[11px] font-bold uppercase tracking-wider text-slate-600 outline-none hover:border-emerald-200 transition-all cursor-pointer w-full"
               >
                 <option>Pending</option>
@@ -275,6 +252,7 @@ export const MyDonationsList = () => {
                               sortOrder: opt.value,
                               isSortDropdownOpen: false,
                             });
+                            refreshData();
                           }}
                           className={`w-full px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-left transition-all ${
                             isSelected

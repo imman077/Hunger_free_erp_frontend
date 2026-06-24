@@ -16,10 +16,10 @@ import {
 import { Modal, ModalContent, ModalBody } from "@heroui/react";
 import { useVolunteers } from "../controller/volunteers_controller";
 import type { Volunteer } from "../model/user_schemas";
-import ResuableInput from "../../../../global/components/resuable-components/input";
-import ReusableButton from "../../../../global/components/resuable-components/button";
-import ResuableDropdown from "../../../../global/components/resuable-components/dropdown";
-import FileUploadSlot from "../../../../global/components/resuable-components/FileUploadSlot";
+import ResuableInput from "../../../../global/components/reusable-components/Input";
+import ReusableButton from "../../../../global/components/reusable-components/Button";
+import ResuableDropdown from "../../../../global/components/reusable-components/Dropdown";
+import FileUploadSlot from "../../../../global/components/reusable-components/FileUploadSlot";
 
 const CreateVolunteer = () => {
   const navigate = useNavigate();

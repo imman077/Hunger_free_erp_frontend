@@ -1,4 +1,4 @@
-import ImpactCards from "../../../global/components/resuable-components/ImpactCards";
+import ImpactCards from "../../../global/components/reusable-components/ImpactCards";
 import { useNgoDashboard } from "./controller/dashboard_controller";
 import {
   WelcomeHeader,

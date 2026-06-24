@@ -1,4 +1,6 @@
 import { donorRewardsService } from "../api/rewards/rewards_api";
+import { getPointsTiersApi } from "../api/get_points_tiers/get_points_tiers_api";
+import { getPrizesApi } from "../api/get_prizes/get_prizes_api";
 import { rewardsInputModel } from "../store/rewards_store";
 import { useDonorStore } from "../../store/donor-store";
 
@@ -23,7 +25,11 @@ export const onInit = async (userId: string) => {
   const globalStore = useDonorStore.getState();
   globalStore.setLoading(true);
   try {
-    const res = await donorRewardsService.getRewards(userId);
+    const [res, , prizesRes] = await Promise.all([
+      donorRewardsService.getRewards(userId),
+      getPointsTiersApi({ role: "DONOR" }),
+      getPrizesApi({ role: "DONOR" }),
+    ]);
     
     const donorRewards = res.rewards.map((r: any) => ({
       id: r.id,
@@ -35,12 +41,23 @@ export const onInit = async (userId: string) => {
       desc: r.description || "",
     }));
 
-    const mappedPrizes = res.prizes.map((p: any) => ({
-      id: p.id,
-      label: p.label,
-      icon: mapIcon(p.icon),
-      color: p.prizeType === "GRANT" ? "#22c55e" : "var(--bg-secondary)",
-    }));
+    const prizesList = prizesRes?.data?.prizes || res.prizes || [];
+    const mappedPrizes = prizesList.map((p: any, idx: number) => {
+      const isJackpot = p.label.toUpperCase() === "GRAND JACKPOT" || p.prizeType === "GRANT";
+      let color;
+      if (isJackpot) {
+        color = "#22c55e";
+      } else {
+        color = idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-tertiary)";
+      }
+      return {
+        id: p.id,
+        label: p.label,
+        icon: mapIcon(p.icon),
+        color: color,
+        isJackpot: isJackpot,
+      };
+    });
 
     globalStore.setDonorData({
       ...globalStore.data,

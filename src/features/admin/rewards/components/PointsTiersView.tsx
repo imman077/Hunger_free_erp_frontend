@@ -15,17 +15,15 @@ import {
 } from "lucide-react";
 import { useDisclosure, Button } from "@heroui/react";
 import { toast } from "sonner";
-import ResuableModal from "../../../../global/components/resuable-components/modal";
+import ResuableModal from "../../../../global/components/reusable-components/Modal";
 
-import type { ColumnDef } from "../../../../global/components/resuable-components/table";
-import ReusableTable from "../../../../global/components/resuable-components/table";
-import { ImpactCards } from "../../../../global/components/resuable-components/ImpactCards";
-import ResuableInput from "../../../../global/components/resuable-components/input";
-import ResuableButton from "../../../../global/components/resuable-components/button";
-import ResuableDrawer from "../../../../global/components/resuable-components/drawer";
-import { INITIAL_TIERS as DEFAULT_TIERS } from "../../../../global/constants/milestone_config";
-
-const INITIAL_TIERS = DEFAULT_TIERS;
+import type { ColumnDef } from "../../../../global/components/reusable-components/Table";
+import ReusableTable from "../../../../global/components/reusable-components/Table";
+import { ImpactCards } from "../../../../global/components/reusable-components/ImpactCards";
+import ResuableInput from "../../../../global/components/reusable-components/Input";
+import ResuableButton from "../../../../global/components/reusable-components/Button";
+import ResuableDrawer from "../../../../global/components/reusable-components/Drawer";
+import { tiersService } from "../../../../features/donor/dashboard/api/tiers/tiers_api";
 
 const tierColumns: ColumnDef[] = [
   { name: "TIER NAME", uid: "name", sortable: true, align: "start" },
@@ -43,7 +41,21 @@ const tierColumns: ColumnDef[] = [
 const PointsTiersView: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [tiers, setTiers] = useState(INITIAL_TIERS);
+  const [tiers, setTiers] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  React.useEffect(() => {
+    tiersService.getGamificationTiers()
+      .then((data) => {
+        setTiers(data);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to load tiers:", err);
+        setIsLoading(false);
+      });
+  }, []);
+
   const [newTier, setNewTier] = useState({
     name: "",
     minPoints: "",
@@ -349,12 +361,18 @@ const PointsTiersView: React.FC = () => {
         </div>
         <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0 scrollbar-hide">
           <div className="min-w-[600px]">
-            <ReusableTable
-              data={sortedTiers}
-              columns={tierColumns}
-              renderCell={renderTierCell}
-              enableSorting={false}
-            />
+            {isLoading ? (
+              <div className="text-center py-8 font-bold text-xs uppercase tracking-widest text-slate-400">
+                Loading Tiers...
+              </div>
+            ) : (
+              <ReusableTable
+                data={sortedTiers}
+                columns={tierColumns}
+                renderCell={renderTierCell}
+                enableSorting={false}
+              />
+            )}
           </div>
         </div>
       </div>
