@@ -304,27 +304,25 @@ const DonationRequests = () => {
             {/* Right: Search & View Controls */}
             <div className="flex flex-col md:flex-row items-center gap-4 w-full xl:w-auto">
               {/* Search Hub */}
-              {viewMode === "card" && (
-                <div className="relative w-full md:w-[280px]">
-                  <Search
-                    size={14}
-                    className="absolute left-4 top-1/2 -translate-y-1/2"
-                    style={{ color: "var(--text-muted)" }}
-                  />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setRequestsStateValue("searchQuery", e.target.value)}
-                    placeholder="Search..."
-                    className="w-full pl-11 pr-4 py-2.5 rounded-xl text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-[#22c55e]/20 transition-all shadow-sm border"
-                    style={{
-                      backgroundColor: "var(--bg-primary)",
-                      borderColor: "var(--border-color)",
-                      color: "var(--text-primary)",
-                    }}
-                  />
-                </div>
-              )}
+              <div className="relative w-full md:w-[280px]">
+                <Search
+                  size={14}
+                  className="absolute left-4 top-1/2 -translate-y-1/2"
+                  style={{ color: "var(--text-muted)" }}
+                />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setRequestsStateValue("searchQuery", e.target.value)}
+                  placeholder="Search..."
+                  className="w-full pl-11 pr-4 py-2.5 rounded-xl text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-[#22c55e]/20 transition-all shadow-sm border"
+                  style={{
+                    backgroundColor: "var(--bg-primary)",
+                    borderColor: "var(--border-color)",
+                    color: "var(--text-primary)",
+                  }}
+                />
+              </div>
 
               <div className="flex items-center gap-3 shrink-0">
                 {/* View Switcher */}
@@ -361,48 +359,48 @@ const DonationRequests = () => {
                   ))}
                 </div>
 
-                {/* Filter Menu */}
-                {viewMode === "card" && activeTab === "marketplace" && (
-                  <div className="relative group/filter">
-                    <div
-                      className="absolute right-0 top-full mt-2 w-48 shadow-xl rounded-xl opacity-0 invisible group-hover/filter:opacity-100 group-hover/filter:visible transition-all z-50 overflow-hidden border"
-                      style={{
-                        backgroundColor: "var(--bg-primary)",
-                        borderColor: "var(--border-color)",
-                      }}
-                    >
-                      <div className="p-2 space-y-1">
-                        {[
-                          { value: "ALL", label: "All Entities" },
-                          { value: "DONOR", label: "Donors Only" },
-                          { value: "NGO", label: "NGOs Only" },
-                        ].map((opt) => (
-                          <button
-                            key={opt.value}
-                            onClick={() => setRequestsStateValue("roleFilter", opt.value)}
-                            className={`w-full text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-colors ${
-                              roleFilter === opt.value
-                                ? "bg-emerald-500/10 text-[#22c55e]"
-                                : "text-[var(--text-muted)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
-                            }`}
-                          >
-                            {opt.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <button
-                      className="flex items-center justify-center w-10 h-10 rounded-xl transition-all shadow-sm border"
-                      style={{
-                        backgroundColor: "var(--bg-primary)",
-                        borderColor: "var(--border-color)",
-                        color: "var(--text-muted)",
-                      }}
-                    >
-                      <Filter size={16} />
-                    </button>
-                  </div>
-                )}
+                 {/* Filter Menu */}
+                 {activeTab === "marketplace" && (
+                   <div className="relative group/filter">
+                     <div
+                       className="absolute right-0 top-full mt-2 w-48 shadow-xl rounded-xl opacity-0 invisible group-hover/filter:opacity-100 group-hover/filter:visible transition-all z-50 overflow-hidden border"
+                       style={{
+                         backgroundColor: "var(--bg-primary)",
+                         borderColor: "var(--border-color)",
+                       }}
+                     >
+                       <div className="p-2 space-y-1">
+                         {[
+                           { value: "ALL", label: "All Entities" },
+                           { value: "DONOR", label: "Donors Only" },
+                           { value: "NGO", label: "NGOs Only" },
+                         ].map((opt) => (
+                           <button
+                             key={opt.value}
+                             onClick={() => setRequestsStateValue("roleFilter", opt.value)}
+                             className={`w-full text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-colors ${
+                               roleFilter === opt.value
+                                 ? "bg-emerald-500/10 text-[#22c55e]"
+                                 : "text-[var(--text-muted)] hover:bg-[var(--bg-secondary)] hover:text-[var(--text-primary)]"
+                             }`}
+                           >
+                             {opt.label}
+                           </button>
+                         ))}
+                       </div>
+                     </div>
+                     <button
+                       className="flex items-center justify-center w-10 h-10 rounded-xl transition-all shadow-sm border"
+                       style={{
+                         backgroundColor: "var(--bg-primary)",
+                         borderColor: "var(--border-color)",
+                         color: "var(--text-muted)",
+                       }}
+                     >
+                       <Filter size={16} />
+                     </button>
+                   </div>
+                 )}
               </div>
             </div>
           </div>

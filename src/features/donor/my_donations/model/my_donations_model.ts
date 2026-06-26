@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createSchemaBundle } from "../../../../core/utility";
 
 export const myDonationsDataSchema = z.object({
+  viewMode: z.string().default("card"),
   statusFilter: z.string().default("Pending"),
   sortOrder: z.string().default("Newest First"),
   isSortDropdownOpen: z.boolean().default(false),
@@ -27,6 +28,7 @@ export const myDonationsDataSchema = z.object({
 });
 
 export const myDonationsPersistenceConfig = {
+  viewMode: true,
   statusFilter: true,
   sortOrder: true,
   isSortDropdownOpen: false,

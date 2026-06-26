@@ -14,6 +14,8 @@ export const profileFormStateSchema = z.object({
     url: z.string(),
     name: z.string(),
   }).nullable().default(null),
+  fieldValues: z.record(z.string(), z.string()).default({}),
+  generalNotes: z.string().default(""),
 });
 
 export const profilePersistenceConfig = {
@@ -26,6 +28,8 @@ export const profilePersistenceConfig = {
   requestMessage: false,
   isPreviewOpen: false,
   selectedFile: false,
+  fieldValues: false,
+  generalNotes: false,
 };
 
 export const profileSchemas = createSchemaBundle(profileFormStateSchema, {

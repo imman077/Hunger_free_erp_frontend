@@ -38,9 +38,9 @@ export const LuckyPrizeBodyField = React.memo(() => {
     if (!wonPrize) return "";
     if (
       wonPrize.isJackpot ||
-      wonPrize.label.toUpperCase() === "GRAND PRIZE" ||
-      wonPrize.label.toUpperCase() === "GRAND JACKPOT" ||
-      wonPrize.label.toUpperCase() === "MEGA BONUS"
+      wonPrize.label?.toUpperCase() === "GRAND PRIZE" ||
+      wonPrize.label?.toUpperCase() === "GRAND JACKPOT" ||
+      wonPrize.label?.toUpperCase() === "MEGA BONUS"
     )
       return "Wow! You just won the Grand Prize!";
     return `Great! You won ${wonPrize.label}!`;

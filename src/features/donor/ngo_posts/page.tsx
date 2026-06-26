@@ -71,21 +71,8 @@ export default function NgoPostsPage() {
 
   return (
     <div className="w-full min-h-full flex flex-col space-y-6 max-w-[1600px] mx-auto p-6 md:p-10 bg-transparent pb-32">
-      <div
-        className="rounded-xl border shadow-sm relative overflow-hidden shrink-0"
-        style={{
-          backgroundColor: "var(--bg-primary)",
-          borderColor: "var(--border-color)",
-        }}
-      >
-        <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none">
-          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-[300px] h-[300px] bg-emerald-500 opacity-[0.03] blur-[100px] rounded-full" />
-          <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-[300px] h-[300px] bg-blue-500 opacity-[0.03] blur-[100px] rounded-full" />
-        </div>
-
-        <NgoPostsHeader />
-        <NgoPostsControls />
-      </div>
+      <NgoPostsHeader />
+      <NgoPostsControls />
 
       <div className="w-full space-y-8">
         {viewMode === "table" ? (

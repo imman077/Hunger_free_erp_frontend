@@ -9,6 +9,7 @@ import { cancelDonationApi } from "../api/cancel_donation/cancel_donation_api";
 import { deleteDonationApi } from "../api/delete_donation/delete_donation_api";
 import { useAuthStore } from "../../../../global/store/auth-store";
 import { saveDonationDraftApi } from "../../create_donation/api/save_donation_draft/save_donation_draft_api";
+import { createDonationInputModel } from "../../create_donation/store/create_donation_store";
 
 export const refreshData = async () => {
   const state = myDonationsInputModel.useStore.getState().myDonationsData;
@@ -37,6 +38,13 @@ export const refreshData = async () => {
 
 export const onInit = () => {
   console.log("MyDonations page initialized");
+  createDonationInputModel.reset();
+  try {
+    localStorage.removeItem("redonate_draft");
+    localStorage.removeItem("redonate_id");
+  } catch (err) {
+    console.error("Failed to clear redonate localStorage draft keys on MyDonations init:", err);
+  }
   refreshData();
 };
 

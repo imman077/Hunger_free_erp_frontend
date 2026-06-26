@@ -1,9 +1,9 @@
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import ResuableButton from "../../../global/components/reusable-components/Button";
 import ResuableDrawer from "../../../global/components/reusable-components/Drawer";
 import FilePreviewModal from "../../../global/components/reusable-components/FilePreviewModal";
-import ImpactCards from "../../../global/components/reusable-components/ImpactCards";
 import { useDonorProfile } from "./hooks/useDonorProfile";
 import {
   ShieldCheck,
@@ -40,6 +40,7 @@ import { profileInputModel } from "./store/profile_store";
  * @description Clean, professional Donor Profile with a focus on perfect alignment and readable hierarchy.
  */
 const DonorProfile = () => {
+  const navigate = useNavigate();
   useEffect(() => {
     onInit();
     return () => {
@@ -56,11 +57,12 @@ const DonorProfile = () => {
   const requestMessage = profileInputModel.useSelector((s) => s.profileFormState.requestMessage);
   const isPreviewOpen = profileInputModel.useSelector((s) => s.profileFormState.isPreviewOpen);
   const selectedFile = profileInputModel.useSelector((s) => s.profileFormState.selectedFile);
+  const fieldValues = profileInputModel.useSelector((s) => s.profileFormState.fieldValues);
+  const generalNotes = profileInputModel.useSelector((s) => s.profileFormState.generalNotes);
 
   const setActiveTab = (activeTab: string) => profileInputModel.update({ activeTab });
   const setIsRequestDrawerOpen = (isRequestDrawerOpen: boolean) => profileInputModel.update({ isRequestDrawerOpen });
   const setIsPreviewOpen = (isPreviewOpen: boolean) => profileInputModel.update({ isPreviewOpen });
-  const setRequestMessage = (requestMessage: string) => profileInputModel.update({ requestMessage });
   const setIsSubmitted = (isSubmitted: boolean) => profileInputModel.update({ isSubmitted });
 
   const CATEGORIES_CONFIG: Record<
@@ -134,180 +136,190 @@ const DonorProfile = () => {
     ? [...tiers].sort((a, b) => b.pointsRequired - a.pointsRequired).find((t) => currentPoints >= t.pointsRequired) || tiers[0]
     : { name: "Loading...", perks: "", color: "", bonus: "" };
 
-  const profileStats = [
-    {
-      label: "Account Status",
-      val: "Active",
-      trend: "Operational",
-      color: "bg-emerald-500",
-    },
-    {
-      label: "Verification",
-      val: profile.verificationLevel || "Level I",
-      trend: "Fully Verified",
-      color: "bg-emerald-500",
-    },
-    {
-      label: "Current Tier",
-      val: currentTier.name,
-      trend: "View Benefits",
-      color: "bg-emerald-500",
-    },
-    {
-      label: "Profile Finish",
-      val: `${profile.completion || 80}%`,
-      trend: profile.completion === 100 ? "Complete" : "Upload Pending",
-      color: profile.completion === 100 ? "bg-emerald-500" : "bg-[#94a3b8]",
-    },
-  ];
+
 
   return (
     <div
       className="min-h-screen flex flex-col font-sans"
       style={{ backgroundColor: "var(--bg-secondary)" }}
     >
-      {/* 1. CLEAN HEADER (TECHNICAL LUXURY) */}
-      <header
-        className="sticky top-0 z-50 border-b shadow-sm"
-        style={{
-          backgroundColor: "var(--bg-primary)",
-          borderColor: "var(--border-color)",
-        }}
-      >
-        <div className="max-w-7xl mx-auto p-6 sm:p-8 lg:px-5 py-6 md:py-8 flex flex-col md:flex-row items-center justify-between gap-10">
-          <div className="flex flex-col md:flex-row items-center gap-8 text-center md:text-left">
-            {/* Logo Container */}
-            <div
-              className="w-28 h-28 md:w-24 md:h-24 rounded-2xl border p-2 shadow-xl overflow-hidden flex items-center justify-center bg-white shrink-0 group hover:scale-[1.02] transition-transform duration-500"
-              style={{
-                borderColor: "var(--border-color)",
-              }}
-            >
-              <img
-                src="/hotel_logo1.jpg"
-                alt="Business Logo"
-                className="w-full h-full object-contain rounded-xl"
-              />
-            </div>
+      {/* 1. HERO BANNER & PROFILE HEADER */}
+      <div className="relative w-full">
+        {/* Decorative Top Banner */}
+        <div className="h-44 w-full bg-gradient-to-r from-emerald-600 to-teal-800 dark:from-emerald-950 dark:to-teal-900 relative overflow-hidden">
+          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-300 via-transparent to-transparent"></div>
+          {/* Subtle grid pattern overlay */}
+          <div className="absolute inset-0 opacity-10 bg-[linear-gradient(to_right,#808080_1px,transparent_1px),linear-gradient(to_bottom,#808080_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+        </div>
 
-            <div className="space-y-4">
-              {/* Status & Identifiers */}
-              <div className="flex items-center justify-center md:justify-start gap-4 flex-wrap">
-                <div
-                  className="px-3 py-1.5 text-green-600 text-[9px] font-black tracking-widest rounded-sm border flex items-center gap-2 whitespace-nowrap shadow-sm"
-                  style={{
-                    backgroundColor: "rgba(34, 197, 94, 0.08)",
-                    borderColor: "rgba(34, 197, 94, 0.2)",
-                  }}
-                >
-                  <ShieldCheck size={14} /> {profile.verificationLevel}
-                </div>
-                <div className="flex items-center gap-2">
-                  <span
-                    className="text-[9px] font-black uppercase tracking-widest"
-                    style={{ color: "var(--text-muted)" }}
-                  >
-                    Reg Id:
-                  </span>
-                  <span
-                    className="text-[9px] font-black uppercase tracking-widest"
+        {/* Profile Identity Card */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-10">
+          <div
+            className="p-6 rounded-2xl border shadow-lg flex flex-col md:flex-row items-center justify-between gap-6 md:gap-10"
+            style={{
+              backgroundColor: "var(--bg-primary)",
+              borderColor: "var(--border-color)",
+            }}
+          >
+            <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-left">
+              {/* Logo Container with floating shadow */}
+              <div
+                className="w-32 h-32 md:w-28 md:h-28 rounded-2xl border p-2.5 shadow-xl overflow-hidden flex items-center justify-center bg-white shrink-0 group hover:scale-[1.02] transition-transform duration-500 -mt-16 md:-mt-20 border-slate-200"
+              >
+                <img
+                  src="/hotel_logo1.jpg"
+                  alt="Business Logo"
+                  className="w-full h-full object-contain rounded-xl"
+                />
+              </div>
+
+              <div className="space-y-3 pt-2 md:pt-0">
+
+
+                {/* Business Name & Type */}
+                <div className="space-y-1">
+                  <h1
+                    className="text-2xl md:text-3xl font-black tracking-tight uppercase leading-none"
                     style={{ color: "var(--text-primary)" }}
                   >
-                    {profile.registrationId}
-                  </span>
+                    {profile.businessName}
+                  </h1>
+                  <p
+                    className="font-bold text-[10px] uppercase tracking-[0.3em]"
+                    style={{ color: "var(--text-muted)" }}
+                  >
+                    {profile.businessType}
+                  </p>
                 </div>
               </div>
+            </div>
 
-              {/* Business Name & Type */}
-              <div className="space-y-1">
-                <h1
-                  className="text-3xl md:text-4xl font-black tracking-tighter uppercase leading-none"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  {profile.businessName}
-                </h1>
-                <p
-                  className="font-black text-[10px] uppercase tracking-[0.4em]"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  {profile.businessType}
-                </p>
-              </div>
+            <div className="w-full md:w-auto">
+              <ResuableButton
+                variant="primary"
+                onClick={() => {
+                  resetSupportHub();
+                  setIsRequestDrawerOpen(true);
+                }}
+                className="w-full md:w-auto px-5 py-3 md:py-3.5 rounded-xl shadow-md text-white text-[10px] md:text-[11px] font-black uppercase tracking-[0.15em] flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all hover:brightness-110"
+              >
+                <ShieldCheck size={16} className="shrink-0" />
+                <span>Request Update</span>
+              </ResuableButton>
             </div>
           </div>
-
-          <div className="w-full md:w-auto">
-            <ResuableButton
-              variant="primary"
-              onClick={() => {
-                resetSupportHub();
-                setIsRequestDrawerOpen(true);
-              }}
-              className="w-full md:w-auto px-4 py-3 md:py-4 rounded-2xl shadow-2xl shadow-hf-green/10 text-white text-[10px] md:text-[11px] font-black uppercase tracking-[0.15em] md:tracking-[0.2em] flex items-center justify-center gap-2.5 active:scale-95 transition-all hover:brightness-110"
-            >
-              <ShieldCheck size={18} className="shrink-0" />
-              <span className="lg:hidden">Update Info</span>
-              <span className="hidden lg:inline">
-                Request Update
-              </span>
-            </ResuableButton>
-          </div>
         </div>
-      </header>
+      </div>
 
       <main className="max-w-7xl mx-auto w-full p-3 sm:p-4 lg:p-5 space-y-5">
         {/* 2. STATS GRID */}
-        <section>
-          <ImpactCards
-            data={profileStats}
-            orientation="horizontal"
-            className="w-full"
-          />
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Current Tier Card */}
+          <div
+            onClick={() => navigate("/donor/rewards/tiers-benefits")}
+            className="group bg-white dark:bg-[#111827] border border-slate-100 dark:border-slate-800 rounded-2xl p-6 flex items-center justify-between shadow-sm hover:shadow-md hover:border-emerald-500/20 dark:hover:border-emerald-500/30 cursor-pointer transition-all duration-300 active:scale-[0.99]"
+          >
+            <div className="flex items-center gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-100 dark:border-emerald-900/50 group-hover:scale-105 transition-transform duration-300">
+                <Award size={26} strokeWidth={2} />
+              </div>
+              <div className="text-start space-y-1.5">
+                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">
+                  Current Tier
+                </p>
+                <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100 leading-none">
+                  {currentTier.name}
+                </h3>
+              </div>
+            </div>
+            <div className="px-3.5 py-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-black text-[9px] uppercase tracking-widest rounded-xl border border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-white group-hover:border-emerald-500 transition-all duration-300">
+              View Benefits
+            </div>
+          </div>
+
+          {/* Profile Finish Card */}
+          <div className="bg-white dark:bg-[#111827] border border-slate-100 dark:border-slate-800 rounded-2xl p-6 flex items-center gap-5 shadow-sm transition-all duration-300">
+            <div className="relative w-14 h-14 flex items-center justify-center shrink-0">
+              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                <circle
+                  cx="18"
+                  cy="18"
+                  r="15.9155"
+                  className="text-slate-100 dark:text-slate-800"
+                  strokeWidth="3.5"
+                  stroke="currentColor"
+                  fill="none"
+                />
+                <circle
+                  cx="18"
+                  cy="18"
+                  r="15.9155"
+                  className="text-blue-500 dark:text-blue-400"
+                  strokeDasharray={`${profile.completion || 80}, 100`}
+                  strokeWidth="3.5"
+                  strokeLinecap="round"
+                  stroke="currentColor"
+                  fill="none"
+                />
+              </svg>
+              <span className="absolute text-[12px] font-black text-[#0f172a] dark:text-slate-100">
+                {profile.completion || 80}%
+              </span>
+            </div>
+            <div className="text-start space-y-1.5 flex flex-col justify-center">
+              <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">
+                Profile Finish
+              </p>
+              <div className="inline-block bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 font-black text-[9px] px-3.5 py-1.5 rounded-xl border border-blue-100 dark:border-blue-900/50 tracking-wider uppercase leading-none w-fit">
+                {profile.completion === 100 ? "Complete" : "Upload Pending"}
+              </div>
+            </div>
+          </div>
         </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* LEFT: ENTITY INFORMATION */}
           <aside className="lg:col-span-4 w-full">
             <div
-              className="border rounded-lg shadow-sm overflow-hidden text-start lg:h-[calc(100vh-270px)] min-h-[440px] flex flex-col"
+              className="border rounded-2xl shadow-sm overflow-hidden text-start lg:h-[calc(100vh-270px)] min-h-[440px] flex flex-col hover:shadow-md transition-shadow duration-300"
               style={{
                 backgroundColor: "var(--bg-primary)",
                 borderColor: "var(--border-color)",
               }}
             >
               <div
-                className="h-[52px] px-6 border-b flex items-center"
+                className="h-[56px] px-6 border-b flex items-center"
                 style={{
                   backgroundColor: "var(--bg-secondary)",
                   borderColor: "var(--border-color)",
                 }}
               >
                 <h3
-                  className="text-xs font-black uppercase tracking-widest flex items-center gap-2"
+                  className="text-xs font-black uppercase tracking-widest flex items-center gap-2.5"
                   style={{ color: "var(--text-primary)" }}
                 >
-                  <User size={14} className="text-[#22c55e]" /> Contact Details
+                  <User size={15} className="text-[#22c55e]" /> Contact Details
                 </h3>
               </div>
-              <div className="p-5 flex-grow overflow-y-auto thin-scrollbar flex flex-col gap-5">
+              <div className="p-6 flex-grow overflow-y-auto thin-scrollbar flex flex-col gap-6">
                 {/* Primary Contact */}
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <p
-                    className="text-[10px] font-black uppercase tracking-[0.1em]"
+                    className="text-[10px] font-black uppercase tracking-wider"
                     style={{ color: "var(--text-muted)" }}
                   >
                     Primary Manager
                   </p>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3 w-full">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 w-full group">
                       <div
-                        className="w-8 h-8 rounded border flex items-center justify-center text-slate-400"
+                        className="w-9 h-9 rounded-xl border flex items-center justify-center text-slate-400 group-hover:text-emerald-500 group-hover:border-emerald-500/20 transition-all duration-200"
                         style={{
                           backgroundColor: "var(--bg-secondary)",
                           borderColor: "var(--border-color)",
                         }}
                       >
-                        <User size={14} />
+                        <User size={15} />
                       </div>
                       <span
                         className="text-sm font-bold tracking-tight"
@@ -316,15 +328,15 @@ const DonorProfile = () => {
                         {profile.name}
                       </span>
                     </div>
-                    <div className="flex items-center gap-3 w-full">
+                    <div className="flex items-center gap-3 w-full group">
                       <div
-                        className="w-8 h-8 rounded border flex items-center justify-center text-slate-400"
+                        className="w-9 h-9 rounded-xl border flex items-center justify-center text-slate-400 group-hover:text-emerald-500 group-hover:border-emerald-500/20 transition-all duration-200"
                         style={{
                           backgroundColor: "var(--bg-secondary)",
                           borderColor: "var(--border-color)",
                         }}
                       >
-                        <Mail size={14} />
+                        <Mail size={15} />
                       </div>
                       <span
                         className="text-sm font-bold lowercase tracking-tight"
@@ -338,24 +350,24 @@ const DonorProfile = () => {
 
                 {/* Secondary Contact */}
                 <div
-                  className="pt-4 border-t space-y-3"
+                  className="pt-5 border-t space-y-3"
                   style={{ borderColor: "var(--border-color)" }}
                 >
                   <p
-                    className="text-[10px] font-black uppercase tracking-[0.1em]"
+                    className="text-[10px] font-black uppercase tracking-wider"
                     style={{ color: "var(--text-muted)" }}
                   >
                     Alternate Contact
                   </p>
-                  <div className="flex items-center gap-3 w-full">
+                  <div className="flex items-center gap-3 w-full group">
                     <div
-                      className="w-8 h-8 rounded border flex items-center justify-center text-slate-400"
+                      className="w-9 h-9 rounded-xl border flex items-center justify-center text-slate-400 group-hover:text-emerald-500 group-hover:border-emerald-500/20 transition-all duration-200"
                       style={{
                         backgroundColor: "var(--bg-secondary)",
                         borderColor: "var(--border-color)",
                       }}
                     >
-                      <Phone size={14} />
+                      <Phone size={15} />
                     </div>
                     <span
                       className="text-sm font-bold tracking-tight"
@@ -368,24 +380,24 @@ const DonorProfile = () => {
 
                 {/* Registered Address */}
                 <div
-                  className="pt-4 border-t space-y-3"
+                  className="pt-5 border-t space-y-3"
                   style={{ borderColor: "var(--border-color)" }}
                 >
                   <p
-                    className="text-[10px] font-black uppercase tracking-[0.1em]"
+                    className="text-[10px] font-black uppercase tracking-wider"
                     style={{ color: "var(--text-muted)" }}
                   >
                     Registered Address
                   </p>
-                  <div className="flex gap-4">
+                  <div className="flex gap-4 group">
                     <div
-                      className="w-8 h-8 rounded border flex items-center justify-center text-[#22c55e] shrink-0"
+                      className="w-9 h-9 rounded-xl border flex items-center justify-center text-[#22c55e] shrink-0 group-hover:scale-105 transition-transform duration-200"
                       style={{
                         backgroundColor: "rgba(34, 197, 94, 0.08)",
                         borderColor: "rgba(34, 197, 94, 0.2)",
                       }}
                     >
-                      <MapPin size={14} />
+                      <MapPin size={15} />
                     </div>
                     <p
                       className="text-[13px] font-bold leading-relaxed tracking-tight"
@@ -413,7 +425,7 @@ const DonorProfile = () => {
           {/* RIGHT: BUSINESS DETAILS */}
           <section className="lg:col-span-8 w-full">
             <div
-              className="border rounded-lg shadow-sm lg:h-[calc(100vh-270px)] min-h-[440px] flex flex-col"
+              className="border rounded-2xl shadow-sm lg:h-[calc(100vh-270px)] min-h-[440px] flex flex-col hover:shadow-md transition-shadow duration-300"
               style={{
                 backgroundColor: "var(--bg-primary)",
                 borderColor: "var(--border-color)",
@@ -421,39 +433,25 @@ const DonorProfile = () => {
             >
               {/* TABS HEADER: REFINED FOR PERFECT ALIGNMENT */}
               <div
-                className="px-3 border-b flex items-center overflow-hidden"
+                className="h-[56px] px-6 border-b flex items-center overflow-hidden"
                 style={{
                   backgroundColor: "var(--bg-secondary)",
                   borderColor: "var(--border-color)",
                 }}
               >
-                <div className="w-full flex items-center gap-1.5 p-1 rounded-xl">
+                <div className="flex gap-6">
                   {[
                     { id: "identity", label: "Business Details" },
-                    { id: "documents", label: "Verification Vault" },
+                    { id: "documents", label: "Documents" },
                   ].map((tab) => (
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`flex-1 w-0 py-2 px-1 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all duration-300 relative text-center leading-snug ${
+                      className={`py-4.5 px-1 text-[10px] font-black uppercase tracking-widest transition-all duration-300 relative border-b-2 ${
                         activeTab === tab.id
-                          ? "shadow-sm border z-10"
-                          : "opacity-40 hover:opacity-100"
+                          ? "text-[#22c55e] border-[#22c55e]"
+                          : "text-slate-400 border-transparent hover:text-slate-600 dark:hover:text-slate-200"
                       }`}
-                      style={{
-                        backgroundColor:
-                          activeTab === tab.id
-                            ? "var(--bg-primary)"
-                            : "transparent",
-                        borderColor:
-                          activeTab === tab.id
-                            ? "var(--border-color)"
-                            : "transparent",
-                        color:
-                          activeTab === tab.id
-                            ? "#22c55e"
-                            : "var(--text-primary)",
-                      }}
                     >
                       {tab.label}
                     </button>
@@ -465,35 +463,35 @@ const DonorProfile = () => {
                 {activeTab === "identity" && (
                   <div className="space-y-6 animate-in fade-in duration-500">
                     {/* SECTION 1: BUSINESS INTELLIGENCE */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                       {[
                         {
                           label: "Legal Name",
                           val: profile.legalName || `${profile.businessName} Private Limited`,
-                          icon: <Building2 size={14} />,
+                          icon: <Building2 size={15} />,
                           span: true,
                           isVerified: true,
                         },
                         {
                           label: "Website",
                           val: profile.website || "N/A",
-                          icon: <Globe size={14} />,
+                          icon: <Globe size={15} />,
                           link: true,
                         },
                         {
                           label: "Registration ID",
                           val: profile.registrationId,
-                          icon: <FileText size={14} />,
+                          icon: <FileText size={15} />,
                         },
                         {
                           label: "Entity Type",
                           val: profile.entityType || "Premium Corporate Donor",
-                          icon: <Award size={14} />,
+                          icon: <Award size={15} />,
                         },
                         {
                           label: "Tax Identifier",
                           val: profile.taxId,
-                          icon: <BadgeCheck size={14} />,
+                          icon: <BadgeCheck size={15} />,
                         },
                       ].map((field, i) => (
                         <div
@@ -501,20 +499,20 @@ const DonorProfile = () => {
                           className={`space-y-2 ${field.span ? "md:col-span-2" : ""}`}
                         >
                           <p
-                            className="text-[10px] font-black uppercase tracking-[0.1em]"
+                            className="text-[10px] font-black uppercase tracking-wider"
                             style={{ color: "var(--text-muted)" }}
                           >
                             {field.label}
                           </p>
                           <div
-                            className="flex items-center gap-3 p-2.5 rounded-md border transition-colors"
+                            className="flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 hover:border-slate-300 dark:hover:border-slate-700"
                             style={{
                               backgroundColor: "var(--bg-secondary)",
                               borderColor: "var(--border-color)",
                             }}
                           >
                             <div
-                              className="flex items-center justify-center w-7 h-7 rounded-md border text-slate-400"
+                              className="flex items-center justify-center w-8 h-8 rounded-lg border text-slate-400"
                               style={{
                                 backgroundColor: "var(--bg-primary)",
                                 borderColor: "var(--border-color)",
@@ -541,7 +539,7 @@ const DonorProfile = () => {
 
                     {/* SECTION 2: PAYOUT INTELLIGENCE (WITH HEADING) */}
                     <div
-                      className="pt-4 border-t space-y-4"
+                      className="pt-6 border-t space-y-4"
                       style={{ borderColor: "var(--border-color)" }}
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
@@ -555,14 +553,14 @@ const DonorProfile = () => {
                           >
                             <Wallet size={18} />
                           </div>
-                          <div className="flex flex-col min-w-0">
+                          <div className="flex flex-col min-w-0 text-start">
                             <h4
-                              className="text-[11px] font-bold uppercase tracking-[0.15em] leading-tight truncate px-0.5"
+                              className="text-[11px] font-black uppercase tracking-[0.15em] leading-tight truncate"
                               style={{ color: "var(--text-primary)" }}
                             >
                               Payment Details
                             </h4>
-                            <span className="text-[9px] font-bold uppercase tracking-widest text-[#94a3b8] mt-1 whitespace-nowrap overflow-hidden text-ellipsis">
+                            <span className="text-[9px] font-bold uppercase tracking-widest text-[#94a3b8] mt-1.5 whitespace-nowrap overflow-hidden text-ellipsis">
                               Verified Bank/UPI Accounts
                             </span>
                           </div>
@@ -581,37 +579,37 @@ const DonorProfile = () => {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                         {[
                           {
                             label: "Bank Account",
                             val: profile.bankName ? `${profile.bankName} (${profile.accountNumber || ""})` : "Not configured",
-                            icon: <Building2 size={14} />,
+                            icon: <Building2 size={15} />,
                             isSecure: true,
                           },
                           {
                             label: "Primary UPI",
                             val: profile.upiId || "Not configured",
-                            icon: <Wallet size={14} />,
+                            icon: <Wallet size={15} />,
                             isSecure: true,
                           },
                         ].map((field, i) => (
                           <div key={i} className="space-y-2">
                             <p
-                              className="text-[10px] font-black uppercase tracking-[0.1em]"
+                              className="text-[10px] font-black uppercase tracking-wider"
                               style={{ color: "var(--text-muted)" }}
                             >
                               {field.label}
                             </p>
                             <div
-                              className="flex items-center gap-3 p-2.5 rounded-md border transition-colors"
+                              className="flex items-center gap-3 p-3 rounded-xl border transition-all duration-200 hover:border-slate-300 dark:hover:border-slate-700"
                               style={{
                                 backgroundColor: "var(--bg-secondary)",
                                 borderColor: "var(--border-color)",
                               }}
                             >
                               <div
-                                className="flex items-center justify-center w-7 h-7 rounded-md border text-slate-400"
+                                className="flex items-center justify-center w-8 h-8 rounded-lg border text-slate-400"
                                 style={{
                                   backgroundColor: "var(--bg-primary)",
                                   borderColor: "var(--border-color)",
@@ -640,40 +638,40 @@ const DonorProfile = () => {
                 {activeTab === "documents" && (
                   <div className="space-y-6 animate-in fade-in duration-300">
                     <p
-                      className="text-[10px] font-black uppercase tracking-[0.1em]"
+                      className="text-[10px] font-black uppercase tracking-wider text-start"
                       style={{ color: "var(--text-muted)" }}
                     >
                       Documents
                     </p>
                     <div className="grid grid-cols-1 gap-4">
-                      {documents.map((doc, i) => (
+                      {documents.map((doc: any, i: number) => (
                         <div
                           key={i}
-                          className="group p-4 px-5 rounded-[22px] border transition-all duration-300 hover:shadow-xl hover:scale-[1.01] flex flex-col gap-3"
+                          className="group p-4 px-5 rounded-2xl border transition-all duration-300 hover:shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                           style={{
                             backgroundColor: "var(--bg-secondary)",
                             borderColor: "var(--border-color)",
                           }}
                         >
-                          <div className="flex items-start gap-4">
+                          <div className="flex items-center gap-4 text-start min-w-0 flex-1">
                             <div
                               className="w-12 h-12 rounded-xl border flex items-center justify-center text-slate-400 group-hover:text-emerald-600 group-hover:border-emerald-500/30 transition-all shadow-sm shrink-0 bg-white"
                               style={{
                                 borderColor: "var(--border-color)",
                               }}
                             >
-                              <FileText size={20} strokeWidth={2.5} />
+                              <FileText size={20} strokeWidth={2} />
                             </div>
-                            <div className="flex flex-col gap-2 min-w-0 flex-1 pt-0.5">
+                            <div className="flex flex-col gap-1 min-w-0">
                               <p
                                 className="text-sm font-black uppercase tracking-tight leading-tight"
                                 style={{ color: "var(--text-primary)" }}
                               >
                                 {doc.name}
                               </p>
-                              <div className="flex flex-col items-start gap-1.5">
+                              <div className="flex items-center gap-2 flex-wrap">
                                 <span
-                                  className={`px-2.5 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest border transition-colors ${
+                                  className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border transition-colors ${
                                     doc.status === "Verified"
                                       ? "text-emerald-600 bg-emerald-500/10 border-emerald-500/20"
                                       : "text-amber-600 bg-amber-500/10 border-amber-500/20"
@@ -681,25 +679,25 @@ const DonorProfile = () => {
                                 >
                                   {doc.status}
                                 </span>
-                                <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
+                                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
                                   ID: {doc.date}
-                                </p>
+                                </span>
                               </div>
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-end gap-2 mt-1">
+                          <div className="flex items-center gap-2 shrink-0">
                             <button
                               onClick={() => handleViewDocument(doc)}
                               title="Quick View"
-                              className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-emerald-500 hover:border-emerald-200 hover:shadow-sm transition-all active:scale-90"
+                              className="w-9 h-9 flex items-center justify-center rounded-xl bg-white dark:bg-[#1f2937] border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-emerald-500 hover:border-emerald-200 dark:hover:border-emerald-900/50 hover:shadow-sm transition-all active:scale-90"
                             >
                               <Eye size={16} />
                             </button>
                             <button
                               onClick={() => handleDownloadDocument(doc)}
                               title="Download Document"
-                              className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-emerald-500 hover:border-emerald-200 hover:shadow-sm transition-all active:scale-90"
+                              className="w-9 h-9 flex items-center justify-center rounded-xl bg-white dark:bg-[#1f2937] border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-emerald-500 hover:border-emerald-200 dark:hover:border-emerald-900/50 hover:shadow-sm transition-all active:scale-90"
                             >
                               <Download size={16} />
                             </button>
@@ -994,26 +992,68 @@ const DonorProfile = () => {
                     })}
                   </div>
 
+                  {/* Selected Fields Dynamic Inputs */}
+                  {selectedFields.length > 0 && (
+                    <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                      <p
+                        className="text-[9px] font-black uppercase tracking-[0.2em]"
+                        style={{ color: "var(--text-muted)" }}
+                      >
+                        Requested Update Values
+                      </p>
+                      <div className="space-y-3">
+                        {selectedFields.map((field: string) => (
+                          <div key={field} className="space-y-1">
+                            <label
+                              className="text-[9px] font-black uppercase tracking-wider block"
+                              style={{ color: "var(--text-muted)" }}
+                            >
+                              {field}
+                            </label>
+                            <input
+                              type="text"
+                              value={fieldValues[field] || ""}
+                              onChange={(e) => {
+                                const nextValues = {
+                                  ...fieldValues,
+                                  [field]: e.target.value,
+                                };
+                                profileInputModel.update({ fieldValues: nextValues });
+                              }}
+                              placeholder={`Enter update for ${field.toLowerCase()}...`}
+                              className="w-full h-10 px-4 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#22c55e]/20 focus:border-[#22c55e] text-xs font-bold transition-all"
+                              style={{
+                                backgroundColor: "var(--bg-secondary)",
+                                borderColor: "var(--border-color)",
+                                color: "var(--text-primary)",
+                              }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Message Area */}
                   <div className="space-y-3">
                     <p
                       className="text-[9px] font-black uppercase tracking-[0.2em]"
                       style={{ color: "var(--text-muted)" }}
                     >
-                      Request Details & Inquiries
+                      {selectedFields.length > 0 ? "Additional Comments" : "Request Details & Inquiries"}
                     </p>
                     <div className="relative group">
                       <textarea
-                        value={requestMessage}
-                        onChange={(e) => setRequestMessage(e.target.value)}
+                        value={generalNotes}
+                        onChange={(e) => {
+                          profileInputModel.update({ generalNotes: e.target.value });
+                        }}
                         placeholder={
                           selectedFields.length > 0
-                            ? `Please describe the changes for: ${selectedFields.join(
-                                ", ",
-                              )}`
-                            : "Please provide more details about your request..."
+                            ? "Please provide any additional comments or reason for the updates..."
+                            : "Please describe your request details..."
                         }
-                        className="w-full h-32 p-4 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#22c55e]/20 focus:border-[#22c55e] text-xs font-bold placeholder:text-muted resize-none transition-all thin-scrollbar"
+                        className="w-full h-24 p-4 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#22c55e]/20 focus:border-[#22c55e] text-xs font-bold placeholder:text-muted resize-none transition-all thin-scrollbar"
                         style={{
                           backgroundColor: "var(--bg-secondary)",
                           borderColor: "var(--border-color)",

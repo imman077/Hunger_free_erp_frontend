@@ -14,6 +14,7 @@ import {
   TrendingUp,
   ChevronRight,
   ChevronLeft,
+  Filter,
 } from "lucide-react";
 import { Button } from "@heroui/react";
 import ReusableTable, {
@@ -21,6 +22,7 @@ import ReusableTable, {
 } from "../../../../global/components/reusable-components/Table";
 import ResuableDrawer from "../../../../global/components/reusable-components/Drawer";
 import ResuableModal from "../../../../global/components/reusable-components/Modal";
+import PageHeader from "../../../../global/components/reusable-components/PageHeader";
 import { getCategoryImage } from "../../../../global/constants/donation_config";
 import ResuableInput from "../../../../global/components/reusable-components/Input";
 import ResuableButton from "../../../../global/components/reusable-components/Button";
@@ -41,35 +43,24 @@ export const NgoPostsHeader = () => {
   );
 
   return (
-    <div className="relative z-10 px-6 py-10 border-b border-[var(--border-color)]">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-        <div className="space-y-2 text-center md:text-left">
-          <h1
-            className="text-3xl md:text-4xl font-black tracking-tighter uppercase leading-none"
-            style={{ color: "var(--text-primary)" }}
-          >
-            NGO <span className="text-emerald-500">Requests</span>
-          </h1>
-          <p className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em]">
-            Help local NGOs by contributing what they need most
-          </p>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="flex flex-col items-end">
-            <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest leading-none mb-1">
-              Live Update
-            </span>
-            <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 text-emerald-500 rounded-lg border border-emerald-500/20">
-              <TrendingUp size={12} />
-              <span className="text-[13px] font-black tabular-nums">
-                {needs.length} Active Posts
-              </span>
-            </div>
-          </div>
+    <PageHeader
+      title="NGO Requests"
+      subtitle="Help local NGOs by contributing what they need most"
+      greenLastWord={true}
+      className="mb-8"
+    >
+      <div className="flex flex-col items-end">
+        <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest leading-none mb-1">
+          Live Update
+        </span>
+        <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 text-emerald-500 rounded-lg border border-emerald-500/20 shrink-0">
+          <TrendingUp size={12} />
+          <span className="text-[13px] font-black tabular-nums">
+            {needs.length} Active Posts
+          </span>
         </div>
       </div>
-    </div>
+    </PageHeader>
   );
 };
 
@@ -95,13 +86,13 @@ export const NgoPostsControls = () => {
 
   return (
     <div
-      className="relative z-10 px-6 py-4 flex flex-col xl:flex-row items-center justify-between gap-6 border-t"
+      className="relative z-10 px-6 py-4 flex flex-col xl:flex-row items-center justify-between gap-6 rounded-xl border shadow-sm"
       style={{
         backgroundColor: "var(--bg-secondary)",
         borderColor: "var(--border-color)",
       }}
     >
-      <div className="relative w-full md:w-[400px]">
+      <div className="relative w-full md:w-[320px]">
         <Search
           size={14}
           className="absolute left-4 top-1/2 -translate-y-1/2"
@@ -114,7 +105,7 @@ export const NgoPostsControls = () => {
             ngoPostsInputModel.update({ searchQuery: e.target.value })
           }
           placeholder="Search items, NGOs, or locations..."
-          className="w-full pl-11 pr-4 py-3 rounded-xl text-[12px] font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-sm border"
+          className="w-full pl-11 pr-4 py-2.5 rounded-xl text-[12px] font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-sm border"
           style={{
             backgroundColor: "var(--bg-primary)",
             borderColor: "var(--border-color)",
@@ -123,24 +114,61 @@ export const NgoPostsControls = () => {
         />
       </div>
 
-      <div className="flex items-center gap-4 w-full xl:w-auto overflow-x-auto no-scrollbar pb-2 xl:pb-0">
+      <div className="flex flex-wrap items-center gap-4 w-full xl:w-auto justify-start xl:justify-end">
+        {/* Category Filter (Hover Dropdown with Filter Icon) */}
+        <div className="relative group/filter z-[150] w-full sm:w-auto">
+          <div
+            className="absolute right-0 top-full mt-2 w-48 shadow-xl rounded-xl opacity-0 invisible group-hover/filter:opacity-100 group-hover/filter:visible transition-all z-[160] overflow-hidden border bg-white"
+            style={{
+              borderColor: "var(--border-color)",
+            }}
+          >
+            <div className="p-2 space-y-1">
+              {categories.map((cat: any) => (
+                <button
+                  key={cat}
+                  onClick={() => {
+                    ngoPostsInputModel.update({ categoryFilter: cat });
+                  }}
+                  className={`w-full text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-colors ${
+                    categoryFilter === cat
+                      ? "bg-emerald-500/10 text-[#22c55e]"
+                      : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+          <button
+            className="flex items-center justify-center w-full sm:w-10 h-10 rounded-xl transition-all shadow-sm border bg-white hover:border-emerald-500 text-slate-500"
+            style={{
+              borderColor: "var(--border-color)",
+            }}
+          >
+            <Filter size={16} />
+          </button>
+        </div>
+
+        {/* View Switcher (Styled like my_donations page) */}
         <div
-          className="flex items-center gap-1 p-1 rounded-xl shadow-sm border shrink-0"
+          className="flex items-center gap-1 p-1 rounded-xl shadow-sm border shrink-0 w-full sm:w-auto"
           style={{
             backgroundColor: "var(--bg-primary)",
             borderColor: "var(--border-color)",
           }}
         >
           {[
-            { id: "table", icon: Table },
-            { id: "card", icon: LayoutGrid },
+            { id: "table", icon: Table, label: "Table" },
+            { id: "card", icon: LayoutGrid, label: "Grid" },
           ].map((mode) => (
             <button
               key={mode.id}
               onClick={() => ngoPostsInputModel.update({ viewMode: mode.id as any })}
-              className={`flex items-center justify-center p-2 rounded-lg transition-all ${
+              className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all w-1/2 sm:w-auto ${
                 viewMode === mode.id
-                  ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
+                  ? "bg-[#22c55e] text-white shadow-lg shadow-green-500/20"
                   : "hover:bg-[var(--bg-secondary)]"
               }`}
               style={{
@@ -149,25 +177,8 @@ export const NgoPostsControls = () => {
                 color: viewMode === mode.id ? "white" : "var(--text-muted)",
               }}
             >
-              <mode.icon size={16} />
-            </button>
-          ))}
-        </div>
-
-        <div className="h-8 w-[1px] bg-[var(--border-color)] hidden md:block" />
-
-        <div className="flex items-center gap-2">
-          {categories.slice(0, 5).map((cat: any) => (
-            <button
-              key={cat}
-              onClick={() => ngoPostsInputModel.update({ categoryFilter: cat })}
-              className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest border transition-all ${
-                categoryFilter === cat
-                  ? "bg-emerald-500 border-emerald-500 text-white shadow-sm"
-                  : "bg-[var(--bg-primary)] border-[var(--border-color)] text-[var(--text-muted)] hover:border-emerald-500/50 hover:text-emerald-500"
-              }`}
-            >
-              {cat}
+              <mode.icon size={14} />
+              <span>{mode.label}</span>
             </button>
           ))}
         </div>

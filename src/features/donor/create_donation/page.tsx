@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Heart, CheckCircle } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
+import { Heart, CheckCircle } from "lucide-react";
 import ResuableButton from "../../../global/components/reusable-components/Button";
 import { toast } from "sonner";
+import PageHeader from "../../../global/components/reusable-components/PageHeader";
 
 import { useDonorStore } from "../store/donor-store";
 import { useAuthStore } from "../../../global/store/auth-store";
@@ -21,7 +22,6 @@ import {
 import { getDonationByIdApi } from "./api/get_donation_by_id/get_donation_by_id_api";
 
 export default function CreateDonationPage() {
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const needId = searchParams.get("need_id");
   const ngoId = searchParams.get("ngo_id");
@@ -157,31 +157,11 @@ export default function CreateDonationPage() {
       style={{ backgroundColor: "var(--bg-secondary)" }}
     >
       {/* Header Bar */}
-      <div className="max-w-5xl mx-auto mb-8 sm:mb-12 px-1 sm:px-0">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-8">
-          <button
-            onClick={() => navigate("/donor/donations")}
-            className="flex items-center gap-2 transition-colors group w-fit"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            <ArrowLeft
-              size={16}
-              className="group-hover:-translate-x-1 transition-transform"
-            />
-            <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-[0.2em] pt-0.5">
-              Back
-            </span>
-          </button>
-          <div className="hidden sm:block h-10 w-px bg-[var(--border-color)] opacity-60" />
-          <div className="min-w-0">
-            <h1
-              className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter leading-none"
-              style={{ color: "var(--text-primary)" }}
-            >
-              Create Donation
-            </h1>
-          </div>
-        </div>
+      <div className="max-w-4xl mx-auto mb-8 sm:mb-12 px-1 sm:px-0">
+        <PageHeader
+          title="Create Donation"
+          subtitle="Contribute food items and schedule a pickup"
+        />
       </div>
 
       {needId && (
@@ -218,39 +198,37 @@ export default function CreateDonationPage() {
 
           {/* Action Bar */}
           <div
-            className="fixed bottom-0 left-0 right-0 backdrop-blur-lg border-t p-6 z-[200] shadow-[0_-10px_40px_rgba(0,0,0,0.08)]"
+            className="p-6 border rounded-3xl shadow-sm flex flex-col-reverse sm:flex-row items-center justify-end gap-4 sm:gap-6 bg-[var(--bg-primary)] border-[var(--border-color)]"
             style={{
               backgroundColor: "var(--bg-primary)",
               borderColor: "var(--border-color)",
             }}
           >
-            <div className="max-w-5xl mx-auto flex flex-col-reverse sm:flex-row items-center justify-end gap-4 sm:gap-6">
-              <ResuableButton
-                variant="ghost"
-                onClick={handleDiscard}
-                className="w-full sm:w-auto font-black text-[11px] uppercase tracking-[0.2em] hover:text-red-500 transition-colors"
-                style={{ color: "var(--text-muted)" }}
-              >
-                Discard Entry
-              </ResuableButton>
-              <ResuableButton
-                type="submit"
-                variant="dark"
-                disabled={loading}
-                className="w-full sm:min-w-[240px] h-[52px] !bg-[#16a34a] hover:!bg-[#15803d] !rounded-md shadow-lg shadow-green-500/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                startContent={
-                  loading ? (
-                    <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
-                  ) : (
-                    <CheckCircle size={20} />
-                  )
-                }
-              >
-                <span className="text-[11px] font-black uppercase tracking-widest">
-                  {loading ? "Submitting..." : "Confirm Donation"}
-                </span>
-              </ResuableButton>
-            </div>
+            <ResuableButton
+              variant="ghost"
+              onClick={handleDiscard}
+              className="w-full sm:w-auto font-black text-[11px] uppercase tracking-[0.2em] hover:text-red-500 transition-colors"
+              style={{ color: "var(--text-muted)" }}
+            >
+              Discard Entry
+            </ResuableButton>
+            <ResuableButton
+              type="submit"
+              variant="dark"
+              disabled={loading}
+              className="w-full sm:min-w-[240px] h-[52px] !bg-[#16a34a] hover:!bg-[#15803d] !rounded-2xl shadow-lg shadow-green-500/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              startContent={
+                loading ? (
+                  <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
+                ) : (
+                  <CheckCircle size={20} />
+                )
+              }
+            >
+              <span className="text-[11px] font-black uppercase tracking-widest">
+                {loading ? "Submitting..." : "Confirm Donation"}
+              </span>
+            </ResuableButton>
           </div>
         </form>
       )}

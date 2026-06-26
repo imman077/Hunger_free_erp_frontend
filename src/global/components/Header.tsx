@@ -398,6 +398,7 @@ const Header = () => {
             >
               <DropdownItem
                 key="profile-header"
+                textValue="Profile Info"
                 className="h-auto opacity-100 pointer-events-none mb-1.5 border-b border-dashed border-slate-200/60 dark:border-slate-800/60 rounded-none pb-3.5"
               >
                 <div className="flex items-center gap-3.5">
@@ -420,6 +421,7 @@ const Header = () => {
 
               <DropdownItem
                 key="view-profile"
+                textValue="View Profile"
                 startContent={<User size={16} className="opacity-70" />}
                 className="text-xs font-bold transition-all duration-200 data-[hover=true]:bg-emerald-500/10 data-[hover=true]:text-emerald-600 data-[hover=true]:translate-x-1"
                 onPress={() => navigate(getProfilePath())}
@@ -430,6 +432,7 @@ const Header = () => {
               {getPaymentsPath() && (
                 <DropdownItem
                   key="payment-methods"
+                  textValue="Payment Methods"
                   startContent={<CreditCard size={16} className="opacity-70" />}
                   className="text-xs font-bold transition-all duration-200 data-[hover=true]:bg-emerald-500/10 data-[hover=true]:text-emerald-600 data-[hover=true]:translate-x-1"
                   onPress={() => navigate(getPaymentsPath()!)}
@@ -440,6 +443,7 @@ const Header = () => {
 
               <DropdownItem
                 key="logout"
+                textValue="Sign Out"
                 className="mt-1.5 pt-3 border-t border-dashed border-slate-200/60 dark:border-slate-800/60 rounded-none text-xs font-bold transition-all duration-200 data-[hover=true]:bg-rose-500/10 data-[hover=true]:text-rose-600 data-[hover=true]:translate-x-1"
                 startContent={<LogOut size={16} className="opacity-70" />}
                 onPress={() => navigate("/auth")}

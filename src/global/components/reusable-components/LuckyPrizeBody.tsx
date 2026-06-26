@@ -31,15 +31,17 @@ const PrizeModal: React.FC<PrizeModalProps> = ({
   reaction,
   onClose,
 }) => {
+  if (!prize) return null;
+
   const isJackpot =
     prize.isJackpot ||
-    prize.label.toUpperCase() === "GRAND JACKPOT" ||
-    prize.label.toUpperCase() === "GRAND GRANT" ||
-    prize.label.toUpperCase() === "GRAND PRIZE" ||
-    prize.label.toUpperCase() === "MEGA BONUS";
+    prize.label?.toUpperCase() === "GRAND JACKPOT" ||
+    prize.label?.toUpperCase() === "GRAND GRANT" ||
+    prize.label?.toUpperCase() === "GRAND PRIZE" ||
+    prize.label?.toUpperCase() === "MEGA BONUS";
 
   const renderPrizeLabel = () => {
-    if (prize.label.toUpperCase() === "GRAND JACKPOT") {
+    if (prize.label?.toUpperCase() === "GRAND JACKPOT") {
       return (
         <h3 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-2 text-slate-800 dark:text-white">
           GRAND <span className="text-[#22c55e]">JACKPOT</span>
@@ -226,10 +228,10 @@ const Wheel: React.FC<WheelProps> = ({
 
             const isJackpot =
               prize.isJackpot ||
-              prize.label.toUpperCase() === "GRAND JACKPOT" ||
-              prize.label.toUpperCase() === "GRAND GRANT" ||
-              prize.label.toUpperCase() === "GRAND PRIZE" ||
-              prize.label.toUpperCase() === "MEGA BONUS";
+              prize.label?.toUpperCase() === "GRAND JACKPOT" ||
+              prize.label?.toUpperCase() === "GRAND GRANT" ||
+              prize.label?.toUpperCase() === "GRAND PRIZE" ||
+              prize.label?.toUpperCase() === "MEGA BONUS";
 
             const segmentColor = isJackpot
               ? "#22c55e"

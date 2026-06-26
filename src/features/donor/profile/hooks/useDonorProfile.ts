@@ -1,14 +1,20 @@
 import { useEffect, useState } from "react";
-import { useDonorStore } from "../../store/donor-store";
+import { getProfileApiOutputModel } from "../api/get_profile/get_profile_store";
 import { tiersService } from "../../dashboard/api/tiers/tiers_api";
 import type { GamificationTier } from "../../dashboard/api/tiers/tiers_output_model";
 
-export const useDonorProfile = () => {
-  const { data, isLoading: storeLoading, error } = useDonorStore();
+export const useDonorProfile = (options?: { skipTiers?: boolean }) => {
+  const skipTiers = options?.skipTiers ?? false;
+  const profileData = getProfileApiOutputModel.useSelector((s) => s.getProfileApiData?.data);
+  const isLoadingProfile = getProfileApiOutputModel.useSelector((s) => s.getProfileApiData?.loading);
+  
+  const documents = profileData?.donorProfile?.documents || [];
+
   const [tiers, setTiers] = useState<GamificationTier[]>([]);
-  const [isLoadingTiers, setIsLoadingTiers] = useState(true);
+  const [isLoadingTiers, setIsLoadingTiers] = useState(!skipTiers);
 
   useEffect(() => {
+    if (skipTiers) return;
     let active = true;
     tiersService.getGamificationTiers()
       .then((res) => {
@@ -26,16 +32,74 @@ export const useDonorProfile = () => {
     return () => {
       active = false;
     };
-  }, []);
+  }, [skipTiers]);
+
+  const parseMemberSince = (createdAt: any) => {
+    if (!createdAt) return 'N/A';
+    if (/^\d+$/.test(createdAt)) {
+      return new Date(Number(createdAt)).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    }
+    return new Date(createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  };
+
+  const bankAccounts = (profileData?.paymentMethods?.bankAccounts || []).map((b: any, index: number) => ({
+    id: b.id || `bank-${index}`,
+    bankName: b.bankName || '',
+    accountHolder: b.accountHolder || '',
+    accountNumber: b.accountNumber || '',
+    ifscCode: b.ifscCode || '',
+    isPrimary: b.isPrimary ?? false,
+    isVerified: b.isVerified ?? false,
+  }));
+
+  const upiIds = (profileData?.paymentMethods?.upiIds || []).map((u: any, index: number) => ({
+    id: u.id || `upi-${index}`,
+    vpa: u.vpa || '',
+    label: u.label || '',
+    isPrimary: u.isPrimary ?? false,
+    isVerified: u.isVerified ?? false,
+  }));
+
+  const primaryBank = bankAccounts.find((b: any) => b.isPrimary) || bankAccounts[0];
+  const primaryUpi = upiIds.find((u: any) => u.isPrimary) || upiIds[0];
+
+  const profile = {
+    businessName: profileData?.donorProfile?.businessName || '',
+    businessType: profileData?.donorProfile?.businessType || '',
+    registrationId: profileData?.donorProfile?.registrationId || '',
+    taxId: profileData?.donorProfile?.taxId || '',
+    legalName: profileData?.donorProfile?.legalName || profileData?.donorProfile?.businessName || profileData?.username || '',
+    website: profileData?.donorProfile?.website || '',
+    entityType: profileData?.donorProfile?.entityType || profileData?.donorProfile?.businessType || '',
+    name: profileData?.username || '',
+    email: profileData?.email || '',
+    phone: profileData?.phone || '',
+    alternateContact: profileData?.donorProfile?.alternateContact || '',
+    address: {
+      line1: profileData?.donorProfile?.address?.line1 || '',
+      city: profileData?.donorProfile?.address?.city || '',
+      state: profileData?.donorProfile?.address?.state || '',
+      postalCode: profileData?.donorProfile?.address?.postalCode || '',
+      country: '',
+    },
+    location: profileData?.donorProfile?.address ? `${profileData.donorProfile.address.city || ''}, ${profileData.donorProfile.address.state || ''}` : '',
+    memberSince: parseMemberSince(profileData?.createdAt),
+    verificationLevel: profileData?.donorProfile?.verificationLevel || 'Level I',
+    completion: profileData?.donorProfile?.profileCompleteness || 0,
+    bankName: primaryBank?.bankName || '',
+    accountNumber: primaryBank?.accountNumber || '',
+    upiId: primaryUpi?.vpa || '',
+    branch: primaryBank?.ifscCode || ''
+  };
 
   return {
-    profile: data.profile,
-    documents: data.documents,
-    bankAccounts: data.bankAccounts,
-    upiIds: data.upiIds,
-    currentPoints: data.currentPoints,
+    profile,
+    documents,
+    bankAccounts,
+    upiIds,
+    currentPoints: profileData?.gamification?.points || 0,
     tiers,
-    isLoading: storeLoading || isLoadingTiers,
-    error,
+    isLoading: isLoadingProfile || isLoadingTiers,
+    error: null,
   };
 };

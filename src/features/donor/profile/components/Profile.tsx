@@ -17,11 +17,9 @@ import {
   MapPin,
   Award,
   MessageSquare,
-  AlertCircle,
   Eye,
   Download,
   Edit,
-  TrendingUp,
   HelpCircle,
   Clock,
   Lock,
@@ -255,35 +253,7 @@ const DonorProfile = () => {
       </div>
 
       {/* 2. STATS ROW */}
-      <div className="max-w-7xl mx-auto w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Account Status Card */}
-        <div className="bg-white dark:bg-[#111827] border border-slate-100 dark:border-slate-800 rounded-2xl p-6 flex items-center gap-5 shadow-sm">
-          <div className="w-12 h-12 rounded-full bg-emerald-500/10 dark:bg-emerald-950/20 text-[#00b955] flex items-center justify-center shrink-0 border border-emerald-500/20">
-            <TrendingUp size={20} />
-          </div>
-          <div className="text-start space-y-1">
-            <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">ACCOUNT STATUS</p>
-            <p className="text-xl font-black text-slate-800 dark:text-slate-100 leading-none">Active</p>
-            <div className="inline-block bg-emerald-500/8 text-[#00b955] font-black text-[8px] px-2 py-0.5 rounded-full border border-emerald-500/20 tracking-wide uppercase leading-none">
-              OPERATIONAL
-            </div>
-          </div>
-        </div>
-
-        {/* Verification Card */}
-        <div className="bg-white dark:bg-[#111827] border border-slate-100 dark:border-slate-800 rounded-2xl p-6 flex items-center gap-5 shadow-sm">
-          <div className="w-12 h-12 rounded-full bg-emerald-500/10 dark:bg-emerald-950/20 text-[#00b955] flex items-center justify-center shrink-0 border border-emerald-500/20">
-            <ShieldCheck size={20} />
-          </div>
-          <div className="text-start space-y-1">
-            <p className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">VERIFICATION</p>
-            <p className="text-xl font-black text-slate-800 dark:text-slate-100 leading-none">{profile.verificationLevel || "Level III"}</p>
-            <div className="inline-block bg-emerald-500/8 text-[#00b955] font-black text-[8px] px-2 py-0.5 rounded-full border border-emerald-500/20 tracking-wide uppercase leading-none">
-              FULLY VERIFIED
-            </div>
-          </div>
-        </div>
-
+      <div className="max-w-7xl mx-auto w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
         {/* Current Tier Card */}
         <div
           onClick={() => navigate("/donor/rewards/tiers-benefits")}
@@ -400,7 +370,7 @@ const DonorProfile = () => {
             <div className="w-full flex items-center gap-1.5 p-1 rounded-xl">
               {[
                 { id: "identity", label: "Business Details" },
-                { id: "documents", label: "Verification Vault" },
+                { id: "documents", label: "Documents" },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -583,7 +553,7 @@ const DonorProfile = () => {
                   Compliance Documents
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-start">
-                  {documents.map((doc, i) => (
+                  {documents.map((doc: any, i: number) => (
                     <div
                       key={i}
                       className="group p-4 px-5 rounded-[22px] border transition-all duration-300 hover:shadow-xl hover:scale-[1.01] flex flex-col gap-3"

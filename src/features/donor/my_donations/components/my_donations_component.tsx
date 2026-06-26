@@ -32,11 +32,17 @@ import {
   XCircle,
   X,
   Trash2,
+  Filter,
+  LayoutGrid,
+  Table,
 } from "lucide-react";
 import { Modal, ModalContent } from "@heroui/react";
 import ResuableDrawer from "../../../../global/components/reusable-components/Drawer";
 import ImpactCards from "../../../../global/components/reusable-components/ImpactCards";
 import PageHeader from "../../../../global/components/reusable-components/PageHeader";
+import ReusableTable, {
+  TableChip,
+} from "../../../../global/components/reusable-components/Table";
 import { getCategoryImage } from "../../../../global/constants/donation_config";
 import { myDonationsInputModel } from "../store/my_donations_store";
 import { useDonorStore } from "../../store/donor-store";
@@ -131,6 +137,9 @@ export const MyDonationsStats = () => {
 export const MyDonationsList = () => {
   const navigate = useNavigate();
   const donationHistory = useDonorStore((state) => state.data.donationHistory);
+  const viewMode = myDonationsInputModel.useSelector(
+    (state) => state.myDonationsData.viewMode
+  );
   const statusFilter = myDonationsInputModel.useSelector(
     (state) => state.myDonationsData.statusFilter
   );
@@ -181,7 +190,7 @@ export const MyDonationsList = () => {
   return (
     <div className="w-full space-y-8">
       <div className="mb-10">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
           <div className="relative">
             <h2 className="text-[13px] font-black uppercase tracking-[0.3em] text-[#22c55e]">
               Recent Contributions
@@ -189,35 +198,59 @@ export const MyDonationsList = () => {
             <div className="absolute -bottom-2 left-0 w-8 h-[3px] bg-[#22c55e] rounded-full" />
           </div>
 
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <div className="relative group w-full md:w-auto">
-              <select
-                value={statusFilter}
-                onChange={(e) => {
-                  myDonationsInputModel.update({ statusFilter: e.target.value });
-                  refreshData();
+          <div className="flex flex-wrap items-center gap-4 w-full md:w-auto justify-start md:justify-end">
+            {/* Status Filter (Hover Dropdown with Filter Icon) */}
+            <div className="relative group/filter z-[150] w-full sm:w-auto">
+              <div
+                className="absolute right-0 top-full mt-2 w-48 shadow-xl rounded-xl opacity-0 invisible group-hover/filter:opacity-100 group-hover/filter:visible transition-all z-[160] overflow-hidden border bg-white"
+                style={{
+                  borderColor: "var(--border-color)",
                 }}
-                className="appearance-none bg-white border border-slate-200 rounded-xl px-5 py-2.5 pr-10 text-[11px] font-bold uppercase tracking-wider text-slate-600 outline-none hover:border-emerald-200 transition-all cursor-pointer w-full"
               >
-                <option>Pending</option>
-                <option>Accepted</option>
-                <option>Assigned</option>
-                <option>Delivered</option>
-                <option>Cancelled</option>
-              </select>
-              <ChevronDown
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-hover:text-emerald-500 transition-colors"
-                size={14}
-              />
+                <div className="p-2 space-y-1">
+                  {[
+                    { value: "Pending", label: "Pending" },
+                    { value: "Accepted", label: "Accepted" },
+                    { value: "Assigned", label: "Assigned" },
+                    { value: "Delivered", label: "Delivered" },
+                    { value: "Cancelled", label: "Cancelled" },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => {
+                        myDonationsInputModel.update({ statusFilter: opt.value });
+                        refreshData();
+                      }}
+                      className={`w-full text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-colors ${
+                        statusFilter === opt.value
+                          ? "bg-emerald-500/10 text-[#22c55e]"
+                          : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <button
+                className="flex items-center justify-center w-full sm:w-10 h-10 rounded-xl transition-all shadow-sm border bg-white hover:border-emerald-500 text-slate-500"
+                style={{
+                  borderColor: "var(--border-color)",
+                }}
+              >
+                <Filter size={16} />
+              </button>
             </div>
-            <div className="relative w-full md:w-auto">
+
+            {/* Sort Dropdown Button */}
+            <div className="relative w-full sm:w-auto">
               <button
                 onClick={() =>
                   myDonationsInputModel.update({
                     isSortDropdownOpen: !isSortDropdownOpen,
                   })
                 }
-                className="bg-white border border-slate-200 hover:border-emerald-500 rounded-xl px-5 py-2.5 flex items-center justify-between gap-3 text-[11px] font-bold uppercase tracking-wider text-slate-600 transition-all cursor-pointer w-full md:w-[160px] outline-none"
+                className="bg-white border border-slate-200 hover:border-emerald-500 rounded-xl px-5 py-2.5 flex items-center justify-between gap-3 text-[11px] font-bold uppercase tracking-wider text-slate-600 transition-all cursor-pointer w-full sm:w-[160px] outline-none"
               >
                 <span>{sortOrder}</span>
                 <ChevronDown
@@ -238,7 +271,7 @@ export const MyDonationsList = () => {
                       })
                     }
                   />
-                  <div className="absolute right-0 top-full mt-1.5 w-full md:w-[160px] bg-white border border-slate-200 rounded-xl shadow-[0_12px_30px_rgba(0,0,0,0.08)] overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="absolute right-0 top-full mt-1.5 w-full sm:w-[160px] bg-white border border-slate-200 rounded-xl shadow-[0_12px_30px_rgba(0,0,0,0.08)] overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                     {[
                       { label: "Newest First", value: "Newest First" },
                       { label: "Oldest First", value: "Oldest First" },
@@ -256,7 +289,7 @@ export const MyDonationsList = () => {
                           }}
                           className={`w-full px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-left transition-all ${
                             isSelected
-                              ? "bg-[#1976d2] text-white font-black"
+                              ? "bg-[#22c55e] text-white font-black"
                               : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                           }`}
                         >
@@ -268,355 +301,611 @@ export const MyDonationsList = () => {
                 </>
               )}
             </div>
+
+            {/* View Switcher */}
+            <div
+              className="flex items-center gap-1 p-1 rounded-xl shadow-sm border shrink-0 w-full sm:w-auto"
+              style={{
+                backgroundColor: "var(--bg-primary)",
+                borderColor: "var(--border-color)",
+              }}
+            >
+              {[
+                { id: "card", icon: LayoutGrid, label: "Cards" },
+                { id: "table", icon: Table, label: "Table" },
+              ].map((mode) => (
+                <button
+                  key={mode.id}
+                  onClick={() => myDonationsInputModel.update({ viewMode: mode.id as any })}
+                  className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all w-1/2 sm:w-auto ${
+                    viewMode === mode.id
+                      ? "bg-[#22c55e] text-white shadow-lg shadow-green-500/20"
+                      : "hover:bg-[var(--bg-secondary)]"
+                  }`}
+                  style={{
+                    backgroundColor:
+                      viewMode === mode.id ? undefined : "var(--bg-primary)",
+                    color: viewMode === mode.id ? "white" : "var(--text-muted)",
+                  }}
+                >
+                  <mode.icon size={14} />
+                  <span>{mode.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="relative group">
-          <AnimatePresence>
-            {canScrollLeft && (
-              <motion.button
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{
-                  opacity: 0.8,
-                  scale: [1, 1.05, 1],
-                  boxShadow: [
-                    "0 0 0 0px rgba(34, 197, 94, 0)",
-                    "0 0 0 8px rgba(34, 197, 94, 0.1)",
-                    "0 0 0 0px rgba(34, 197, 94, 0)",
-                  ],
-                }}
-                exit={{ opacity: 0, scale: 0.5 }}
-                transition={{
-                  scale: { repeat: Infinity, duration: 2, ease: "easeInOut" },
-                  opacity: { duration: 0.3 },
-                }}
-                whileTap={{ scale: 0.8 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (sliderRef.current)
-                    sliderRef.current.scrollBy({
-                      left: -420,
-                      behavior: "smooth",
-                    });
-                }}
-                className="absolute -left-4 md:-left-8 top-1/2 -translate-y-1/2 w-14 h-14 md:w-16 md:h-16 rounded-full bg-white shadow-[0_12px_40px_rgba(34,197,94,0.15)] border-2 border-emerald-100 flex items-center justify-center text-[#22c55e] z-[100] hover:text-white hover:bg-[#22c55e] transition-all cursor-pointer group/arrow active:scale-90"
-              >
-                <ChevronLeft
-                  size={32}
-                  className="transition-transform group-hover/arrow:-translate-x-1"
-                  strokeWidth={3}
-                />
-              </motion.button>
-            )}
-          </AnimatePresence>
+        {viewMode === "card" ? (
+          <div className="relative group">
+            <AnimatePresence>
+              {canScrollLeft && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{
+                    opacity: 0.8,
+                    scale: [1, 1.05, 1],
+                    boxShadow: [
+                      "0 0 0 0px rgba(34, 197, 94, 0)",
+                      "0 0 0 8px rgba(34, 197, 94, 0.1)",
+                      "0 0 0 0px rgba(34, 197, 94, 0)",
+                    ],
+                  }}
+                  exit={{ opacity: 0, scale: 0.5 }}
+                  transition={{
+                    scale: { repeat: Infinity, duration: 2, ease: "easeInOut" },
+                    opacity: { duration: 0.3 },
+                  }}
+                  whileTap={{ scale: 0.8 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (sliderRef.current)
+                      sliderRef.current.scrollBy({
+                        left: -420,
+                        behavior: "smooth",
+                      });
+                  }}
+                  className="absolute -left-4 md:-left-8 top-1/2 -translate-y-1/2 w-14 h-14 md:w-16 md:h-16 rounded-full bg-white shadow-[0_12px_40px_rgba(34,197,94,0.15)] border-2 border-emerald-100 flex items-center justify-center text-[#22c55e] z-[100] hover:text-white hover:bg-[#22c55e] transition-all cursor-pointer group/arrow active:scale-90"
+                >
+                  <ChevronLeft
+                    size={32}
+                    className="transition-transform group-hover/arrow:-translate-x-1"
+                    strokeWidth={3}
+                  />
+                </motion.button>
+              )}
+            </AnimatePresence>
 
-          <div
-            ref={sliderRef}
-            onScroll={checkScroll}
-            className="donation-history-slider flex overflow-x-auto no-scrollbar gap-6 pb-6"
-          >
-            {filtered.length > 0
-              ? filtered.map((donation: any) => (
-                  <div
-                    key={donation.id}
-                    className={`flex-shrink-0 w-full sm:w-[380px] border rounded-[2.5rem] p-4 transition-all duration-300 group/card relative shadow-sm hover:shadow-xl ${
-                      donation.status === "PENDING"
-                        ? "border-orange-100/50"
-                        : donation.status === "ACCEPTED"
-                          ? "border-blue-100/50"
-                          : donation.status === "DELIVERED"
-                            ? "border-emerald-100/50 bg-[#fcfdfc]"
-                            : donation.status === "CANCELLED"
-                              ? "border-rose-100 bg-[#fffcfc]"
-                              : "border-slate-100 hover:border-emerald-100"
-                    }`}
-                  >
-                    <div className="flex justify-between items-center mb-3 px-1">
-                      <div
-                        className={`flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                          donation.status === "PENDING"
-                            ? "bg-orange-50 text-orange-600"
-                            : donation.status === "ACCEPTED"
-                              ? "bg-blue-50 text-blue-600"
-                              : donation.status === "DELIVERED"
-                                ? "bg-emerald-50 text-emerald-700"
-                                : donation.status === "CANCELLED"
-                                  ? "bg-rose-50 text-rose-500"
-                                  : "bg-emerald-50 text-emerald-600"
-                        }`}
-                      >
-                        {donation.status === "PENDING" ? (
-                          <Clock size={12} strokeWidth={3} />
-                        ) : donation.status === "ACCEPTED" ? (
-                          <CheckCircle2 size={12} strokeWidth={3} />
-                        ) : donation.status === "DELIVERED" ? (
-                          <CheckCircle2 size={12} strokeWidth={3} />
-                        ) : donation.status === "CANCELLED" ? (
-                          <XCircle size={12} strokeWidth={3} />
-                        ) : (
-                          <User size={12} strokeWidth={3} />
-                        )}
-                        <span>{donation.status}</span>
-                      </div>
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        {donation.date}
-                      </span>
-                    </div>
-
-                    <div className="relative aspect-[16/10] rounded-[2rem] overflow-hidden mb-4 shadow-sm">
-                      <img
-                        src={
-                          donation.image || getCategoryImage(donation.category)
-                        }
-                        className={`w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-110 ${
-                          donation.status === "DELIVERED"
-                            ? "saturate-[0.8] opacity-95"
-                            : donation.status === "CANCELLED"
-                              ? "saturate-[0.4] opacity-80"
-                              : ""
-                        }`}
-                        alt={donation.foodType}
-                      />
-                      <div
-                        className={`absolute bottom-4 left-4 w-12 h-12 rounded-full bg-white shadow-xl flex items-center justify-center border border-white/50 ${
-                          donation.status === "PENDING"
-                            ? "text-orange-500"
-                            : donation.status === "ACCEPTED"
-                              ? "text-blue-600"
+            <div
+              ref={sliderRef}
+              onScroll={checkScroll}
+              className="donation-history-slider flex overflow-x-auto no-scrollbar gap-6 pb-6"
+            >
+              {filtered.length > 0
+                ? filtered.map((donation: any) => (
+                    <div
+                      key={donation.id}
+                      className={`flex-shrink-0 w-full sm:w-[380px] border rounded-[2.5rem] p-4 transition-all duration-300 group/card relative shadow-sm hover:shadow-xl ${
+                        donation.status === "PENDING"
+                          ? "border-orange-100/50"
+                          : donation.status === "ACCEPTED"
+                            ? "border-blue-100/50"
+                            : donation.status === "DELIVERED"
+                              ? "border-emerald-100/50 bg-[#fcfdfc]"
                               : donation.status === "CANCELLED"
-                                ? "text-rose-500 border-rose-100"
-                                : "text-[#22c55e]"
-                        }`}
-                      >
-                        {donation.status === "PENDING" ? (
-                          <Hourglass size={20} strokeWidth={2.5} />
-                        ) : donation.status === "ACCEPTED" ? (
-                          <ShieldCheck size={20} strokeWidth={2.5} />
-                        ) : donation.status === "DELIVERED" ? (
-                          <CheckCircle2 size={20} strokeWidth={2.5} />
-                        ) : donation.status === "CANCELLED" ? (
-                          <XCircle size={20} strokeWidth={2.5} />
-                        ) : (
-                          <ShieldCheck size={20} strokeWidth={2.5} />
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="px-1 space-y-4 mb-4">
-                      <div className="space-y-1">
-                        <h3
-                          className={`text-[24px] font-black tracking-tight leading-none ${
-                            donation.status === "DELIVERED"
-                              ? "text-slate-700"
-                              : "text-slate-800"
+                                ? "border-rose-100 bg-[#fffcfc]"
+                                : "border-slate-100 hover:border-emerald-100"
+                      }`}
+                    >
+                      <div className="flex justify-between items-center mb-3 px-1">
+                        <div
+                          className={`flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                            donation.status === "PENDING"
+                              ? "bg-orange-50 text-orange-600"
+                              : donation.status === "ACCEPTED"
+                                ? "bg-blue-50 text-blue-600"
+                                : donation.status === "DELIVERED"
+                                  ? "bg-emerald-50 text-emerald-700"
+                                  : donation.status === "CANCELLED"
+                                    ? "bg-rose-50 text-rose-500"
+                                    : "bg-emerald-50 text-emerald-600"
                           }`}
                         >
-                          {donation.foodType}
-                        </h3>
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[8px] font-black uppercase tracking-widest">
-                            {donation.category}
-                          </span>
+                          {donation.status === "PENDING" ? (
+                            <Clock size={12} strokeWidth={3} />
+                          ) : donation.status === "ACCEPTED" ? (
+                            <CheckCircle2 size={12} strokeWidth={3} />
+                          ) : donation.status === "DELIVERED" ? (
+                            <CheckCircle2 size={12} strokeWidth={3} />
+                          ) : donation.status === "CANCELLED" ? (
+                            <XCircle size={12} strokeWidth={3} />
+                          ) : (
+                            <User size={12} strokeWidth={3} />
+                          )}
+                          <span>{donation.status}</span>
                         </div>
-                        <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                          {donation.quantity} • {donation.dietaryType} •{" "}
-                          {donation.preparationType}
-                        </p>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          {donation.date}
+                        </span>
                       </div>
 
-                      <div className="space-y-3.5">
-                        <div className="flex items-start gap-4">
-                          <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                              donation.status === "PENDING"
-                                ? "bg-orange-50 text-orange-500"
-                                : donation.status === "ACCEPTED"
-                                  ? "bg-blue-50 text-blue-500"
-                                  : donation.status === "CANCELLED"
-                                    ? "bg-orange-50 text-orange-500"
-                                    : "bg-emerald-50 text-emerald-600"
+                      <div className="relative aspect-[16/10] rounded-[2rem] overflow-hidden mb-4 shadow-sm">
+                        <img
+                          src={
+                            donation.image || getCategoryImage(donation.category)
+                          }
+                          className={`w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-110 ${
+                            donation.status === "DELIVERED"
+                              ? "saturate-[0.8] opacity-95"
+                              : donation.status === "CANCELLED"
+                                ? "saturate-[0.4] opacity-80"
+                                : ""
+                          }`}
+                          alt={donation.foodType}
+                        />
+                        <div
+                          className={`absolute bottom-4 left-4 w-12 h-12 rounded-full bg-white shadow-xl flex items-center justify-center border border-white/50 ${
+                            donation.status === "PENDING"
+                              ? "text-orange-500"
+                              : donation.status === "ACCEPTED"
+                                ? "text-blue-600"
+                                : donation.status === "CANCELLED"
+                                  ? "text-rose-500 border-rose-100"
+                                  : "text-[#22c55e]"
+                          }`}
+                        >
+                          {donation.status === "PENDING" ? (
+                            <Hourglass size={20} strokeWidth={2.5} />
+                          ) : donation.status === "ACCEPTED" ? (
+                            <ShieldCheck size={20} strokeWidth={2.5} />
+                          ) : donation.status === "DELIVERED" ? (
+                            <CheckCircle2 size={20} strokeWidth={2.5} />
+                          ) : donation.status === "CANCELLED" ? (
+                            <XCircle size={20} strokeWidth={2.5} />
+                          ) : (
+                            <ShieldCheck size={20} strokeWidth={2.5} />
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="px-1 space-y-4 mb-4">
+                        <div className="space-y-1">
+                          <h3
+                            className={`text-[24px] font-black tracking-tight leading-none ${
+                              donation.status === "DELIVERED"
+                                ? "text-slate-700"
+                                : "text-slate-800"
                             }`}
                           >
-                            <MapPin size={16} strokeWidth={2.5} />
-                          </div>
-                          <div className="flex flex-col text-start">
-                            <span className="text-[14px] font-bold text-slate-700">
-                              {donation.status === "PENDING"
-                                ? "Matching nearby NGOs..."
-                                : donation.status === "CANCELLED"
-                                  ? "No match found"
-                                  : donation.ngo}
-                            </span>
-                            <span className="text-[10px] font-bold text-slate-400">
-                              {donation.status === "PENDING"
-                                ? "Searching for the best match"
-                                : donation.status === "ACCEPTED"
-                                  ? "NGO has accepted your donation"
-                                  : donation.status === "CANCELLED"
-                                    ? "The donation has been cancelled and is no longer active."
-                                    : donation.status === "DELIVERED"
-                                      ? "Donation received successfully"
-                                      : "Pickup in progress"}
+                            {donation.foodType}
+                          </h3>
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[8px] font-black uppercase tracking-widest">
+                              {donation.category}
                             </span>
                           </div>
+                          <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                            {donation.quantity} • {donation.dietaryType} •{" "}
+                            {donation.preparationType}
+                          </p>
                         </div>
 
-                        <div className="flex items-start gap-4">
-                          <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                              donation.status === "PENDING"
-                                ? "bg-orange-50 text-orange-500"
-                                : donation.status === "ACCEPTED"
-                                  ? "bg-blue-50 text-blue-500"
-                                  : donation.status === "CANCELLED"
-                                    ? "bg-orange-50 text-orange-500"
-                                    : "bg-emerald-50 text-emerald-600"
-                            }`}
-                          >
-                            <Clock size={16} strokeWidth={2.5} />
-                          </div>
-                          <div className="flex flex-col text-start">
-                            <span
-                              className={`text-[14px] font-bold ${
-                                donation.status === "CANCELLED"
-                                  ? "line-through text-slate-400 font-medium"
-                                  : "text-slate-700"
+                        <div className="space-y-3.5">
+                          <div className="flex items-start gap-4">
+                            <div
+                              className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                                donation.status === "PENDING"
+                                  ? "bg-orange-50 text-orange-500"
+                                  : donation.status === "ACCEPTED"
+                                    ? "bg-blue-50 text-blue-500"
+                                    : donation.status === "CANCELLED"
+                                      ? "bg-orange-50 text-orange-500"
+                                      : "bg-emerald-50 text-emerald-600"
                               }`}
                             >
-                              {donation.date},{" "}
-                              {donation.status === "DELIVERED"
-                                ? "6:25 PM"
-                                : "6:00 PM - 7:00 PM"}
-                            </span>
-                          </div>
-                        </div>
-
-                        {donation.status === "DELIVERED" && (
-                          <div className="flex items-start gap-4">
-                            <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                              <User size={16} strokeWidth={2.5} />
+                              <MapPin size={16} strokeWidth={2.5} />
                             </div>
                             <div className="flex flex-col text-start">
-                              <span className="text-[10px] font-bold text-slate-400">
-                                Received by
-                              </span>
                               <span className="text-[14px] font-bold text-slate-700">
-                                {donation.ngo} Team
+                                {donation.status === "PENDING"
+                                  ? "Matching nearby NGOs..."
+                                  : donation.status === "CANCELLED"
+                                    ? "No match found"
+                                    : donation.ngo}
+                              </span>
+                              <span className="text-[10px] font-bold text-slate-400">
+                                {donation.status === "PENDING"
+                                  ? "Searching for the best match"
+                                  : donation.status === "ACCEPTED"
+                                    ? "NGO has accepted your donation"
+                                    : donation.status === "CANCELLED"
+                                      ? "The donation has been cancelled and is no longer active."
+                                      : donation.status === "DELIVERED"
+                                        ? "Donation received successfully"
+                                        : "Pickup in progress"}
                               </span>
                             </div>
                           </div>
-                        )}
 
-                        {donation.status === "CANCELLED" && (
-                          <div className="p-3 bg-emerald-50/30 border border-emerald-100/30 rounded-[1.5rem] flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#22c55e] shadow-sm shrink-0 border border-emerald-50">
-                              <Leaf size={16} strokeWidth={2.5} />
+                          <div className="flex items-start gap-4">
+                            <div
+                              className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                                donation.status === "PENDING"
+                                  ? "bg-orange-50 text-orange-500"
+                                  : donation.status === "ACCEPTED"
+                                    ? "bg-blue-50 text-blue-500"
+                                    : donation.status === "CANCELLED"
+                                      ? "bg-orange-50 text-orange-500"
+                                      : "bg-emerald-50 text-emerald-600"
+                              }`}
+                            >
+                              <Clock size={16} strokeWidth={2.5} />
                             </div>
                             <div className="flex flex-col text-start">
-                              <span className="text-[11px] font-black text-emerald-800">
-                                Thank you for thinking to share!
-                              </span>
-                              <span className="text-[9px] font-bold text-slate-400 leading-tight">
-                                Your intent to reduce food waste makes a big
-                                difference.
+                              <span
+                                className={`text-[14px] font-bold ${
+                                  donation.status === "CANCELLED"
+                                    ? "line-through text-slate-400 font-medium"
+                                    : "text-slate-700"
+                                }`}
+                              >
+                                {donation.date},{" "}
+                                {donation.status === "DELIVERED"
+                                  ? "6:25 PM"
+                                  : "6:00 PM - 7:00 PM"}
                               </span>
                             </div>
                           </div>
-                        )}
-                      </div>
 
-                      {donation.status === "PENDING" ? (
-                        <div className="p-3 bg-orange-50/50 border border-orange-100/50 rounded-2xl flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-orange-500 shadow-sm shrink-0">
-                            <Search size={16} />
-                          </div>
-                          <div className="flex flex-col text-start">
-                            <span className="text-[11px] font-black text-orange-600">
-                              We are finding the best NGO
-                            </span>
-                            <span className="text-[9px] font-bold text-slate-400">
-                              Estimated acceptance in 10-15 min
-                            </span>
-                          </div>
+                          {donation.status === "DELIVERED" && (
+                            <div className="flex items-start gap-4">
+                              <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                                <User size={16} strokeWidth={2.5} />
+                              </div>
+                              <div className="flex flex-col text-start">
+                                <span className="text-[10px] font-bold text-slate-400">
+                                  Received by
+                                </span>
+                                <span className="text-[14px] font-bold text-slate-700">
+                                  {donation.ngo} Team
+                                </span>
+                              </div>
+                            </div>
+                          )}
+
+                          {donation.status === "CANCELLED" && (
+                            <div className="p-3 bg-emerald-50/30 border border-emerald-100/30 rounded-[1.5rem] flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#22c55e] shadow-sm shrink-0 border border-emerald-50">
+                                <Leaf size={16} strokeWidth={2.5} />
+                              </div>
+                              <div className="flex flex-col text-start">
+                                <span className="text-[11px] font-black text-emerald-800">
+                                  Thank you for thinking to share!
+                                </span>
+                                <span className="text-[9px] font-bold text-slate-400 leading-tight">
+                                  Your intent to reduce food waste makes a big
+                                  difference.
+                                </span>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      ) : donation.status === "CANCELLED" ? (
-                        <div className="p-3 bg-rose-50/50 border border-rose-100/50 rounded-2xl flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-rose-500 shadow-sm shrink-0 border border-rose-100/50">
-                            <XCircle size={16} />
+
+                        {donation.status === "PENDING" ? (
+                          <div className="p-3 bg-orange-50/50 border border-orange-100/50 rounded-2xl flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-orange-500 shadow-sm shrink-0">
+                              <Search size={16} />
+                            </div>
+                            <div className="flex flex-col text-start">
+                              <span className="text-[11px] font-black text-orange-600">
+                                We are finding the best NGO
+                              </span>
+                              <span className="text-[9px] font-bold text-slate-400">
+                                Estimated acceptance in 10-15 min
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex flex-col text-start">
-                            <span className="text-[11px] font-black text-rose-600">
-                              Donation Cancelled
-                            </span>
-                            <span className="text-[9px] font-bold text-slate-400">
-                              This donation has been cancelled.
-                            </span>
+                        ) : donation.status === "CANCELLED" ? (
+                          <div className="p-3 bg-rose-50/50 border border-rose-100/50 rounded-2xl flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-rose-500 shadow-sm shrink-0 border border-rose-100/50">
+                              <XCircle size={16} />
+                            </div>
+                            <div className="flex flex-col text-start">
+                              <span className="text-[11px] font-black text-rose-600">
+                                Donation Cancelled
+                              </span>
+                              <span className="text-[9px] font-bold text-slate-400">
+                                This donation has been cancelled.
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      ) : donation.status === "ACCEPTED" ? (
-                        <div className="p-3 bg-blue-50/50 border border-blue-100/50 rounded-2xl flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-blue-600 shadow-sm shrink-0">
-                            <Truck size={16} />
-                          </div>
-                          <div className="flex flex-col text-start">
-                            <span className="text-[11px] font-black text-blue-600">
-                              Preparing for pickup
-                            </span>
-                            <span className="text-[9px] font-bold text-slate-400">
-                              NGO is arranging a volunteer
-                            </span>
-                          </div>
-                        </div>
-                      ) : donation.status === "DELIVERED" ? (
-                        <div className="p-3 bg-emerald-50/50 border border-emerald-100/50 rounded-2xl flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-emerald-600 shadow-sm shrink-0">
-                            <Heart size={16} fill="currentColor" />
-                          </div>
-                          <div className="flex flex-col text-start">
-                            <span className="text-[11px] font-black text-emerald-600">
-                              Thank you!
-                            </span>
-                            <span className="text-[9px] font-bold text-slate-400">
-                              Your donation will feed many in need 🎉
-                            </span>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="p-3 bg-emerald-50/50 border border-emerald-100/50 rounded-2xl flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-emerald-600 shadow-sm shrink-0">
+                        ) : donation.status === "ACCEPTED" ? (
+                          <div className="p-3 bg-blue-50/50 border border-blue-100/50 rounded-2xl flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-blue-600 shadow-sm shrink-0">
                               <Truck size={16} />
                             </div>
                             <div className="flex flex-col text-start">
-                              <span className="text-[11px] font-black text-emerald-600">
-                                Volunteer on the way
+                              <span className="text-[11px] font-black text-blue-600">
+                                Preparing for pickup
                               </span>
                               <span className="text-[9px] font-bold text-slate-400">
-                                ETA: 20 mins • 2.4 km away
+                                NGO is arranging a volunteer
                               </span>
                             </div>
                           </div>
-                          <div className="flex items-center gap-1.5 px-2 py-1 bg-white rounded-full shadow-sm border border-emerald-100">
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                            <span className="text-[8px] font-black uppercase text-emerald-600 tracking-tighter">
-                              Live
-                            </span>
+                        ) : donation.status === "DELIVERED" ? (
+                          <div className="p-3 bg-emerald-50/50 border border-emerald-100/50 rounded-2xl flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-emerald-600 shadow-sm shrink-0">
+                              <Heart size={16} fill="currentColor" />
+                            </div>
+                            <div className="flex flex-col text-start">
+                              <span className="text-[11px] font-black text-emerald-600">
+                                Thank you!
+                              </span>
+                              <span className="text-[9px] font-bold text-slate-400">
+                                Your donation will feed many in need 🎉
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
+                        ) : (
+                          <div className="p-3 bg-emerald-50/50 border border-emerald-100/50 rounded-2xl flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-emerald-600 shadow-sm shrink-0">
+                                <Truck size={16} />
+                              </div>
+                              <div className="flex flex-col text-start">
+                                <span className="text-[11px] font-black text-emerald-600">
+                                  Volunteer on the way
+                                </span>
+                                <span className="text-[9px] font-bold text-slate-400">
+                                  ETA: 20 mins • 2.4 km away
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5 px-2 py-1 bg-white rounded-full shadow-sm border border-emerald-100">
+                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                              <span className="text-[8px] font-black uppercase text-emerald-600 tracking-tighter">
+                                Live
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
 
-                    <div className="pt-4 border-t border-slate-100/50 space-y-4">
-                      <div className="flex items-center gap-2.5">
+                      <div className="pt-4 border-t border-slate-100/50 space-y-4">
+                        <div className="flex items-center gap-2.5">
+                          <button
+                            onClick={() => handleDetailsClick(donation)}
+                            className="flex-1 flex items-center justify-center gap-2 px-3 py-3 rounded-2xl bg-slate-55 text-slate-500 border border-slate-200/50 hover:bg-slate-100 transition-all text-[10px] font-black uppercase tracking-wider whitespace-nowrap"
+                          >
+                            <Info size={14} />
+                            <span>View Details</span>
+                          </button>
+
+                          {donation.status === "DELIVERED" ? (
+                            <button
+                              onClick={() => {
+                                myDonationsInputModel.update({
+                                  receiptDonation: donation,
+                                  isReceiptModalOpen: true,
+                                });
+                              }}
+                              className="flex-1 flex items-center justify-center gap-2 px-3 py-3 rounded-2xl bg-white border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 transition-all text-[10px] font-black uppercase tracking-wider whitespace-nowrap"
+                            >
+                              <Download size={14} />
+                              <span>Receipt</span>
+                            </button>
+                          ) : donation.status === "CANCELLED" ? (
+                            <>
+                              <button
+                                onClick={() => {
+                                  myDonationsInputModel.update({
+                                    deletingDonationId: String(donation.id),
+                                    isDeleteModalOpen: true,
+                                  });
+                                }}
+                                className="flex-[0.35] flex items-center justify-center gap-2 px-3 py-3 rounded-2xl bg-red-50 text-red-500 border border-red-200/50 hover:bg-red-100 transition-all text-[10px] font-black uppercase tracking-wider"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  myDonationsInputModel.update({
+                                    redonateDonation: donation,
+                                    isRedonateModalOpen: true,
+                                  });
+                                }}
+                                className="flex-[1.2] flex items-center justify-center gap-2 px-3 py-3 rounded-2xl font-black uppercase tracking-wider text-[10px] bg-[#ff6f00] hover:bg-[#e65100] transition-all active:scale-95 shadow-md shadow-orange-500/20 text-white whitespace-nowrap"
+                              >
+                                <RotateCcw size={14} className="stroke-[2.5]" />
+                                <span>Redonate</span>
+                              </button>
+                            </>
+                          ) : donation.status === "ASSIGNED" || donation.status === "PICKED_UP" ? (
+                            <button
+                              onClick={() => {
+                                handleLiveTrackClick(donation);
+                              }}
+                              className="flex-[1.2] flex items-center justify-center gap-2 px-3 py-3 rounded-2xl font-black uppercase tracking-wider text-[10px] transition-all active:scale-95 shadow-md whitespace-nowrap text-white bg-[#2e7d32] hover:bg-[#1b5e20]"
+                            >
+                              Live Track
+                            </button>
+                          ) : donation.status === "PENDING" ? (
+                            <button
+                              onClick={() =>
+                                handleCancelClick(
+                                  String(donation.id),
+                                  donation.status
+                                )
+                              }
+                              disabled={cancellingId === String(donation.id)}
+                              className="flex-[1.2] flex items-center justify-center gap-2 px-3 py-3 rounded-2xl font-black uppercase tracking-wider text-[10px] transition-all active:scale-95 shadow-md whitespace-nowrap text-white bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300"
+                            >
+                              {cancellingId === String(donation.id) ? (
+                                <div className="animate-spin h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full" />
+                              ) : (
+                                "Cancel Donation"
+                              )}
+                            </button>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                : null}
+            </div>
+
+            <AnimatePresence>
+              {canScrollRight && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.5 }}
+                  animate={{
+                    opacity: 0.8,
+                    scale: [1, 1.05, 1],
+                    boxShadow: [
+                      "0 0 0 0px rgba(34, 197, 94, 0)",
+                      "0 0 0 8px rgba(34, 197, 94, 0.1)",
+                      "0 0 0 0px rgba(34, 197, 94, 0)",
+                    ],
+                  }}
+                  exit={{ opacity: 0, scale: 0.5 }}
+                  transition={{
+                    scale: { repeat: Infinity, duration: 2, ease: "easeInOut" },
+                    opacity: { duration: 0.3 },
+                  }}
+                  whileTap={{ scale: 0.8 }}
+                  onClick={(e: React.MouseEvent) => {
+                    e.stopPropagation();
+                    if (sliderRef.current)
+                      sliderRef.current.scrollBy({
+                        left: 420,
+                        behavior: "smooth",
+                      });
+                  }}
+                  className="absolute -right-4 md:-right-8 top-1/2 -translate-y-1/2 w-14 h-14 md:w-16 md:h-16 rounded-full bg-white shadow-[0_12px_40px_rgba(34,197,94,0.15)] border-2 border-emerald-100 flex items-center justify-center text-[#22c55e] z-[100] hover:text-white hover:bg-[#22c55e] transition-all cursor-pointer group/arrow active:scale-90"
+                >
+                  <ChevronRight
+                    size={32}
+                    className="transition-transform group-hover/arrow:translate-x-1"
+                    strokeWidth={3}
+                  />
+                </motion.button>
+              )}
+            </AnimatePresence>
+          </div>
+        ) : (
+          <div
+            className="border rounded-xl shadow-sm p-2 overflow-hidden bg-white"
+            style={{
+              borderColor: "var(--border-color)",
+            }}
+          >
+            <ReusableTable
+              variant="compact"
+              data={filtered}
+              columns={[
+                { name: "ID", uid: "id", sortable: true },
+                { name: "Item", uid: "foodType", align: "start" },
+                { name: "Quantity", uid: "quantity" },
+                { name: "Target NGO", uid: "ngo" },
+                { name: "Scheduled Date", uid: "date" },
+                { name: "Status", uid: "status" },
+                { name: "Actions", uid: "actions", align: "end" },
+              ]}
+              renderCell={(donation: any, columnKey: React.Key) => {
+                switch (columnKey) {
+                  case "id":
+                    return (
+                      <div className="py-1">
+                        <span
+                          className="text-[10px] font-black uppercase tracking-widest tabular-nums border px-2 py-1 rounded-sm bg-slate-50 border-slate-200 text-slate-500"
+                        >
+                          #HF-{donation.id}
+                        </span>
+                      </div>
+                    );
+                  case "foodType":
+                    return (
+                      <div className="py-1">
+                        <TableChip
+                          text={donation.foodType}
+                          icon={
+                            <img
+                              src={donation.image || getCategoryImage(donation.category)}
+                              alt={donation.foodType}
+                              className="w-full h-full object-cover rounded-sm"
+                            />
+                          }
+                          iconClassName="shadow-sm border w-10 h-10 overflow-hidden"
+                          maxWidth="max-w-[280px]"
+                        />
+                      </div>
+                    );
+                  case "quantity":
+                    return (
+                      <div className="py-1 text-start">
+                        <span className="text-[11px] font-black uppercase tracking-widest text-slate-500">
+                          {donation.quantity}
+                        </span>
+                        <span className="text-[9px] text-slate-400 block">
+                          {donation.dietaryType} • {donation.preparationType}
+                        </span>
+                      </div>
+                    );
+                  case "ngo":
+                    return (
+                      <div className="py-1 text-start">
+                        <span className="text-[12px] font-bold text-slate-700">
+                          {donation.status === "PENDING"
+                            ? "Matching nearby NGOs..."
+                            : donation.status === "CANCELLED"
+                              ? "No match found"
+                              : donation.ngo}
+                        </span>
+                      </div>
+                    );
+                  case "date":
+                    return (
+                      <div className="py-1 text-start">
+                        <span className="text-[11px] font-bold text-slate-600 block">
+                          {donation.date}
+                        </span>
+                        <span className="text-[9px] text-slate-400">
+                          {donation.status === "DELIVERED" ? "6:25 PM" : "6:00 PM - 7:00 PM"}
+                        </span>
+                      </div>
+                    );
+                  case "status":
+                    return (
+                      <div className="py-1">
+                        <span
+                          className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 w-fit border ${
+                            donation.status === "PENDING"
+                              ? "bg-orange-50 border-orange-200 text-orange-600"
+                              : donation.status === "ACCEPTED"
+                                ? "bg-blue-50 border-blue-200 text-blue-600"
+                                : donation.status === "DELIVERED"
+                                  ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                                  : donation.status === "CANCELLED"
+                                    ? "bg-rose-50 border-rose-200 text-rose-500"
+                                    : "bg-emerald-50 border-emerald-200 text-emerald-600"
+                          }`}
+                        >
+                          {donation.status}
+                        </span>
+                      </div>
+                    );
+                  case "actions":
+                    return (
+                      <div className="flex items-center gap-2 justify-end">
                         <button
                           onClick={() => handleDetailsClick(donation)}
-                          className="flex-1 flex items-center justify-center gap-2 px-3 py-3 rounded-2xl bg-slate-55 text-slate-500 border border-slate-200/50 hover:bg-slate-100 transition-all text-[10px] font-black uppercase tracking-wider whitespace-nowrap"
+                          className="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 transition-all text-slate-500"
+                          title="View Details"
                         >
                           <Info size={14} />
-                          <span>View Details</span>
                         </button>
-
-                        {donation.status === "DELIVERED" ? (
+                        {donation.status === "DELIVERED" && (
                           <button
                             onClick={() => {
                               myDonationsInputModel.update({
@@ -624,12 +913,22 @@ export const MyDonationsList = () => {
                                 isReceiptModalOpen: true,
                               });
                             }}
-                            className="flex-1 flex items-center justify-center gap-2 px-3 py-3 rounded-2xl bg-white border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 transition-all text-[10px] font-black uppercase tracking-wider whitespace-nowrap"
+                            className="p-2 rounded-xl border border-emerald-500 bg-white text-emerald-600 hover:bg-emerald-50 transition-all"
+                            title="Receipt"
                           >
                             <Download size={14} />
-                            <span>Receipt</span>
                           </button>
-                        ) : donation.status === "CANCELLED" ? (
+                        )}
+                        {(donation.status === "ASSIGNED" || donation.status === "PICKED_UP") && (
+                          <button
+                            onClick={() => handleLiveTrackClick(donation)}
+                            className="p-2 rounded-xl border border-emerald-500 bg-[#22c55e] text-white hover:bg-emerald-600 transition-all"
+                            title="Live Track"
+                          >
+                            <Truck size={14} />
+                          </button>
+                        )}
+                        {donation.status === "CANCELLED" && (
                           <>
                             <button
                               onClick={() => {
@@ -638,7 +937,8 @@ export const MyDonationsList = () => {
                                   isDeleteModalOpen: true,
                                 });
                               }}
-                              className="flex-[0.35] flex items-center justify-center gap-2 px-3 py-3 rounded-2xl bg-red-50 text-red-500 border border-red-200/50 hover:bg-red-100 transition-all text-[10px] font-black uppercase tracking-wider"
+                              className="p-2 rounded-xl border border-red-200 bg-red-50 text-red-500 hover:bg-red-100 transition-all"
+                              title="Delete"
                             >
                               <Trash2 size={14} />
                             </button>
@@ -649,22 +949,14 @@ export const MyDonationsList = () => {
                                   isRedonateModalOpen: true,
                                 });
                               }}
-                              className="flex-[1.2] flex items-center justify-center gap-2 px-3 py-3 rounded-2xl font-black uppercase tracking-wider text-[10px] bg-[#ff6f00] hover:bg-[#e65100] transition-all active:scale-95 shadow-md shadow-orange-500/20 text-white whitespace-nowrap"
+                              className="p-2 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-all"
+                              title="Redonate"
                             >
-                              <RotateCcw size={14} className="stroke-[2.5]" />
-                              <span>Redonate</span>
+                              <RotateCcw size={14} />
                             </button>
                           </>
-                        ) : donation.status === "ASSIGNED" || donation.status === "PICKED_UP" ? (
-                          <button
-                            onClick={() => {
-                              handleLiveTrackClick(donation);
-                            }}
-                            className="flex-[1.2] flex items-center justify-center gap-2 px-3 py-3 rounded-2xl font-black uppercase tracking-wider text-[10px] transition-all active:scale-95 shadow-md whitespace-nowrap text-white bg-[#2e7d32] hover:bg-[#1b5e20]"
-                          >
-                            Live Track
-                          </button>
-                        ) : donation.status === "PENDING" ? (
+                        )}
+                        {donation.status !== "DELIVERED" && donation.status !== "CANCELLED" && donation.status !== "ACCEPTED" && donation.status !== "ASSIGNED" && donation.status !== "PICKED_UP" && (
                           <button
                             onClick={() =>
                               handleCancelClick(
@@ -673,60 +965,25 @@ export const MyDonationsList = () => {
                               )
                             }
                             disabled={cancellingId === String(donation.id)}
-                            className="flex-[1.2] flex items-center justify-center gap-2 px-3 py-3 rounded-2xl font-black uppercase tracking-wider text-[10px] transition-all active:scale-95 shadow-md whitespace-nowrap text-white bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300"
+                            className="p-2 rounded-xl border border-rose-200 bg-rose-50 text-rose-500 hover:bg-rose-100 transition-all disabled:opacity-50"
+                            title="Cancel Donation"
                           >
                             {cancellingId === String(donation.id) ? (
-                              <div className="animate-spin h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full" />
+                              <div className="animate-spin h-3.5 w-3.5 border-2 border-rose-500 border-t-transparent rounded-full" />
                             ) : (
-                              "Cancel Donation"
+                              <X size={14} />
                             )}
                           </button>
-                        ) : null}
+                        )}
                       </div>
-                    </div>
-                  </div>
-                ))
-              : null}
+                    );
+                  default:
+                    return null;
+                }
+              }}
+            />
           </div>
-
-          <AnimatePresence>
-            {canScrollRight && (
-              <motion.button
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{
-                  opacity: 0.8,
-                  scale: [1, 1.05, 1],
-                  boxShadow: [
-                    "0 0 0 0px rgba(34, 197, 94, 0)",
-                    "0 0 0 8px rgba(34, 197, 94, 0.1)",
-                    "0 0 0 0px rgba(34, 197, 94, 0)",
-                  ],
-                }}
-                exit={{ opacity: 0, scale: 0.5 }}
-                transition={{
-                  scale: { repeat: Infinity, duration: 2, ease: "easeInOut" },
-                  opacity: { duration: 0.3 },
-                }}
-                whileTap={{ scale: 0.8 }}
-                onClick={(e: React.MouseEvent) => {
-                  e.stopPropagation();
-                  if (sliderRef.current)
-                    sliderRef.current.scrollBy({
-                      left: 420,
-                      behavior: "smooth",
-                    });
-                }}
-                className="absolute -right-4 md:-right-8 top-1/2 -translate-y-1/2 w-14 h-14 md:w-16 md:h-16 rounded-full bg-white shadow-[0_12px_40px_rgba(34,197,94,0.15)] border-2 border-emerald-100 flex items-center justify-center text-[#22c55e] z-[100] hover:text-white hover:bg-[#22c55e] transition-all cursor-pointer group/arrow active:scale-90"
-              >
-                <ChevronRight
-                  size={32}
-                  className="transition-transform group-hover/arrow:translate-x-1"
-                  strokeWidth={3}
-                />
-              </motion.button>
-            )}
-          </AnimatePresence>
-        </div>
+        )}
       </div>
 
       {donationHistory.length === 0 && (
