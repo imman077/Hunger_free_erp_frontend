@@ -143,7 +143,7 @@ const DonorProfile = () => {
     },
     {
       label: "Verification",
-      val: "Level III",
+      val: profile.verificationLevel || "Level I",
       trend: "Fully Verified",
       color: "bg-emerald-500",
     },
@@ -155,9 +155,9 @@ const DonorProfile = () => {
     },
     {
       label: "Profile Finish",
-      val: "85%",
-      trend: "Upload Pending",
-      color: "bg-[#94a3b8]",
+      val: `${profile.completion || 80}%`,
+      trend: profile.completion === 100 ? "Complete" : "Upload Pending",
+      color: profile.completion === 100 ? "bg-emerald-500" : "bg-[#94a3b8]",
     },
   ];
 
@@ -361,7 +361,7 @@ const DonorProfile = () => {
                       className="text-sm font-bold tracking-tight"
                       style={{ color: "var(--text-primary)" }}
                     >
-                      +91 8374653321
+                      {profile.alternateContact || "N/A"}
                     </span>
                   </div>
                 </div>
@@ -391,11 +391,18 @@ const DonorProfile = () => {
                       className="text-[13px] font-bold leading-relaxed tracking-tight"
                       style={{ color: "var(--text-secondary)" }}
                     >
-                      123 Grand Street, Central District,
-                      <br />
-                      Chennai, Tamil Nadu, 600001
-                      <br />
-                      India
+                      {profile.address && (profile.address.line1 || profile.address.city || profile.address.state) ? (
+                        <>
+                          {profile.address.line1 && <>{profile.address.line1}<br /></>}
+                          {profile.address.city && <>{profile.address.city}</>}
+                          {profile.address.state && <>{profile.address.city ? ", " : ""}{profile.address.state}</>}
+                          {(profile.address.city || profile.address.state) && <br />}
+                          {profile.address.postalCode && <>{profile.address.postalCode}<br /></>}
+                          {profile.address.country || "India"}
+                        </>
+                      ) : (
+                        profile.location || "N/A"
+                      )}
                     </p>
                   </div>
                 </div>
@@ -462,14 +469,14 @@ const DonorProfile = () => {
                       {[
                         {
                           label: "Legal Name",
-                          val: `${profile.businessName} Private Limited`,
+                          val: profile.legalName || `${profile.businessName} Private Limited`,
                           icon: <Building2 size={14} />,
                           span: true,
                           isVerified: true,
                         },
                         {
                           label: "Website",
-                          val: "www.grandregal.com",
+                          val: profile.website || "N/A",
                           icon: <Globe size={14} />,
                           link: true,
                         },
@@ -480,7 +487,7 @@ const DonorProfile = () => {
                         },
                         {
                           label: "Entity Type",
-                          val: "Premium Corporate Donor",
+                          val: profile.entityType || "Premium Corporate Donor",
                           icon: <Award size={14} />,
                         },
                         {
@@ -578,13 +585,13 @@ const DonorProfile = () => {
                         {[
                           {
                             label: "Bank Account",
-                            val: `${profile.bankName} (***8890)`,
+                            val: profile.bankName ? `${profile.bankName} (${profile.accountNumber || ""})` : "Not configured",
                             icon: <Building2 size={14} />,
                             isSecure: true,
                           },
                           {
                             label: "Primary UPI",
-                            val: profile.upiId,
+                            val: profile.upiId || "Not configured",
                             icon: <Wallet size={14} />,
                             isSecure: true,
                           },

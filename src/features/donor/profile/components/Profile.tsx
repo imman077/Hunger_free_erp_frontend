@@ -286,7 +286,7 @@ const DonorProfile = () => {
 
         {/* Current Tier Card */}
         <div
-          onClick={() => navigate("/donor/rewards/benefits")}
+          onClick={() => navigate("/donor/rewards/tiers-benefits")}
           className="bg-white dark:bg-[#111827] border border-slate-100 dark:border-slate-800 rounded-2xl p-6 flex items-center gap-5 shadow-sm cursor-pointer hover:shadow-md transition-all duration-200"
         >
           <div className="w-12 h-12 rounded-full bg-emerald-500/10 dark:bg-emerald-950/20 text-[#00b955] flex items-center justify-center shrink-0 border border-emerald-500/20">

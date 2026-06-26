@@ -1,5 +1,5 @@
 import React from "react";
-import { Star } from "lucide-react";
+import { Star, ChevronRight } from "lucide-react";
 
 interface PageHeaderProps {
   title: string;
@@ -14,6 +14,10 @@ interface PageHeaderProps {
   pointsCardIcon?: React.ReactNode;
   pointsCardTitle?: string;
   pointsCardUnit?: string;
+  buttonIcon?: React.ReactNode;
+  buttonText?: string;
+  buttonOnClick?: () => void;
+  showArrow?: boolean;
 }
 
 export const PageHeader: React.FC<PageHeaderProps> = ({
@@ -29,6 +33,10 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   pointsCardIcon,
   pointsCardTitle = "YOUR IMPACT POINTS",
   pointsCardUnit = "PTS",
+  buttonIcon,
+  buttonText,
+  buttonOnClick,
+  showArrow = false,
 }) => {
   const words = title.split(" ");
   const firstWord = words[0] || "";
@@ -100,7 +108,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           </p>
         )}
       </div>
-      {(showPointsCard || children) && (
+      {(showPointsCard || children || buttonText) && (
         <div className="w-full sm:w-auto flex items-center gap-4 flex-wrap sm:flex-nowrap shrink-0">
           {showPointsCard && typeof points === "number" && (
             <div className="flex items-center gap-4 border border-[var(--border-color)] bg-[var(--bg-primary)] p-3 px-5 rounded-md text-left relative overflow-hidden shrink-0">
@@ -123,6 +131,24 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
                 </div>
               </div>
             </div>
+          )}
+          {buttonText && (
+            <button
+              onClick={buttonOnClick}
+              className="flex items-center justify-between gap-4 border border-[var(--border-color)] bg-[var(--bg-primary)] hover:bg-[var(--bg-hover)] p-2 sm:p-2.5 px-4 rounded-lg text-left relative overflow-hidden shrink-0 transition-all active:scale-95 shadow-sm group"
+            >
+              <div className="flex items-center gap-3">
+                {buttonIcon && (
+                  <div className="w-9 h-9 bg-green-500/8 border border-green-500/20 rounded-[10px] flex items-center justify-center shrink-0">
+                    {buttonIcon}
+                  </div>
+                )}
+                <span className="text-xs font-black uppercase tracking-wider text-[var(--text-primary)]">{buttonText}</span>
+              </div>
+              {showArrow && (
+                <ChevronRight size={14} className="text-slate-400 group-hover:text-emerald-500 transition-all duration-200" />
+              )}
+            </button>
           )}
           {children}
         </div>

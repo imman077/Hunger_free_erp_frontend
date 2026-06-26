@@ -36,8 +36,7 @@ const NGORewards = () => {
         title="NGO Grants & Rewards"
         subtitle="Redeem points for exclusive benefits"
         className="mb-8"
-        showPointsCard={true}
-        points={userStats.totalPoints}
+        showPointsCard={false}
       >
         {/* Beneficiaries Card */}
         <div

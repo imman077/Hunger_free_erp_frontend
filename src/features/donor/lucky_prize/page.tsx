@@ -1,16 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
-import { onInit, onDestroy } from "./controller/donor_lucky_prize_controller";
+import { onInit } from "./controller/donor_lucky_prize_controller";
 import { LuckyPrizeBodyField } from "./components/donor_lucky_prize_component";
 
 export default function Donor_lucky_prizePage() {
   useEffect(() => {
     onInit();
-
-    return () => {
-      onDestroy();
-    };
   }, []);
 
   return (

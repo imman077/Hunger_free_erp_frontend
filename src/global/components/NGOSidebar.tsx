@@ -155,13 +155,8 @@ const NGOSidebar: React.FC = () => {
 
   const rewardsSubItems: SubItem[] = [
     { label: "My Rewards", to: "/ngo/rewards" },
-    { label: "Benefits", to: "/ngo/rewards/benefits" },
+    { label: "Tier & Benefits", to: "/ngo/rewards/tiers-benefits" },
     { label: "Lucky Prize", to: "/ngo/lucky-prize" },
-  ];
-
-  const profileSubItems: SubItem[] = [
-    { label: "My Profile", to: "/ngo/profile" },
-    { label: "Payment Methods", to: "/ngo/profile/payments" },
   ];
 
   const NavContent = ({
@@ -204,13 +199,6 @@ const NGOSidebar: React.FC = () => {
             label="Rewards"
             expanded={inDrawer ? true : expanded}
             subItems={rewardsSubItems}
-            onNavigate={onNavigate}
-          />
-          <SidebarItem
-            icon={<Icon name="users" />}
-            label="Profile"
-            expanded={inDrawer ? true : expanded}
-            subItems={profileSubItems}
             onNavigate={onNavigate}
           />
           <SidebarItem

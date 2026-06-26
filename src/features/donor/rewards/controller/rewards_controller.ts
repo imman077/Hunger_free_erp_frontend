@@ -1,6 +1,4 @@
 import { donorRewardsService } from "../api/rewards/rewards_api";
-import { getPointsTiersApi } from "../api/get_points_tiers/get_points_tiers_api";
-import { getPrizesApi } from "../api/get_prizes/get_prizes_api";
 import { rewardsInputModel } from "../store/rewards_store";
 import { useDonorStore } from "../../store/donor-store";
 
@@ -11,25 +9,12 @@ const mapCategory = (cat: string): "cash" | "tours" | "youth" => {
   return "youth"; // fallback
 };
 
-const mapIcon = (iconName: string): string => {
-  const name = (iconName || "").toLowerCase();
-  if (name === "star") return "⭐";
-  if (name === "gift") return "🎁";
-  if (name === "zap") return "⚡";
-  if (name === "cash" || name === "money") return "💰";
-  return iconName || "🎁";
-};
-
 export const onInit = async (userId: string) => {
   if (!userId) return;
   const globalStore = useDonorStore.getState();
   globalStore.setLoading(true);
   try {
-    const [res, , prizesRes] = await Promise.all([
-      donorRewardsService.getRewards(userId),
-      getPointsTiersApi({ role: "DONOR" }),
-      getPrizesApi({ role: "DONOR" }),
-    ]);
+    const res = await donorRewardsService.getRewards(userId);
     
     const donorRewards = res.rewards.map((r: any) => ({
       id: r.id,
@@ -41,29 +26,10 @@ export const onInit = async (userId: string) => {
       desc: r.description || "",
     }));
 
-    const prizesList = prizesRes?.data?.prizes || res.prizes || [];
-    const mappedPrizes = prizesList.map((p: any, idx: number) => {
-      const isJackpot = p.label.toUpperCase() === "GRAND JACKPOT" || p.prizeType === "GRANT";
-      let color;
-      if (isJackpot) {
-        color = "#22c55e";
-      } else {
-        color = idx % 2 === 0 ? "var(--bg-secondary)" : "var(--bg-tertiary)";
-      }
-      return {
-        id: p.id,
-        label: p.label,
-        icon: mapIcon(p.icon),
-        color: color,
-        isJackpot: isJackpot,
-      };
-    });
-
     globalStore.setDonorData({
       ...globalStore.data,
       currentPoints: res.currentPoints,
       rewards: donorRewards,
-      prizes: mappedPrizes.length > 0 ? mappedPrizes : globalStore.data.prizes,
     });
   } catch (err) {
     console.error("Failed to load rewards:", err);

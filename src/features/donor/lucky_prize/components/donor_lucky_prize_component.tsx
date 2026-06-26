@@ -2,7 +2,8 @@ import React, { useEffect, useMemo } from "react";
 import { useAuthStore } from "../../../../global/store/auth-store";
 import { useDonorStore } from "../../store/donor-store";
 import { rewardsInputModel } from "../../rewards/store/rewards_store";
-import { onInit as initRewards, onDestroy as destroyRewards, handleSpin, setWonPrize } from "../../rewards/controller/rewards_controller";
+import { handleSpin, setWonPrize } from "../../rewards/controller/rewards_controller";
+import { onInit } from "../controller/donor_lucky_prize_controller";
 import { LuckyPrizeBody } from "../../../../global/components/reusable-components/LuckyPrizeBody";
 import type { Prize } from "../../../../global/components/reusable-components/LuckyPrizeBody";
 
@@ -11,13 +12,11 @@ export const LuckyPrizeBodyField = React.memo(() => {
   const userId = user?.id || "6a1939fe875b850d3dd88b6b";
 
   useEffect(() => {
-    if (userId) {
-      initRewards(String(userId));
-    }
+    onInit();
     return () => {
-      destroyRewards();
+      rewardsInputModel.reset();
     };
-  }, [userId]);
+  }, []);
 
   const { data, isLoading } = useDonorStore();
   const prizes = (data.prizes || []) as Prize[];
@@ -53,6 +52,8 @@ export const LuckyPrizeBodyField = React.memo(() => {
     );
   }
 
+  const userName = user?.first_name || user?.username || "";
+
   return (
     <LuckyPrizeBody
       role="DONOR"
@@ -65,6 +66,7 @@ export const LuckyPrizeBodyField = React.memo(() => {
       backRoute="/donor/rewards"
       subtitle="Exclusive Donor Member Rewards"
       reaction={prizeReaction}
+      userName={userName}
     />
   );
 });

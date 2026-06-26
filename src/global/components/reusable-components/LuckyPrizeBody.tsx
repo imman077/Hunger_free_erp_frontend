@@ -405,6 +405,7 @@ interface LuckyPrizeBodyProps {
   backRoute: string;
   subtitle: string;
   reaction: string;
+  userName?: string;
 }
 
 export const LuckyPrizeBody: React.FC<LuckyPrizeBodyProps> = ({
@@ -418,11 +419,13 @@ export const LuckyPrizeBody: React.FC<LuckyPrizeBodyProps> = ({
   backRoute: _backRoute,
   subtitle,
   reaction,
+  userName,
 }) => {
   // Time & Reset States
   const [timeLeft, setTimeLeft] = useState({ hrs: 10, mins: 30, secs: 45 });
   const [isResetting, setIsResetting] = useState(false);
   const [showDrawModal, setShowDrawModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
 
   // Countdown timer simulation
   useEffect(() => {
@@ -491,23 +494,16 @@ export const LuckyPrizeBody: React.FC<LuckyPrizeBodyProps> = ({
         subtitle={subtitle}
         showUnderline={false}
         greenLastWord={true}
-      >
-        {/* Spin History Button */}
-        <button
-          className="bg-[var(--bg-primary)] border border-[var(--border-color)] hover:bg-[var(--bg-hover)] text-[var(--text-primary)] p-2 sm:p-2.5 px-4 rounded-sm flex items-center justify-between gap-4 shadow-sm group transition-all shrink-0 active:scale-95 text-left"
-        >
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-sm bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold">
-              <svg className="w-4 h-4 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
-                <path d="M13 5v14" strokeDasharray="3 3" />
-              </svg>
-            </div>
-            <span className="text-xs font-black uppercase tracking-wider">Spin History</span>
-          </div>
-          <span className="text-slate-400 group-hover:text-emerald-500 transition-colors font-bold">&gt;</span>
-        </button>
-      </PageHeader>
+        buttonText="Spin History"
+        buttonIcon={
+          <svg className="w-4 h-4 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
+            <path d="M13 5v14" strokeDasharray="3 3" />
+          </svg>
+        }
+        buttonOnClick={() => setShowHistoryModal(true)}
+        showArrow={true}
+      />
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6 items-center w-full">
@@ -736,7 +732,121 @@ export const LuckyPrizeBody: React.FC<LuckyPrizeBodyProps> = ({
           setShowDrawModal(false);
         }}
       />
+
+      {/* Spin History Modal */}
+      <SpinHistoryModal
+        isOpen={showHistoryModal}
+        onClose={() => setShowHistoryModal(false)}
+        userName={userName}
+      />
     </div>
   );
 };
+
+interface SpinHistoryItem {
+  id: string;
+  prizeName: string;
+  date: string;
+  type: "jackpot" | "points" | "cash" | "voucher" | "miss";
+  value: string;
+}
+
+const mockSpinHistory: SpinHistoryItem[] = [
+  { id: "1", prizeName: "Grand Grant (₹5,000)", date: "2 hours ago", type: "jackpot", value: "₹5,000" },
+  { id: "2", prizeName: "100 Impact Points", date: "1 day ago", type: "points", value: "100 PTS" },
+  { id: "3", prizeName: "₹200 Grocery Voucher", date: "3 days ago", type: "voucher", value: "₹200" },
+  { id: "4", prizeName: "₹500 Fuel Coupon", date: "5 days ago", type: "voucher", value: "₹500" },
+  { id: "5", prizeName: "50 Impact Points", date: "1 week ago", type: "points", value: "50 PTS" },
+];
+
+const SpinHistoryModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  userName?: string;
+}> = ({ isOpen, onClose, userName }) => {
+  return (
+    <Modal
+      isOpen={isOpen}
+      onOpenChange={onClose}
+      placement="center"
+      backdrop="blur"
+      size="md"
+      hideCloseButton={true}
+      classNames={{
+        backdrop: "bg-slate-900/40 backdrop-blur-xl",
+        base: "rounded-2xl shadow-2xl overflow-hidden border-none",
+        body: "p-0",
+        wrapper: "z-[100]",
+      }}
+      style={{
+        backgroundColor: "var(--bg-primary)",
+      }}
+    >
+      <ModalContent>
+        <ModalBody className="p-6">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-6 pb-4 border-b border-[var(--border-color)]">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
+                <svg className="w-5 h-5 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
+                  <path d="M13 5v14" strokeDasharray="3 3" />
+                </svg>
+              </div>
+              <div className="text-start">
+                <h3 className="text-lg font-black uppercase tracking-tight text-slate-800 dark:text-white leading-none">
+                  Spin History
+                </h3>
+                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-1 uppercase tracking-wider">
+                  {userName ? `${userName}'s past lucky spin rewards` : "Your past lucky spin rewards"}
+                </p>
+              </div>
+            </div>
+            <button 
+              onClick={onClose}
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-black p-1 hover:bg-[var(--bg-hover)] rounded-md transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* List */}
+          <div className="space-y-3.5 max-h-[360px] overflow-y-auto pr-1 no-scrollbar text-start">
+            {mockSpinHistory.map((item) => {
+              let badgeColor = "bg-slate-100 text-slate-600 dark:bg-slate-800/40 dark:text-slate-400";
+              if (item.type === "jackpot") badgeColor = "bg-green-100 text-green-700 dark:bg-green-950/20 dark:text-green-400";
+              else if (item.type === "voucher") badgeColor = "bg-blue-100 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400";
+              else if (item.type === "points") badgeColor = "bg-amber-100 text-amber-700 dark:bg-amber-950/20 dark:text-amber-400";
+
+              return (
+                <div 
+                  key={item.id}
+                  className="flex items-center justify-between p-3.5 rounded-xl border border-[var(--border-color)] bg-slate-50/50 dark:bg-slate-900/10 hover:shadow-sm transition-all duration-200"
+                >
+                  <div className="flex items-center gap-3 text-start">
+                    <div className="text-2xl select-none">
+                      {item.type === "jackpot" ? "🏆" : item.type === "voucher" ? "🎫" : "⭐"}
+                    </div>
+                    <div className="text-start">
+                      <h4 className="text-sm font-black text-slate-700 dark:text-slate-200 leading-tight">
+                        {item.prizeName}
+                      </h4>
+                      <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-0.5">
+                        {item.date}
+                      </p>
+                    </div>
+                  </div>
+                  <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full ${badgeColor}`}>
+                    {item.value}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </ModalBody>
+      </ModalContent>
+    </Modal>
+  );
+};
+
 export default LuckyPrizeBody;

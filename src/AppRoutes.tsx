@@ -155,7 +155,8 @@ export const AppRoutes = () => {
           <Route path="donations/create" element={<DonorCreateDonation />} />
           <Route path="donations/marketplace" element={<DonorNGOPosts />} />
           <Route path="rewards" element={<DonorRewards />} />
-          <Route path="rewards/benefits" element={<DonorBenefits />} />
+          <Route path="rewards/tiers-benefits" element={<DonorBenefits />} />
+          <Route path="rewards/benefits" element={<Navigate to="/donor/rewards/tiers-benefits" replace />} />
           <Route path="lucky-prize" element={<DonorLuckySpin />} />
           <Route path="profile" element={<DonorProfile />} />
           <Route path="profile/payments" element={<DonorPaymentMethods />} />
@@ -169,7 +170,8 @@ export const AppRoutes = () => {
           <Route path="inventory" element={<NGOInventory />} />
           <Route path="inventory/add" element={<NGOAddItem />} />
           <Route path="rewards" element={<NGORewards />} />
-          <Route path="rewards/benefits" element={<NGOBenefits />} />
+          <Route path="rewards/tiers-benefits" element={<NGOBenefits />} />
+          <Route path="rewards/benefits" element={<Navigate to="/ngo/rewards/tiers-benefits" replace />} />
           <Route path="lucky-prize" element={<NGOLuckySpin />} />
           <Route path="profile" element={<NGOProfile />} />
           <Route path="profile/payments" element={<NGOPaymentMethods />} />
@@ -182,7 +184,8 @@ export const AppRoutes = () => {
           <Route path="dashboard" element={<VolunteerDashboard />} />
           <Route path="tasks" element={<VolunteerTasks />} />
           <Route path="rewards" element={<VolunteerRewards />} />
-          <Route path="rewards/benefits" element={<VolunteerBenefits />} />
+          <Route path="rewards/tiers-benefits" element={<VolunteerBenefits />} />
+          <Route path="rewards/benefits" element={<Navigate to="/volunteer/rewards/tiers-benefits" replace />} />
           <Route path="lucky-prize" element={<VolunteerLuckySpin />} />
           <Route path="profile" element={<VolunteerProfile />} />
           <Route path="payments" element={<VolunteerPaymentMethods />} />

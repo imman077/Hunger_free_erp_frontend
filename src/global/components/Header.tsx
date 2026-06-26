@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Badge from "@mui/material/Badge";
 import Avatar from "@mui/material/Avatar";
 import IconButton from "@mui/material/IconButton";
-import { BellIcon, CheckCheck, User, LogOut } from "lucide-react";
+import { BellIcon, CheckCheck, User, LogOut, Star, CreditCard } from "lucide-react";
 import { useSidebar } from "../contexts/SidebarContext";
 import { formatDistanceToNow } from "date-fns";
 import ThemeToggle from "./ThemeToggle";
@@ -14,6 +14,12 @@ import {
 } from "@heroui/react";
 import { useNavigate } from "react-router-dom";
 import { Icon } from "./reusable-components/Icon";
+import { useAuthStore } from "../store/auth-store";
+import { useDonorStore } from "../../features/donor/store/donor-store";
+import { useNgoStore } from "../../features/ngo/store/ngo_store";
+import { useVolunteerStore } from "../../features/volunteer/store/volunteer_store";
+import { gql } from "@apollo/client";
+import client from "../api/apollo-client";
 
 /* ---------------- Interfaces ---------------- */
 
@@ -96,6 +102,132 @@ const Header = () => {
   const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState<any>("all");
 
+  const { user } = useAuthStore();
+  const donorPoints = useDonorStore((state) => state.data.currentPoints);
+  const ngoPoints = useNgoStore((state) => state.data.currentPoints);
+  const volunteerPoints = useVolunteerStore((state) => state.stats.impactPoints);
+
+  const getProfileName = () => {
+    if (!user) return "Guest";
+    const role = user.profile?.role;
+    if (role === "ADMIN") return "Master Admin";
+    
+    // Check stores first for clean names
+    if (role === "DONOR") {
+      const bName = useDonorStore.getState().data.profile.businessName;
+      if (bName) return bName;
+    }
+    if (role === "NGO") {
+      const nName = user.ngo_profile?.name || useNgoStore.getState().data.profile.ngoName;
+      if (nName) return nName;
+    }
+    if (role === "VOLUNTEER") {
+      const fName = useVolunteerStore.getState().profile.fullName;
+      if (fName) return fName;
+    }
+
+    if (user.first_name || user.last_name) {
+      return `${user.first_name || ""} ${user.last_name || ""}`.trim();
+    }
+    
+    // Capitalize username nicely
+    const uname = user.username || "";
+    return uname.charAt(0).toUpperCase() + uname.slice(1).replace(/_/g, " ");
+  };
+
+  const getNavbarLabel = () => {
+    if (!user) return "Guest";
+    if (user.profile?.role === "ADMIN") return "Admin Hub";
+    return getProfileName();
+  };
+
+  const getInitials = (name: string) => {
+    if (!name) return "U";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
+  };
+
+  const getProfilePath = () => {
+    if (!user) return "/auth";
+    const role = user.profile?.role;
+    if (role === "ADMIN") return "/admin/settings";
+    if (role === "DONOR") return "/donor/profile";
+    if (role === "NGO") return "/ngo/profile";
+    if (role === "VOLUNTEER") return "/volunteer/profile";
+    return "/auth";
+  };
+
+  const getPaymentsPath = () => {
+    if (!user) return null;
+    const role = user.profile?.role;
+    if (role === "DONOR") return "/donor/profile/payments";
+    if (role === "NGO") return "/ngo/profile/payments";
+    if (role === "VOLUNTEER") return "/volunteer/payments";
+    return null;
+  };
+
+  const getPoints = () => {
+    if (!user) return null;
+    const role = user.profile?.role;
+    if (role === "DONOR") return donorPoints;
+    if (role === "NGO") return ngoPoints;
+    if (role === "VOLUNTEER") return volunteerPoints;
+    return null;
+  };
+
+  const points = getPoints();
+
+  useEffect(() => {
+    if (!user?.id) return;
+    
+    const fetchPoints = async () => {
+      try {
+        const response = await client.query({
+          query: gql`
+            query GetUserPoints($userId: ID!) {
+              me(userId: $userId) {
+                id
+                gamification {
+                  points
+                }
+              }
+            }
+          `,
+          variables: { userId: String(user.id) },
+          fetchPolicy: "network-only",
+        });
+        
+        const fetchedPoints = response.data?.me?.gamification?.points ?? 0;
+        
+        const role = user.profile?.role;
+        if (role === "DONOR") {
+          useDonorStore.getState().setDonorData({
+            ...useDonorStore.getState().data,
+            currentPoints: fetchedPoints,
+          });
+        } else if (role === "NGO") {
+          useNgoStore.getState().setNgoData({
+            ...useNgoStore.getState().data,
+            currentPoints: fetchedPoints,
+          });
+        } else if (role === "VOLUNTEER") {
+          useVolunteerStore.getState().setStats({
+            ...useVolunteerStore.getState().stats,
+            impactPoints: fetchedPoints,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch points in navbar:", err);
+      }
+    };
+    
+    fetchPoints();
+  }, [user?.id]);
+
   const handleNotificationClick = () => {
     setNotificationDrawerOpen(true);
   };
@@ -151,6 +283,21 @@ const Header = () => {
 
         {/* Right section - Notifications and avatar */}
         <div className="flex flex-row gap-2 md:gap-3 items-center">
+          {points !== null && (
+            <div className="flex items-center gap-2 border border-[var(--border-color)] bg-[var(--bg-tertiary)] px-3 h-[36px] md:h-[40px] rounded-[12px] text-left shrink-0 shadow-sm mr-1">
+              <div className="w-6 h-6 md:w-7 md:h-7 bg-green-500/8 border border-green-500/20 rounded-[8px] flex items-center justify-center shrink-0">
+                <Star className="text-green-500 fill-green-500" size={12} />
+              </div>
+              <div className="flex items-baseline gap-1">
+                <span className="text-xs md:text-sm font-black tabular-nums leading-none text-[var(--text-primary)]">
+                  {points.toLocaleString()}
+                </span>
+                <span className="text-[9px] md:text-[10px] font-black text-green-500 uppercase tracking-wide">
+                  PTS
+                </span>
+              </div>
+            </div>
+          )}
           <ThemeToggle />
           {/* Bell Notification */}
           <IconButton
@@ -192,7 +339,7 @@ const Header = () => {
           {/* Avatar Profile */}
           <Dropdown placement="bottom-end">
             <DropdownTrigger>
-              <div className="flex items-center gap-2.5 cursor-pointer group outline-none">
+              <div className="flex items-center gap-2.5 cursor-pointer group outline-none p-1.5 pr-3.5 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/40 border border-transparent hover:border-slate-100 dark:hover:border-slate-800 transition-all duration-300">
                 <div className="relative">
                   <Avatar
                     alt="User"
@@ -217,7 +364,7 @@ const Header = () => {
                       className="text-xs font-black tracking-tight"
                       style={{ color: "var(--text-primary)" }}
                     >
-                      Admin Hub
+                      {getNavbarLabel()}
                     </span>
                     <Icon
                       name="chevron-down"
@@ -254,15 +401,18 @@ const Header = () => {
                 className="h-auto opacity-100 pointer-events-none mb-1.5 border-b border-dashed border-slate-200/60 dark:border-slate-800/60 rounded-none pb-3.5"
               >
                 <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0 shadow-sm">
-                    <User size={20} />
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white font-black text-sm shrink-0 shadow-md">
+                    {getInitials(getProfileName())}
                   </div>
-                  <div className="flex flex-col">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 leading-none mb-1">
-                      Logged in as
+                  <div className="flex flex-col text-start">
+                    <p className="text-[9px] font-black uppercase tracking-wider text-emerald-500 dark:text-emerald-400 leading-none mb-1.5">
+                      {user?.profile?.role === "ADMIN" ? "Administrator" : user?.profile?.role || "User"}
                     </p>
-                    <p className="font-bold text-sm text-[var(--text-primary)] leading-tight">
-                      Master Admin
+                    <p className="font-extrabold text-sm text-[var(--text-primary)] leading-tight">
+                      {getProfileName()}
+                    </p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold truncate leading-none mt-1.5">
+                      {user?.email}
                     </p>
                   </div>
                 </div>
@@ -271,15 +421,26 @@ const Header = () => {
               <DropdownItem
                 key="view-profile"
                 startContent={<User size={16} className="opacity-70" />}
-                className="text-xs font-semibold data-[hover=true]:bg-emerald-500/5 data-[hover=true]:text-emerald-500"
-                onPress={() => navigate("/admin/settings")}
+                className="text-xs font-bold transition-all duration-200 data-[hover=true]:bg-emerald-500/10 data-[hover=true]:text-emerald-600 data-[hover=true]:translate-x-1"
+                onPress={() => navigate(getProfilePath())}
               >
                 View Profile
               </DropdownItem>
 
+              {getPaymentsPath() && (
+                <DropdownItem
+                  key="payment-methods"
+                  startContent={<CreditCard size={16} className="opacity-70" />}
+                  className="text-xs font-bold transition-all duration-200 data-[hover=true]:bg-emerald-500/10 data-[hover=true]:text-emerald-600 data-[hover=true]:translate-x-1"
+                  onPress={() => navigate(getPaymentsPath()!)}
+                >
+                  Payment Methods
+                </DropdownItem>
+              )}
+
               <DropdownItem
                 key="logout"
-                className="mt-1.5 pt-3 border-t border-dashed border-slate-200/60 dark:border-slate-800/60 rounded-none data-[hover=true]:bg-rose-500/5 data-[hover=true]:text-rose-500"
+                className="mt-1.5 pt-3 border-t border-dashed border-slate-200/60 dark:border-slate-800/60 rounded-none text-xs font-bold transition-all duration-200 data-[hover=true]:bg-rose-500/10 data-[hover=true]:text-rose-600 data-[hover=true]:translate-x-1"
                 startContent={<LogOut size={16} className="opacity-70" />}
                 onPress={() => navigate("/auth")}
               >
@@ -323,9 +484,6 @@ const Header = () => {
               }}
             >
               <div className="flex flex-col">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 leading-none mb-1">
-                  Alert Center
-                </span>
                 <span className="font-bold text-lg tracking-tight text-[var(--text-primary)]">
                   Notifications
                 </span>

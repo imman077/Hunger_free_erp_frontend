@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   Sparkles,
   Shield,
@@ -14,7 +13,6 @@ import {
   Flame,
   Rocket,
   Users,
-  ChevronLeft,
   TrendingUp,
   Lock,
 } from "lucide-react";
@@ -34,16 +32,18 @@ interface Tier {
   color: string;
   icon: string;
   perks: string[];
+  image?: string;
+  textColor?: string;
 }
 
 const donorTiers: Tier[] = [
-  { name: "Beginner", points: "0 - 500", minPoints: 0, maxPoints: 500, bonus: 0, color: "from-slate-400 to-slate-500", icon: "Sparkles", perks: ["Welcome Pack (Digital Assets)", "Community Forum Access", "Basic Daily Impact Tracking", "Standard Support Email"] },
-  { name: "Bronze", points: "501 - 1,500", minPoints: 501, maxPoints: 1500, bonus: 5, color: "from-amber-600 to-amber-700", icon: "Shield", perks: ["Bronze Verified Profile Badge", "5% Bonus Impact Points", "Monthly Lucky Draw Entry", "Community Member Status"] },
-  { name: "Silver", points: "1,501 - 3,500", minPoints: 1501, maxPoints: 3500, bonus: 10, color: "from-slate-300 to-slate-400", icon: "Zap", perks: ["Silver Verified Profile Badge", "10% Bonus Impact Points", "Priority Food Pickup Services", "Detailed Monthly Impact Reports"] },
-  { name: "Gold", points: "3,501 - 7,500", minPoints: 3501, maxPoints: 7500, bonus: 15, color: "from-yellow-400 to-yellow-500", icon: "Star", perks: ["Gold Verified Profile Badge", "15% Bonus Impact Points", "VIP NGO Event Invitations", "Direct Support Chat Access"] },
-  { name: "Platinum", points: "7,501 - 15,000", minPoints: 7501, maxPoints: 15000, bonus: 20, color: "from-cyan-400 to-cyan-500", icon: "Gift", perks: ["Platinum Verified Profile Badge", "20% Bonus Impact Points", "Exclusive Hunger-Free ERP Gear", "Dedicated Impact Manager"] },
-  { name: "Diamond", points: "15,001 - 30,000", minPoints: 15001, maxPoints: 30000, bonus: 25, color: "from-blue-500 to-indigo-600", icon: "Crown", perks: ["Diamond Verified Profile Badge", "25% Bonus Impact Points", "Featured Donor on Home Wall", "Custom Impact Milestone Gifts"] },
-  { name: "Legend", points: "30,001+", minPoints: 30001, maxPoints: null, bonus: 40, color: "from-emerald-500 to-green-600", icon: "Trophy", perks: ["Legend Verified Profile Badge", "40% Bonus Impact Points", "10 Trees Planted Monthly in your Name", "Lifetime Achievement Trophy", "Global All-Access Pass"] },
+  { name: "Starter Donor", points: "0 - 499", minPoints: 0, maxPoints: 499, bonus: 0, color: "from-slate-400 to-slate-500", icon: "Sparkles", image: "/donor_tiers/begineer.png", textColor: "#00ab55", perks: ["Welcome Pack (Digital Assets)", "Community Forum Access", "Basic Daily Impact Tracking", "Standard Support Email"] },
+  { name: "Bronze Donor", points: "500 - 2,499", minPoints: 500, maxPoints: 2499, bonus: 5, color: "from-amber-600 to-amber-700", icon: "Shield", image: "/donor_tiers/bronze.png", textColor: "#8a583c", perks: ["Bronze Verified Profile Badge", "5% Bonus Impact Points", "Monthly Lucky Draw Entry", "Community Member Status"] },
+  { name: "Silver Donor", points: "2,500 - 7,499", minPoints: 2500, maxPoints: 7499, bonus: 10, color: "from-slate-300 to-slate-400", icon: "Zap", image: "/donor_tiers/silver.png", textColor: "#4f5e74", perks: ["Silver Verified Profile Badge", "10% Bonus Impact Points", "Priority Food Pickup Services", "Detailed Monthly Impact Reports"] },
+  { name: "Gold Donor", points: "7,500 - 19,999", minPoints: 7500, maxPoints: 19999, bonus: 15, color: "from-yellow-400 to-yellow-500", icon: "Star", image: "/donor_tiers/gold.png", textColor: "#c59218", perks: ["Gold Verified Profile Badge", "15% Bonus Impact Points", "VIP NGO Event Invitations", "Direct Support Chat Access"] },
+  { name: "Platinum Donor", points: "20,000 - 49,999", minPoints: 20000, maxPoints: 49999, bonus: 20, color: "from-cyan-400 to-cyan-500", icon: "Gift", image: "/donor_tiers/platinum.png", textColor: "#1a788b", perks: ["Platinum Verified Profile Badge", "20% Bonus Impact Points", "Exclusive Hunger-Free ERP Gear", "Dedicated Impact Manager"] },
+  { name: "Diamond Donor", points: "50,000 - 99,999", minPoints: 50000, maxPoints: 99999, bonus: 25, color: "from-blue-500 to-indigo-600", icon: "Crown", image: "/donor_tiers/diamond.png", textColor: "#6f42c1", perks: ["Diamond Verified Profile Badge", "25% Bonus Impact Points", "Featured Donor on Home Wall", "Custom Impact Milestone Gifts"] },
+  { name: "Legend Donor", points: "100,000+", minPoints: 100000, maxPoints: null, bonus: 40, color: "from-emerald-500 to-green-600", icon: "Trophy", image: "/donor_tiers/legend.png", textColor: "#198754", perks: ["Legend Verified Profile Badge", "40% Bonus Impact Points", "10 Trees Planted Monthly in your Name", "Lifetime Achievement Trophy", "Global All-Access Pass"] },
 ];
 
 const ngoTiers: Tier[] = [
@@ -89,7 +89,6 @@ export const GlobalTiersOverview: React.FC<GlobalTiersOverviewProps> = ({
   role,
   totalPoints,
 }) => {
-  const navigate = useNavigate();
 
   const pointsTiers = useMemo(() => {
     if (role === "ngo") return ngoTiers;
@@ -164,26 +163,11 @@ export const GlobalTiersOverview: React.FC<GlobalTiersOverviewProps> = ({
       {/* Header */}
       <div className="space-y-6">
         <div className="space-y-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-1.5 transition-colors group -ml-1"
-            style={{ color: "var(--text-muted)" }}
-          >
-            <ChevronLeft
-              size={16}
-              className="group-hover:-translate-x-0.5 transition-transform"
-            />
-            <span className="text-[10px] font-black uppercase tracking-widest">
-              Back to Rewards
-            </span>
-          </button>
-
           <PageHeader
             title="Loyalty Tiers & Benefits"
             subtitle="Track your progress and unlock exclusive perks"
             className="mb-8"
-            showPointsCard={true}
-            points={totalPoints}
+            showPointsCard={false}
           />
         </div>
       </div>
@@ -217,7 +201,7 @@ export const GlobalTiersOverview: React.FC<GlobalTiersOverviewProps> = ({
         <div className="relative mb-6">
           {/* Background Line (Gray) */}
           <div
-            className="absolute top-[32px] left-[7.14%] h-[3px] -translate-y-1/2 z-0 hidden lg:block bg-zinc-200"
+            className="absolute top-[48px] left-[7.14%] h-[3px] -translate-y-1/2 z-0 hidden lg:block bg-zinc-200"
             style={{ 
               width: pointsTiers.length > 1 
                 ? `${(pointsTiers.length - 1) * (100 / pointsTiers.length)}%` 
@@ -227,7 +211,7 @@ export const GlobalTiersOverview: React.FC<GlobalTiersOverviewProps> = ({
 
           {/* Active Progress Line (Green) */}
           <div
-            className="absolute top-[32px] left-[7.14%] h-[3px] -translate-y-1/2 z-0 hidden lg:block transition-all duration-700 ease-in-out bg-[#00ab55]"
+            className="absolute top-[48px] left-[7.14%] h-[3px] -translate-y-1/2 z-0 hidden lg:block transition-all duration-700 ease-in-out bg-[#00ab55]"
             style={{
               width: pointsTiers.length > 1 
                 ? `${userStats.currentIndex * (100 / pointsTiers.length)}%` 
@@ -235,6 +219,26 @@ export const GlobalTiersOverview: React.FC<GlobalTiersOverviewProps> = ({
               boxShadow: "0 0 8px rgba(0, 171, 85, 0.4)"
             }}
           />
+
+          {/* Lock Badges on Connecting Lines (Donor Only) */}
+          {role === "donor" && pointsTiers.map((tier, idx) => {
+            if (idx === 0) return null;
+            // Only show lock if the destination tier idx is locked and is beyond the next immediate tier
+            const isLockedSegment = idx > userStats.currentIndex + 1;
+            if (!isLockedSegment) return null;
+
+            const segmentMidpointPercent = (100 / pointsTiers.length) * (idx - 0.5) + 100 / (2 * pointsTiers.length);
+
+            return (
+              <div
+                key={`lock-line-${idx}`}
+                className="absolute top-[48px] -translate-y-1/2 -translate-x-1/2 w-6 h-6 rounded-full border border-slate-200 bg-white flex items-center justify-center z-10 shadow-sm"
+                style={{ left: `${segmentMidpointPercent}%` }}
+              >
+                <Lock size={10} className="text-slate-400" />
+              </div>
+            );
+          })}
 
           <div className={`grid grid-cols-2 md:grid-cols-4 lg:grid-cols-${pointsTiers.length} gap-4 relative z-10`}>
             {pointsTiers.map((tier, idx) => {
@@ -244,52 +248,79 @@ export const GlobalTiersOverview: React.FC<GlobalTiersOverviewProps> = ({
 
               return (
                 <div key={tier.name} className="flex flex-col items-center relative">
-                  <div className="h-16 flex items-center justify-center mb-3 relative">
+                  <div className="h-24 flex items-center justify-center mb-3 relative">
                     {isCurrent ? (
                       <div className="relative">
                         <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-[#00ab55] text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-sm whitespace-nowrap z-30 shadow-md">
                           Current Tier
                           <div className="absolute bottom-[-3px] left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#00ab55] rotate-45" />
                         </div>
-                        <div className="w-16 h-16 border-2 border-[#00ab55] p-1 rounded-2xl bg-white flex items-center justify-center z-20">
-                          <div className="w-full h-full bg-[#00ab55] rounded-xl flex items-center justify-center">
-                            <Star className="text-white fill-white" size={24} />
-                          </div>
+                        <div className="w-24 h-24 border border-[#00ab55] p-1 bg-white rounded-full flex items-center justify-center z-20 shadow-md">
+                          {tier.image ? (
+                            <img src={tier.image} alt={tier.name} className="w-full h-full object-contain rounded-full" />
+                          ) : (
+                            <div className="w-full h-full bg-[#00ab55] rounded-full flex items-center justify-center">
+                              {getIcon(tier.icon, 28, "text-white")}
+                            </div>
+                          )}
                         </div>
                       </div>
                     ) : isPast ? (
-                      <div className="relative w-12 h-12 border border-[#00ab55] bg-white rounded-full flex items-center justify-center z-20 shadow-sm">
-                        <svg className="w-5 h-5 text-[#00ab55]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <div className="absolute -top-1 -right-1 bg-[#00ab55] border border-white rounded-full w-4 h-4 flex items-center justify-center z-30 shadow-sm">
-                          <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
+                      <div className="relative w-20 h-20 border border-[#00ab55] bg-white rounded-full flex items-center justify-center z-20 shadow-sm p-1">
+                        {tier.image ? (
+                          <img src={tier.image} alt={tier.name} className="w-full h-full object-contain rounded-full" />
+                        ) : (
+                          <div className="w-full h-full bg-white rounded-full flex items-center justify-center">
+                            {getIcon(tier.icon, 24, "text-[#00ab55]")}
+                          </div>
+                        )}
+                        <div className="absolute -top-1 -right-1 bg-[#00ab55] border border-white rounded-full w-5 h-5 flex items-center justify-center z-30 shadow-sm">
+                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                           </svg>
                         </div>
                       </div>
                     ) : (
-                      <div className="w-12 h-12 border border-slate-200 bg-slate-50 rounded-full flex items-center justify-center z-20">
-                        <Lock className="text-slate-400" size={16} strokeWidth={2} />
+                      <div className="w-20 h-20 border border-slate-200 bg-slate-50 rounded-full flex items-center justify-center z-20 opacity-60 p-1">
+                        {tier.image ? (
+                          <img src={tier.image} alt={tier.name} className="w-full h-full object-contain rounded-full" />
+                        ) : (
+                          <div className="w-full h-full rounded-full flex items-center justify-center">
+                            <Lock className="text-slate-400" size={20} strokeWidth={2} />
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
                   
                   <p
-                    className="text-[10px] font-black uppercase tracking-widest mt-1"
-                    style={{ color: isFuture ? "var(--text-muted)" : "#00ab55" }}
+                    className="text-[10px] font-black uppercase tracking-widest mt-1 text-center"
+                    style={{ color: tier.textColor || (isFuture ? "var(--text-muted)" : "#00ab55") }}
                   >
                     {tier.name}
                   </p>
                   
-                  <p 
-                    className="text-[8px] font-bold mt-0.5"
-                    style={{ color: isFuture ? "var(--text-muted)" : "var(--text-secondary)" }}
-                  >
-                    {tier.maxPoints === null || tier.maxPoints === undefined
-                      ? `${tier.minPoints.toLocaleString()}+`
-                      : `${tier.minPoints.toLocaleString()} - ${tier.maxPoints.toLocaleString()}`}
-                  </p>
+                  {role === "donor" ? (
+                    <p 
+                      className="text-[8px] font-bold mt-0.5 text-center leading-normal"
+                      style={{ color: isFuture ? "var(--text-muted)" : "var(--text-secondary)" }}
+                    >
+                      {tier.maxPoints === null || tier.maxPoints === undefined
+                        ? `${tier.minPoints.toLocaleString()}+ kg`
+                        : `${tier.minPoints.toLocaleString()} - ${tier.maxPoints.toLocaleString()} kg`}
+                      <br />
+                      donated
+                    </p>
+                  ) : (
+                    <p 
+                      className="text-[8px] font-bold mt-0.5 text-center"
+                      style={{ color: isFuture ? "var(--text-muted)" : "var(--text-secondary)" }}
+                    >
+                      {tier.maxPoints === null || tier.maxPoints === undefined
+                        ? `${tier.minPoints.toLocaleString()}+`
+                        : `${tier.minPoints.toLocaleString()} - ${tier.maxPoints.toLocaleString()}`}
+                    </p>
+                  )}
                 </div>
               );
             })}
@@ -412,17 +443,23 @@ export const GlobalTiersOverview: React.FC<GlobalTiersOverviewProps> = ({
               className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${tier.color} opacity-[0.05] rounded-bl-[100px] transition-transform duration-500 group-hover:scale-110`}
             />
 
-            <div className="relative z-10 flex flex-col h-full">
+            <div className="relative z-10 flex flex-col h-full text-left">
               <div className="flex items-center justify-between">
-                <div
-                  className="p-4 border rounded-sm"
-                  style={{
-                    backgroundColor: "var(--bg-primary)",
-                    borderColor: "var(--border-color)",
-                  }}
-                >
-                  {getIcon(tier.icon)}
-                </div>
+                {tier.image ? (
+                  <div className="w-14 h-14 rounded-full flex items-center justify-center shrink-0 border border-slate-100 shadow-sm p-0.5">
+                    <img src={tier.image} alt={tier.name} className="w-full h-full object-contain rounded-full" />
+                  </div>
+                ) : (
+                  <div
+                    className="p-4 border rounded-sm"
+                    style={{
+                      backgroundColor: "var(--bg-primary)",
+                      borderColor: "var(--border-color)",
+                    }}
+                  >
+                    {getIcon(tier.icon)}
+                  </div>
+                )}
                 <div className="text-right">
                   <p
                     className="text-[10px] font-black uppercase tracking-widest leading-none mb-1.5"
@@ -439,9 +476,9 @@ export const GlobalTiersOverview: React.FC<GlobalTiersOverviewProps> = ({
                 </div>
               </div>
 
-              <div className="space-y-1 mt-6">
+              <div className="space-y-1 mt-6 text-left">
                 <h3
-                  className="text-2xl font-black uppercase tracking-tight"
+                  className="text-2xl font-black uppercase tracking-tight text-left"
                   style={{ color: "var(--text-primary)" }}
                 >
                   {tier.name}
@@ -452,11 +489,42 @@ export const GlobalTiersOverview: React.FC<GlobalTiersOverviewProps> = ({
               </div>
 
               {/* Perks List */}
-              <ul className="mt-4 space-y-2 text-xs font-semibold text-[var(--text-secondary)] opacity-80 list-disc list-inside">
+              <ul className="mt-4 space-y-2 text-xs font-semibold text-[var(--text-secondary)] opacity-80 list-disc list-inside text-left">
                 {tier.perks.map((perk, pIdx) => (
-                  <li key={pIdx} className="leading-tight">{perk}</li>
+                  <li key={pIdx} className="leading-tight text-left">{perk}</li>
                 ))}
               </ul>
+
+              {/* Earning Rates Details */}
+              <div 
+                className="mt-6 p-4 rounded-xl border text-xs space-y-2.5 text-left"
+                style={{ 
+                  borderColor: "var(--border-color)",
+                  backgroundColor: "rgba(0, 0, 0, 0.01)"
+                }}
+              >
+                <p className="font-black text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
+                  Earning Rates
+                </p>
+                {calculatorItems.map((item, itemIdx) => {
+                  const itemBonus = tier.bonus || 0;
+                  let baseVal = item.base;
+                  if (role === "donor") {
+                    if (item.label === "First Donation") baseVal = 200;
+                    else if (item.label === "Per KG Food") baseVal = 20;
+                    else if (item.label === "Milestone Bonus") baseVal = 400;
+                  }
+                  const itemPoints = Math.floor(baseVal * (1 + itemBonus / 100));
+                  return (
+                    <div key={itemIdx} className="flex justify-between items-center text-left">
+                      <span className="font-semibold text-slate-500 dark:text-slate-400">{item.label}</span>
+                      <span className="font-black text-slate-700 dark:text-slate-300">
+                        {itemPoints} <span className="text-[9px] text-slate-400">PTS</span>
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
 
               <div
                 className="pt-6 mt-auto border-t"

@@ -158,13 +158,8 @@ const DonorSidebar: React.FC = () => {
 
   const rewardsSubItems: SubItem[] = [
     { label: "My Rewards", to: "/donor/rewards" },
-    { label: "Benefits", to: "/donor/rewards/benefits" },
+    { label: "Tier & Benefits", to: "/donor/rewards/tiers-benefits" },
     { label: "Lucky Prize", to: "/donor/lucky-prize" },
-  ];
-
-  const profileSubItems: SubItem[] = [
-    { label: "My Profile", to: "/donor/profile" },
-    { label: "Payment Methods", to: "/donor/profile/payments" },
   ];
 
   const NavContent = ({
@@ -200,13 +195,6 @@ const DonorSidebar: React.FC = () => {
             label="Rewards"
             expanded={inDrawer ? true : expanded}
             subItems={rewardsSubItems}
-            onNavigate={onNavigate}
-          />
-          <SidebarItem
-            icon={<Icon name="user" />}
-            label="Profile"
-            expanded={inDrawer ? true : expanded}
-            subItems={profileSubItems}
             onNavigate={onNavigate}
           />
         </div>

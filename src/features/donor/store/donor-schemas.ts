@@ -106,10 +106,21 @@ export const ProfileDetailsSchema = z.object({
   memberSince: z.string(),
   verificationLevel: z.string(),
   completion: z.number(),
-  bankName: z.string(),
-  accountNumber: z.string(),
-  upiId: z.string(),
-  branch: z.string(),
+  bankName: z.string().optional().nullable(),
+  accountNumber: z.string().optional().nullable(),
+  upiId: z.string().optional().nullable(),
+  branch: z.string().optional().nullable(),
+  legalName: z.string().optional().default(''),
+  website: z.string().optional().default(''),
+  entityType: z.string().optional().default(''),
+  alternateContact: z.string().optional().default(''),
+  address: z.object({
+    line1: z.string().optional().default(''),
+    city: z.string().optional().default(''),
+    state: z.string().optional().default(''),
+    postalCode: z.string().optional().default(''),
+    country: z.string().optional().default(''),
+  }).optional().default({ line1: '', city: '', state: '', postalCode: '', country: '' }),
 });
 
 export const DocumentSchema = z.object({

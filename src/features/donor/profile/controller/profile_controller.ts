@@ -1,9 +1,64 @@
 import { profileInputModel } from "../store/profile_store";
 import { useDonorStore } from "../../store/donor-store";
+import { donorProfileService } from "../api/profile/profile_api";
+import { paymentMethodsService } from "../api/profile/payment_methods_api";
 
-export const onInit = () => {
-  console.log("Profile controller initialized");
+export const onInit = async () => {
+  try {
+    const store = useDonorStore.getState();
+
+    // Fetch profile + payment methods + all other dashboard data in parallel
+    const [profile, payments] = await Promise.all([
+      donorProfileService.getProfile(),
+      paymentMethodsService.getPaymentMethods()
+    ]);
+
+    store.setDonorData({
+      ...store.data,
+      profile: {
+        businessName: profile.businessName,
+        businessType: profile.businessType,
+        registrationId: profile.registrationId,
+        taxId: profile.taxId,
+        legalName: profile.legalName || '',
+        website: profile.website || '',
+        entityType: profile.entityType || '',
+        name: profile.name,
+        email: profile.email,
+        phone: profile.phone,
+        alternateContact: profile.alternateContact || '',
+        address: {
+          line1: profile.address?.line1 || '',
+          city: profile.address?.city || '',
+          state: profile.address?.state || '',
+          postalCode: profile.address?.postalCode || '',
+          country: profile.address?.country || '',
+        },
+        location: profile.location,
+        memberSince: profile.memberSince,
+        verificationLevel: profile.verificationLevel,
+        completion: profile.completion,
+        bankName: profile.bankName || '',
+        accountNumber: profile.accountNumber || '',
+        upiId: profile.upiId || '',
+        branch: profile.branch || ''
+      },
+      bankAccounts: payments.bankAccounts || [],
+      upiIds: payments.upiIds || []
+    });
+
+    // Fetch remaining data sections in parallel (non-blocking)
+    await Promise.all([
+      store.refreshDashboard(),
+      store.refreshDocuments(),
+      store.refreshPrizes(),
+      store.refreshRewards()
+    ]);
+  } catch (err) {
+    console.error("Profile load failed:", err);
+  }
 };
+
 
 export const onDestroy = () => {
   profileInputModel.reset();

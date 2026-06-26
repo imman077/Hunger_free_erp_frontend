@@ -244,14 +244,6 @@ const SidebarIcons: React.FC = () => {
     },
   ];
 
-  const profileSubItems: SubItem[] = [
-    {
-      label: "Personal Settings",
-      to: "/admin/settings",
-      icon: <Icon name="settings" className="h-4 w-4" />,
-    },
-  ];
-
   // Shared nav content used in both desktop aside and mobile drawer
   const NavContent = ({
     inDrawer = false,
@@ -340,13 +332,6 @@ const SidebarIcons: React.FC = () => {
             ]}
           />
 
-          <SidebarItem
-            icon={<Icon name="users" />}
-            label="Profile"
-            expanded={inDrawer ? true : expanded}
-            subItems={profileSubItems}
-            onNavigate={onNavigate}
-          />
         </div>
       </nav>
     </div>

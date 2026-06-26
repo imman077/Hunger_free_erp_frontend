@@ -32,8 +32,7 @@ const VolunteerRewards = () => {
         title="My Rewards"
         subtitle="Spend your points here"
         className="mb-8"
-        showPointsCard={true}
-        points={userStats.totalPoints}
+        showPointsCard={false}
       >
         {/* Payout Vault Card */}
         <div
