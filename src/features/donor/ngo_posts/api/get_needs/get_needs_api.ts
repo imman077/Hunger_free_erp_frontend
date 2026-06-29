@@ -6,8 +6,8 @@ import { getNeedsApiOutputSchema } from "./get_needs_output_model";
 import { getNeedsApiOutputModel } from "./get_needs_store";
 
 const GET_NEEDS_QUERY = gql`
-  query GetNeeds($status: String) {
-    needs(status: $status) {
+  query GetNeeds($status: String, $search: String, $urgency: Urgency) {
+    needs(status: $status, search: $search, urgency: $urgency) {
       id
       ngo
       ngoName
@@ -51,7 +51,11 @@ export async function getNeedsApi(
 
     const response = await client.query({
       query: GET_NEEDS_QUERY,
-      variables: { status: validatedInput.status },
+      variables: {
+        status: validatedInput.status,
+        ...(validatedInput.search ? { search: validatedInput.search } : {}),
+        ...(validatedInput.urgency ? { urgency: validatedInput.urgency } : {}),
+      },
       fetchPolicy: "network-only",
     });
 

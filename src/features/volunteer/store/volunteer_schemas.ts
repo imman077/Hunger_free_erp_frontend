@@ -10,6 +10,9 @@ export const VolunteerProfileSchema = z.object({
   vehicleType: z.string().optional(),
   licenseNumber: z.string().optional(),
   avatar: z.string().optional(),
+  bankName: z.string().optional().nullable(),
+  accountNumber: z.string().optional().nullable(),
+  upiId: z.string().optional().nullable(),
 });
 
 export const VolunteerStatsSchema = z.object({

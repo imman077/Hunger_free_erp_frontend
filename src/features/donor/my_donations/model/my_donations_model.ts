@@ -25,6 +25,8 @@ export const myDonationsDataSchema = z.object({
   isDeleting: z.boolean().default(false),
   isReceiptModalOpen: z.boolean().default(false),
   receiptDonation: z.any().nullable().default(null),
+  searchText: z.string().default(""),
+  isFilterDropdownOpen: z.boolean().default(false),
 });
 
 export const myDonationsPersistenceConfig = {
@@ -51,6 +53,8 @@ export const myDonationsPersistenceConfig = {
   isDeleting: false,
   isReceiptModalOpen: false,
   receiptDonation: false,
+  searchText: false,
+  isFilterDropdownOpen: false,
 };
 
 export const myDonationsSchemas = createSchemaBundle(myDonationsDataSchema, {

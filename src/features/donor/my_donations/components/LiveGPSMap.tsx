@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Maximize2, Minimize2 } from "lucide-react";
 
 interface Coords {
   lat: number;
@@ -19,9 +20,54 @@ export const LiveGPSMap: React.FC<LiveGPSMapProps> = ({
   volunteerName = "Volunteer",
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const volunteerMarkerRef = useRef<any>(null);
   const [leafletLoaded, setLeafletLoaded] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = () => {
+    if (!containerRef.current) return;
+    if (!document.fullscreenElement) {
+      containerRef.current.requestFullscreen().catch((err) => {
+        console.error("Error enabling fullscreen:", err);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
+  useEffect(() => {
+    if (mapInstanceRef.current) {
+      const timer = setTimeout(() => {
+        mapInstanceRef.current.invalidateSize();
+        if (pickupCoords && deliveryCoords) {
+          const L = (window as any).L;
+          const pLat = pickupCoords.lat || 19.0760;
+          const pLng = pickupCoords.lng || 72.8777;
+          const dLat = deliveryCoords.lat || 19.1300;
+          const dLng = deliveryCoords.lng || 72.8900;
+          const vLat = volunteerLocation?.lat || pLat;
+          const vLng = volunteerLocation?.lng || pLng;
+          const group = L.featureGroup([
+            L.marker([pLat, pLng]),
+            L.marker([dLat, dLng]),
+            L.marker([vLat, vLng]),
+          ]);
+          mapInstanceRef.current.fitBounds(group.getBounds().pad(0.15));
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [isFullscreen, leafletLoaded, pickupCoords, deliveryCoords, volunteerLocation]);
 
   // Load Leaflet dynamically from CDN
   useEffect(() => {
@@ -196,9 +242,25 @@ export const LiveGPSMap: React.FC<LiveGPSMapProps> = ({
   }, [volunteerLocation, leafletLoaded]);
 
   return (
-    <div className="relative rounded-[2rem] overflow-hidden border border-slate-100/80 shadow-md bg-slate-50 w-full h-[220px]">
+    <div
+      ref={containerRef}
+      className={`relative overflow-hidden bg-slate-50 w-full transition-all duration-300 ${
+        isFullscreen
+          ? "h-full w-full rounded-none"
+          : "rounded-[2rem] border border-slate-100/80 shadow-md h-[220px]"
+      }`}
+    >
       <div ref={mapContainerRef} className="w-full h-full z-10" />
-      
+
+      {/* Fullscreen Toggle Button */}
+      <button
+        onClick={toggleFullscreen}
+        className="absolute top-4 right-4 z-20 bg-white/95 backdrop-blur-md p-2.5 rounded-xl border border-slate-100 shadow-lg text-slate-600 hover:text-emerald-500 hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center justify-center"
+        title={isFullscreen ? "Exit Fullscreen" : "View Fullscreen"}
+      >
+        {isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+      </button>
+
       {/* Dynamic Overlay HUD HUD Info */}
       <div className="absolute top-4 left-4 z-20 bg-white/95 backdrop-blur-md px-3.5 py-2.5 rounded-2xl border border-slate-100 shadow-lg flex flex-col gap-0.5 pointer-events-none">
         <span className="text-[9px] font-black uppercase text-emerald-600 tracking-wider flex items-center gap-1.5 animate-pulse">

@@ -6,7 +6,7 @@ import RewardsMarketplace from "./components/RewardsMarketplace";
 
 const DonorRewards = () => {
   const { user } = useAuthStore();
-  const userId = user?.id || "6a1939fe875b850d3dd88b6b";
+  const userId = user?.id;
 
   useEffect(() => {
     if (userId) {

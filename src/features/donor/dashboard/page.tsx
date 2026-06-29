@@ -38,7 +38,14 @@ const DonorDashboardPage = () => {
 
   const { data, donationStats } = useDonorStore();
   const currentPoints = data.currentPoints;
-  const recentActivities = data.recentActivities;
+  const recentActivities = data.donationHistory.slice(0, 5).map((d: any) => ({
+    id: d.id,
+    title: d.foodType,
+    ngo: d.ngo || "Pending NGO",
+    time: d.createdAt ? new Date(d.createdAt).toLocaleDateString('en-IN') : d.date || 'Recently',
+    status: d.status === 'DELIVERED' ? 'Collected' : d.status === 'PICKED_UP' ? 'In Transit' : d.status,
+    category: d.category
+  }));
   const profile = data.profile;
 
   const milestones = dashboardInputModel.useSelector(
@@ -496,47 +503,13 @@ const DonorDashboardPage = () => {
                   );
                 })
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center py-12 px-6 text-center relative overflow-hidden group bg-white/80 backdrop-blur-xl border border-slate-100 rounded-[32px] shadow-[0_8px_30px_rgba(0,0,0,0.02)] mt-2">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full blur-3xl pointer-events-none group-hover:bg-green-500/10 transition-colors duration-700" />
-                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl pointer-events-none group-hover:bg-blue-500/10 transition-colors duration-700" />
-                  
-                  <div className="relative z-10 flex flex-col items-center">
-                    <motion.div
-                      animate={{ 
-                        y: [0, -8, 0],
-                      }}
-                      transition={{
-                        duration: 5,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                      className="relative w-40 h-28 -mb-1"
-                    >
-                      <img
-                        src="/empty_food.png"
-                        alt="No Activity"
-                        className="w-full h-full object-contain opacity-90"
-                      />
-                    </motion.div>
-
-                    <div className="space-y-2 mb-8">
-                      <h3 className="text-xl font-black text-slate-800 tracking-tight leading-none">
-                        No activity yet
-                      </h3>
-                      <p className="text-[11px] font-bold text-slate-500/70 max-w-[240px] mx-auto leading-relaxed">
-                        You haven't created any donation requests yet. <br />
-                        Start sharing surplus food and help someone in need.
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => navigate("/donor/donations/create")}
-                      className="px-8 py-3.5 bg-[#22c55e] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#16a34a] transition-all flex items-center justify-center gap-2 active:scale-95 shadow-md shadow-green-500/10"
-                    >
-                      <img src="/giving.png" className="w-5 h-5 object-contain" alt="Giving" />
-                      <span>Start Your Journey</span>
-                    </button>
-                  </div>
+                <div className="flex-1 flex flex-col items-center justify-center border border-dashed rounded-xl p-8 text-center mt-2" style={{ borderColor: "var(--border-color)" }}>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-green-500 mb-1">
+                    No Activity Yet
+                  </span>
+                  <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+                    No donation records found.
+                  </p>
                 </div>
               )}
             </div>

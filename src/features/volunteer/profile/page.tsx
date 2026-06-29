@@ -173,9 +173,9 @@ const VolunteerProfile = () => {
       score: 940,
       rating: 4.9,
     },
-    bankName: "State Bank of India",
-    accountNumber: "**** 1234",
-    upiId: "rahul@okaxis",
+    bankName: storeProfile.bankName || "State Bank of India",
+    accountNumber: storeProfile.accountNumber || "**** 1234",
+    upiId: storeProfile.upiId || "rahul@okaxis",
   };
 
   if (isLoading) {

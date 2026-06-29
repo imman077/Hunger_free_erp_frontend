@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getProfileApiOutputModel } from "../api/get_profile/get_profile_store";
 import { tiersService } from "../../dashboard/api/tiers/tiers_api";
 import type { GamificationTier } from "../../dashboard/api/tiers/tiers_output_model";
+import { mapBankAccounts, mapUpiIds } from "../../store/map-payment-methods";
 
 export const useDonorProfile = (options?: { skipTiers?: boolean }) => {
   const skipTiers = options?.skipTiers ?? false;
@@ -42,23 +43,8 @@ export const useDonorProfile = (options?: { skipTiers?: boolean }) => {
     return new Date(createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   };
 
-  const bankAccounts = (profileData?.paymentMethods?.bankAccounts || []).map((b: any, index: number) => ({
-    id: b.id || `bank-${index}`,
-    bankName: b.bankName || '',
-    accountHolder: b.accountHolder || '',
-    accountNumber: b.accountNumber || '',
-    ifscCode: b.ifscCode || '',
-    isPrimary: b.isPrimary ?? false,
-    isVerified: b.isVerified ?? false,
-  }));
-
-  const upiIds = (profileData?.paymentMethods?.upiIds || []).map((u: any, index: number) => ({
-    id: u.id || `upi-${index}`,
-    vpa: u.vpa || '',
-    label: u.label || '',
-    isPrimary: u.isPrimary ?? false,
-    isVerified: u.isVerified ?? false,
-  }));
+  const bankAccounts = mapBankAccounts(profileData?.paymentMethods?.bankAccounts);
+  const upiIds = mapUpiIds(profileData?.paymentMethods?.upiIds);
 
   const primaryBank = bankAccounts.find((b: any) => b.isPrimary) || bankAccounts[0];
   const primaryUpi = upiIds.find((u: any) => u.isPrimary) || upiIds[0];

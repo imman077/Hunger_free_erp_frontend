@@ -6,8 +6,8 @@ import { getMyDonationsApiOutputSchema } from "./get_my_donations_output_model";
 import { getMyDonationsApiOutputModel } from "./get_my_donations_store";
 
 export const GET_MY_DONATIONS_QUERY = gql`
-  query GetMyDonations($status: String, $sortOrder: String) {
-    donations(status: $status, sortOrder: $sortOrder) {
+  query GetMyDonations($userId: String, $status: String, $sortOrder: String, $search: String) {
+    donations(userId: $userId, status: $status, sortOrder: $sortOrder, search: $search) {
       id
       foodType
       category
@@ -75,12 +75,14 @@ export async function getMyDonationsApi(
     const response = await client.query({
       query: GET_MY_DONATIONS_QUERY,
       variables: {
-        ...(validatedInput.status
+        ...(validatedInput.userId ? { userId: validatedInput.userId } : {}),
+        ...(validatedInput.status && validatedInput.status !== "Assigned"
           ? { status: validatedInput.status === "Active" ? "PENDING" : validatedInput.status.toUpperCase() }
           : {}),
         ...(validatedInput.sortOrder
           ? { sortOrder: validatedInput.sortOrder === "Newest First" ? "NEWEST_FIRST" : "OLDEST_FIRST" }
           : {}),
+        ...(validatedInput.search ? { search: validatedInput.search } : {}),
       },
       fetchPolicy: "network-only",
     });

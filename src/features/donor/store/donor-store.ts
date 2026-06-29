@@ -4,6 +4,7 @@ import type { DonorData } from "./donor-schemas";
 import client from "../../../global/api/apollo-client";
 import { GET_MY_DONATIONS_QUERY as GET_MY_DONATIONS } from "../my_donations/api/get_my_donations/get_my_donations_api";
 import axiosInstance from "../../../global/utils/axios-instance";
+import { useAuthStore } from "../../../global/store/auth-store";
 
 // Empty baseline (no mock data at all — APIs fill this in)
 const emptyData: DonorData = {
@@ -57,10 +58,6 @@ interface DonorState {
   setLoading: (isLoading: boolean) => void;
   setError: (error: string | null) => void;
   refreshData: (status?: string, sortOrder?: string) => Promise<void>;
-  refreshDashboard: () => Promise<void>;
-  refreshDocuments: () => Promise<void>;
-  refreshPrizes: () => Promise<void>;
-  refreshRewards: () => Promise<void>;
   setRedonatePayload: (payload: any | null) => void;
 }
 
@@ -90,67 +87,15 @@ export const useDonorStore = create<DonorState>((set) => ({
   setLoading: (isLoading) => set({ isLoading }),
   setError: (error) => set({ error }),
 
-  refreshDashboard: async () => {
-    try {
-      const res = await axiosInstance.get("donor-profiles/me/dashboard/");
-      const { currentPoints, stats, recentActivities, donationStats } = res.data;
-      set((state) => ({
-        data: { ...state.data, currentPoints: currentPoints || 0, stats: stats || [], recentActivities: recentActivities || [] },
-        donationStats: donationStats || state.donationStats
-      }));
-    } catch (err) {
-      console.error("Dashboard fetch failed:", err);
-    }
-  },
-
-  refreshDocuments: async () => {
-    try {
-      const res = await axiosInstance.get("donor-profiles/me/documents/");
-      set((state) => ({ data: { ...state.data, documents: res.data || [] } }));
-    } catch (err) {
-      console.error("Documents fetch failed:", err);
-    }
-  },
-
-  refreshPrizes: async () => {
-    try {
-      const res = await axiosInstance.get("lucky-spin-prizes/?role=DONOR");
-      const prizes = (res.data || []).map((p: any) => ({
-        id: p.id || p._id,
-        label: p.label || p.name,
-        icon: p.icon || '🎁',
-        color: p.color || 'var(--bg-secondary)'
-      }));
-      set((state) => ({ data: { ...state.data, prizes } }));
-    } catch (err) {
-      console.error("Prizes fetch failed:", err);
-    }
-  },
-
-  refreshRewards: async () => {
-    try {
-      const res = await axiosInstance.get("rewards/?role=DONOR");
-      const rewards = (res.data || []).map((r: any) => ({
-        id: r.id || r._id,
-        name: r.name,
-        amount: r.amount || null,
-        desc: r.description || r.desc || null,
-        points: r.pointsRequired || r.points || 0,
-        available: r.available !== false,
-        category: r.category || 'cash'
-      }));
-      set((state) => ({ data: { ...state.data, rewards } }));
-    } catch (err) {
-      console.error("Rewards fetch failed:", err);
-    }
-  },
-
   refreshData: async (status?: string, sortOrder?: string) => {
     set({ isLoading: true });
+    const user = useAuthStore.getState().user;
+    const userId = user?.id ? String(user.id) : null;
     try {
       const { data } = await client.query<{ donations: any[], donationStats: any }>({
         query: GET_MY_DONATIONS,
         variables: {
+          ...(userId ? { userId } : {}),
           ...(status ? { status: status === 'Active' ? 'PENDING' : status.toUpperCase() } : {}),
           ...(sortOrder ? { sortOrder: sortOrder === 'Newest First' ? 'NEWEST_FIRST' : 'OLDEST_FIRST' } : {})
         },

@@ -11,10 +11,11 @@ import {
   Loader2,
   Box,
   Heart,
-  TrendingUp,
-  ChevronRight,
   ChevronLeft,
-  Filter,
+  ChevronRight,
+  ChevronDown,
+  Check,
+  TrendingUp,
 } from "lucide-react";
 import { Button } from "@heroui/react";
 import ReusableTable, {
@@ -33,6 +34,7 @@ import {
   handleApplyToHelp,
   handleFulfillSubmit,
   handleValueChange,
+  fetchNeeds,
 } from "../controller/ngo_posts_controller";
 
 const EMPTY_ARRAY: any[] = [];
@@ -48,19 +50,12 @@ export const NgoPostsHeader = () => {
       subtitle="Help local NGOs by contributing what they need most"
       greenLastWord={true}
       className="mb-8"
-    >
-      <div className="flex flex-col items-end">
-        <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest leading-none mb-1">
-          Live Update
-        </span>
-        <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 text-emerald-500 rounded-lg border border-emerald-500/20 shrink-0">
-          <TrendingUp size={12} />
-          <span className="text-[13px] font-black tabular-nums">
-            {needs.length} Active Posts
-          </span>
-        </div>
-      </div>
-    </PageHeader>
+      showPointsCard={true}
+      points={needs.length}
+      pointsCardTitle="Live Update"
+      pointsCardUnit="Active Posts"
+      pointsCardIcon={<TrendingUp size={20} className="text-green-500" />}
+    />
   );
 };
 
@@ -75,112 +70,158 @@ export const NgoPostsControls = () => {
     (state) => state.ngoPostsData.categoryFilter
   );
 
+  const [searchValue, setSearchValue] = useState(searchQuery);
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    setSearchValue(searchQuery);
+  }, [searchQuery]);
+
   const needs = getNeedsApiOutputModel.useSelector(
     (state) => state.getNeedsApiData?.data?.needs || EMPTY_ARRAY
   );
 
-  const categories = [
-    "ALL",
-    ...Array.from(new Set(needs.map((n: any) => n.category))),
+  const priorities = [
+    { id: "ALL", label: "All Priorities" },
+    { id: "HIGH", label: "High Priority" },
+    { id: "MEDIUM", label: "Medium Priority" },
+    { id: "LOW", label: "Low Priority" },
   ];
 
   return (
-    <div
-      className="relative z-10 px-6 py-4 flex flex-col xl:flex-row items-center justify-between gap-6 rounded-xl border shadow-sm"
-      style={{
-        backgroundColor: "var(--bg-secondary)",
-        borderColor: "var(--border-color)",
-      }}
-    >
-      <div className="relative w-full md:w-[320px]">
-        <Search
-          size={14}
-          className="absolute left-4 top-1/2 -translate-y-1/2"
-          style={{ color: "var(--text-muted)" }}
-        />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) =>
-            ngoPostsInputModel.update({ searchQuery: e.target.value })
-          }
-          placeholder="Search items, NGOs, or locations..."
-          className="w-full pl-11 pr-4 py-2.5 rounded-xl text-[12px] font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-sm border"
-          style={{
-            backgroundColor: "var(--bg-primary)",
-            borderColor: "var(--border-color)",
-            color: "var(--text-primary)",
-          }}
-        />
+    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6 mb-8 w-full">
+      {/* Left Column: Title & Subtitle */}
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0">
+          <Heart className="text-green-500" size={20} />
+        </div>
+        <div className="space-y-0.5 text-start">
+          <h2 className="text-xl font-bold tracking-tight text-slate-800">
+            NGO Needs Marketplace
+          </h2>
+          <p className="text-xs text-slate-500 font-medium">
+            Discover urgent food requirements posted by local NGOs and support them
+          </p>
+        </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-4 w-full xl:w-auto justify-start xl:justify-end">
-        {/* Category Filter (Hover Dropdown with Filter Icon) */}
-        <div className="relative group/filter z-[150] w-full sm:w-auto">
-          <div
-            className="absolute right-0 top-full mt-2 w-48 shadow-xl rounded-xl opacity-0 invisible group-hover/filter:opacity-100 group-hover/filter:visible transition-all z-[160] overflow-hidden border bg-white"
-            style={{
-              borderColor: "var(--border-color)",
+      {/* Right Column: Search, Filter and View Switcher */}
+      <div className="flex flex-wrap lg:flex-nowrap items-center gap-3.5 w-full lg:w-auto justify-start lg:justify-end">
+        {/* Search Bar */}
+        <div className="relative w-full sm:w-[240px]">
+          <input
+            type="text"
+            placeholder="Search items, NGOs, or locations..."
+            value={searchValue}
+            onChange={(e) => {
+              const val = e.target.value;
+              setSearchValue(val);
+              if (val === "") {
+                ngoPostsInputModel.update({ searchQuery: "" });
+                fetchNeeds("");
+              }
             }}
-          >
-            <div className="p-2 space-y-1">
-              {categories.map((cat: any) => (
-                <button
-                  key={cat}
-                  onClick={() => {
-                    ngoPostsInputModel.update({ categoryFilter: cat });
-                  }}
-                  className={`w-full text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-colors ${
-                    categoryFilter === cat
-                      ? "bg-emerald-500/10 text-[#22c55e]"
-                      : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-          </div>
-          <button
-            className="flex items-center justify-center w-full sm:w-10 h-10 rounded-xl transition-all shadow-sm border bg-white hover:border-emerald-500 text-slate-500"
-            style={{
-              borderColor: "var(--border-color)",
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                ngoPostsInputModel.update({ searchQuery: searchValue });
+                fetchNeeds(searchValue);
+              }
             }}
-          >
-            <Filter size={16} />
-          </button>
+            className="w-full pl-4 pr-10 py-3 bg-white border border-slate-200 hover:border-emerald-500 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 shadow-sm transition-all outline-none"
+          />
+          <Search
+            onClick={() => {
+              ngoPostsInputModel.update({ searchQuery: searchValue });
+              fetchNeeds(searchValue);
+            }}
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-500 transition-colors cursor-pointer"
+            size={16}
+          />
         </div>
 
-        {/* View Switcher (Styled like my_donations page) */}
-        <div
-          className="flex items-center gap-1 p-1 rounded-xl shadow-sm border shrink-0 w-full sm:w-auto"
-          style={{
-            backgroundColor: "var(--bg-primary)",
-            borderColor: "var(--border-color)",
-          }}
-        >
-          {[
-            { id: "table", icon: Table, label: "Table" },
-            { id: "card", icon: LayoutGrid, label: "Grid" },
-          ].map((mode) => (
-            <button
-              key={mode.id}
-              onClick={() => ngoPostsInputModel.update({ viewMode: mode.id as any })}
-              className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all w-1/2 sm:w-auto ${
-                viewMode === mode.id
-                  ? "bg-[#22c55e] text-white shadow-lg shadow-green-500/20"
-                  : "hover:bg-[var(--bg-secondary)]"
-              }`}
-              style={{
-                backgroundColor:
-                  viewMode === mode.id ? undefined : "var(--bg-primary)",
-                color: viewMode === mode.id ? "white" : "var(--text-muted)",
-              }}
-            >
-              <mode.icon size={14} />
-              <span>{mode.label}</span>
-            </button>
-          ))}
+        {/* Category Filter */}
+        <div className="relative w-full sm:w-auto">
+          <button
+            onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
+            className="w-full sm:w-[150px] bg-white border border-slate-200 hover:border-emerald-500 rounded-xl p-3 px-4 flex flex-col items-start gap-0.5 shadow-sm text-start outline-none transition-all cursor-pointer relative"
+          >
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">
+              Priority
+            </span>
+            <div className="flex justify-between items-center w-full gap-2 mt-0.5">
+              <span className="text-xs font-black text-slate-700 leading-none truncate">
+                {priorities.find(p => p.id === categoryFilter)?.label || "All Priorities"}
+              </span>
+              <ChevronDown
+                className={`text-slate-400 shrink-0 transition-transform duration-300 ${
+                  isCategoryDropdownOpen ? "rotate-180 text-emerald-500" : ""
+                }`}
+                size={14}
+              />
+            </div>
+          </button>
+
+          {isCategoryDropdownOpen && (
+            <>
+              <div
+                className="fixed inset-0 z-40 cursor-default"
+                onClick={() => setIsCategoryDropdownOpen(false)}
+              />
+              <div className="absolute left-0 sm:right-0 top-full mt-1.5 w-full sm:w-[150px] bg-white border border-slate-200 rounded-xl shadow-[0_12px_30px_rgba(0,0,0,0.08)] overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                {priorities.map((opt) => {
+                  const isSelected = categoryFilter === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      onClick={() => {
+                        ngoPostsInputModel.update({ categoryFilter: opt.id });
+                        setIsCategoryDropdownOpen(false);
+                        fetchNeeds(searchValue, opt.id);
+                      }}
+                      className={`w-full text-left px-4 py-3 text-xs transition-colors flex items-center justify-between cursor-pointer ${
+                        isSelected
+                          ? "bg-emerald-50 text-emerald-600 font-black"
+                          : "text-slate-600 hover:bg-slate-50 font-semibold"
+                      }`}
+                    >
+                      <span>{opt.label}</span>
+                      {isSelected && <Check size={14} className="text-emerald-500 shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* View Switcher (Cards / Table) */}
+        <div className="flex items-center bg-slate-100 rounded-xl p-1 shrink-0 w-full sm:w-auto">
+          <button
+            onClick={() =>
+              ngoPostsInputModel.update({ viewMode: "card" })
+            }
+            className={`px-3.5 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer w-1/2 sm:w-auto ${
+              viewMode === "card"
+                ? "bg-emerald-500 text-white shadow-md active:scale-95"
+                : "text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            <LayoutGrid size={14} />
+            Cards
+          </button>
+          <button
+            onClick={() =>
+              ngoPostsInputModel.update({ viewMode: "table" })
+            }
+            className={`px-3.5 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer w-1/2 sm:w-auto ${
+              viewMode === "table"
+                ? "bg-emerald-500 text-white shadow-md active:scale-95"
+                : "text-slate-500 hover:text-slate-800"
+            }`}
+          >
+            <Table size={14} />
+            Table
+          </button>
         </div>
       </div>
     </div>
@@ -269,9 +310,9 @@ export const NgoPostsGrid = ({ filteredNeeds }: { filteredNeeds: any[] }) => {
                 <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-2">
                   <span
                     className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.2em] shadow-xl backdrop-blur-md border ${
-                      need.urgency === "Urgent"
-                        ? "bg-red-50 text-white border-red-400/50 animate-pulse"
-                        : need.urgency === "High"
+                      need.urgency === "URGENT" || need.urgency === "Urgent"
+                        ? "bg-red-500 text-white border-red-400/50 animate-pulse"
+                        : need.urgency === "HIGH" || need.urgency === "High"
                           ? "bg-amber-500 text-white border-amber-400/50"
                           : "bg-emerald-500 text-white border-emerald-400/50"
                     }`}
@@ -428,6 +469,9 @@ export const NgoPostsTable = ({ filteredNeeds }: { filteredNeeds: any[] }) => {
     <div className="border rounded-2xl shadow-sm p-4 overflow-hidden bg-[var(--bg-primary)] border-[var(--border-color)]">
       <ReusableTable
         data={filteredNeeds}
+        enableSearch={false}
+        enableFilters={false}
+        showColumnSettings={false}
         onRowClick={(need: any) =>
           ngoPostsInputModel.update({ selectedNeed: need, isDrawerOpen: true })
         }
@@ -467,9 +511,9 @@ export const NgoPostsTable = ({ filteredNeeds }: { filteredNeeds: any[] }) => {
               return (
                 <span
                   className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${
-                    need.urgency === "Urgent"
+                    need.urgency === "URGENT" || need.urgency === "Urgent"
                       ? "bg-red-500/10 text-red-500 border-red-500/20"
-                      : need.urgency === "High"
+                      : need.urgency === "HIGH" || need.urgency === "High"
                         ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
                         : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
                   }`}

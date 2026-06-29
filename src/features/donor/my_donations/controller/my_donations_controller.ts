@@ -11,13 +11,17 @@ import { useAuthStore } from "../../../../global/store/auth-store";
 import { saveDonationDraftApi } from "../../create_donation/api/save_donation_draft/save_donation_draft_api";
 import { createDonationInputModel } from "../../create_donation/store/create_donation_store";
 
-export const refreshData = async () => {
+export const refreshData = async (searchOverride?: string) => {
   const state = myDonationsInputModel.useStore.getState().myDonationsData;
   const status = state.statusFilter;
   const sortOrder = state.sortOrder;
+  const search = searchOverride !== undefined ? searchOverride : state.searchText;
+
+  const user = useAuthStore.getState().user;
+  const userId = user?.id ? String(user.id) : null;
 
   try {
-    const res = await getMyDonationsApi({ status, sortOrder });
+    const res = await getMyDonationsApi({ status, sortOrder, userId, search });
     if (res?.data) {
       // Sync with global store
       useDonorStore.setState((globalState) => ({
@@ -37,7 +41,6 @@ export const refreshData = async () => {
 };
 
 export const onInit = () => {
-  console.log("MyDonations page initialized");
   createDonationInputModel.reset();
   try {
     localStorage.removeItem("redonate_draft");

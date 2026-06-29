@@ -11,11 +11,20 @@ import {
   Smartphone,
   CreditCard,
 } from "lucide-react";
-import { toast } from "sonner";
 import ResuableInput from "../../../../global/components/reusable-components/Input";
 import ResuableModal from "../../../../global/components/reusable-components/Modal";
 import ResuableDrawer from "../../../../global/components/reusable-components/Drawer";
 import type { BankAccount, UpiId } from "../../store/donor-schemas";
+import {
+  handleAddBankAccount,
+  handleUpdateBankAccount,
+  handleRemoveBankAccount,
+  handleAddUpi,
+  handleRemoveUpi,
+  handleUpdateUpi,
+  handleSetPrimaryBank,
+  handleSetPrimaryUpi,
+} from "../controller/donor_payment_methods_controller";
 
 interface Props {
   bankAccounts: BankAccount[];
@@ -23,15 +32,12 @@ interface Props {
   isLoading?: boolean;
 }
 
-export const PaymentMethodsBodyField = memo(({ bankAccounts: initialBanks, upiIds: initialUpis, isLoading }: Props) => {
+export const PaymentMethodsBodyField = memo(({ bankAccounts, upiIds, isLoading }: Props) => {
   const [activeTab, setActiveTab] = useState<"bank" | "upi">("bank");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditDrawerOpen, setIsEditDrawerOpen] = useState(false);
   const [methodType, setMethodType] = useState<"bank" | "upi">("bank");
   const [editingId, setEditingId] = useState<string | null>(null);
-
-  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>(initialBanks);
-  const [upiIds, setUpiIds] = useState<UpiId[]>(initialUpis);
 
   const [bankForm, setBankForm] = useState({
     bankName: "",
@@ -47,64 +53,44 @@ export const PaymentMethodsBodyField = memo(({ bankAccounts: initialBanks, upiId
     isPrimary: false,
   });
 
-  // Sync when props update (after API load)
-  const [synced, setSynced] = useState(false);
-  if (!synced && (initialBanks.length > 0 || initialUpis.length > 0)) {
-    setBankAccounts(initialBanks);
-    setUpiIds(initialUpis);
-    setSynced(true);
-  }
-
-  const handleAddBank = () => {
+  const handleOpenAddBank = () => {
     setMethodType("bank");
     setBankForm({ bankName: "", accountHolder: "", accountNumber: "", ifscCode: "", isPrimary: bankAccounts.length === 0 });
     setIsModalOpen(true);
   };
 
-  const handleAddUpi = () => {
+  const handleOpenAddUpi = () => {
     setMethodType("upi");
     setUpiForm({ vpa: "", label: "", isPrimary: upiIds.length === 0 });
     setIsModalOpen(true);
   };
 
-  const saveBank = () => {
-    const newBank: BankAccount = { id: Math.random().toString(36).substr(2, 9), ...bankForm, isVerified: false };
-    setBankAccounts(newBank.isPrimary
-      ? [...bankAccounts, newBank].map((b) => ({ ...b, isPrimary: b.id === newBank.id }))
-      : [...bankAccounts, newBank]);
+  const saveBank = async () => {
+    await handleAddBankAccount(bankForm);
     setIsModalOpen(false);
-    toast.success("Bank Account Added", { description: `${bankForm.bankName} has been linked.` });
     setBankForm({ bankName: "", accountHolder: "", accountNumber: "", ifscCode: "", isPrimary: false });
   };
 
-  const saveUpi = () => {
-    const newUpi: UpiId = { id: Math.random().toString(36).substr(2, 9), ...upiForm, isVerified: true };
-    setUpiIds(newUpi.isPrimary
-      ? [...upiIds, newUpi].map((u) => ({ ...u, isPrimary: u.id === newUpi.id }))
-      : [...upiIds, newUpi]);
+  const saveUpi = async () => {
+    await handleAddUpi(upiForm);
     setIsModalOpen(false);
-    toast.success("UPI ID Linked", { description: `${upiForm.vpa} is now active.` });
     setUpiForm({ vpa: "", label: "", isPrimary: false });
   };
 
-  const deleteBank = (id: string) => {
-    setBankAccounts(bankAccounts.filter((b) => b.id !== id));
-    toast.error("Bank Account removed");
+  const deleteBank = async (id: string) => {
+    await handleRemoveBankAccount(id);
   };
 
-  const deleteUpi = (id: string) => {
-    setUpiIds(upiIds.filter((u) => u.id !== id));
-    toast.error("UPI Identity removed");
+  const deleteUpi = async (id: string) => {
+    await handleRemoveUpi(id);
   };
 
-  const setPrimaryBank = (id: string) => {
-    setBankAccounts(bankAccounts.map((b) => ({ ...b, isPrimary: b.id === id })));
-    toast.success("Primary Account Updated");
+  const setPrimaryBank = async (id: string) => {
+    await handleSetPrimaryBank(id);
   };
 
-  const setPrimaryUpi = (id: string) => {
-    setUpiIds(upiIds.map((u) => ({ ...u, isPrimary: u.id === id })));
-    toast.success("Primary VPA Updated");
+  const setPrimaryUpi = async (id: string) => {
+    await handleSetPrimaryUpi(id);
   };
 
   const handleEditBank = (account: BankAccount) => {
@@ -121,19 +107,17 @@ export const PaymentMethodsBodyField = memo(({ bankAccounts: initialBanks, upiId
     setIsEditDrawerOpen(true);
   };
 
-  const updateBank = () => {
-    const updated = bankAccounts.map((b) => b.id === editingId ? { ...b, ...bankForm } : b);
-    setBankAccounts(bankForm.isPrimary ? updated.map((b) => ({ ...b, isPrimary: b.id === editingId })) : updated);
+  const updateBank = async () => {
+    if (!editingId) return;
+    await handleUpdateBankAccount(editingId, bankForm);
     setIsEditDrawerOpen(false);
-    toast.success("Account Updated");
     setEditingId(null);
   };
 
-  const updateUpi = () => {
-    const updated = upiIds.map((u) => u.id === editingId ? { ...u, ...upiForm } : u);
-    setUpiIds(upiForm.isPrimary ? updated.map((u) => ({ ...u, isPrimary: u.id === editingId })) : updated);
+  const updateUpi = async () => {
+    if (!editingId) return;
+    await handleUpdateUpi(editingId, upiForm);
     setIsEditDrawerOpen(false);
-    toast.success("UPI Identity Modified");
     setEditingId(null);
   };
 
@@ -188,7 +172,7 @@ export const PaymentMethodsBodyField = memo(({ bankAccounts: initialBanks, upiId
             <div className="w-12 h-1 bg-green-500 mt-2" />
           </div>
           <button
-            onClick={activeTab === "bank" ? handleAddBank : handleAddUpi}
+            onClick={activeTab === "bank" ? handleOpenAddBank : handleOpenAddUpi}
             className="group flex items-center gap-3 px-6 py-4 bg-[#22c55e] text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-sm hover:opacity-90 transition-all active:scale-95 shadow-lg shadow-green-500/20"
           >
             <Plus size={16} strokeWidth={3} className="group-hover:rotate-90 transition-transform" />

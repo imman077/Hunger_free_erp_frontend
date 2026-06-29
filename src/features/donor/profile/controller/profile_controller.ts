@@ -4,6 +4,7 @@ import { getProfileApi } from "../api/get_profile/get_profile_api";
 import { getProfileApiOutputModel } from "../api/get_profile/get_profile_store";
 import { submitEnquiryApi } from "../api/submit_enquiry/submit_enquiry_api";
 import { toast } from "sonner";
+import { mapBankAccounts, mapUpiIds } from "../../store/map-payment-methods";
 
 export const onInit = async () => {
   try {
@@ -65,8 +66,8 @@ export const handleSubmit = async () => {
 
     const inputPayload = {
       userId: profileData?.id || null,
-      name: profileData?.username || "Star Hotel",
-      email: profileData?.email || "info@starhotel.com",
+      name: profileData?.username || "",
+      email: profileData?.email || "",
       phone: profileData?.phone || null,
       subject: `Profile Update - ${formState.requestCategory?.toUpperCase() || 'General'}`,
       message: compiledMessage,
@@ -125,23 +126,8 @@ export const getProfileData = () => {
   const profileData = getProfileApiOutputModel.useStore.getState().getProfileApiData?.data;
   const documents = profileData?.donorProfile?.documents || [];
   
-  const bankAccounts = (profileData?.paymentMethods?.bankAccounts || []).map((b: any, index: number) => ({
-    id: b.id || `bank-${index}`,
-    bankName: b.bankName || '',
-    accountHolder: b.accountHolder || '',
-    accountNumber: b.accountNumber || '',
-    ifscCode: b.ifscCode || '',
-    isPrimary: b.isPrimary ?? false,
-    isVerified: b.isVerified ?? false,
-  }));
-
-  const upiIds = (profileData?.paymentMethods?.upiIds || []).map((u: any, index: number) => ({
-    id: u.id || `upi-${index}`,
-    vpa: u.vpa || '',
-    label: u.label || '',
-    isPrimary: u.isPrimary ?? false,
-    isVerified: u.isVerified ?? false,
-  }));
+  const bankAccounts = mapBankAccounts(profileData?.paymentMethods?.bankAccounts);
+  const upiIds = mapUpiIds(profileData?.paymentMethods?.upiIds);
 
   const primaryBank = bankAccounts.find((b: any) => b.isPrimary) || bankAccounts[0];
   const primaryUpi = upiIds.find((u: any) => u.isPrimary) || upiIds[0];

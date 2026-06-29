@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
   Package,
@@ -17,8 +17,6 @@ import {
   ShoppingBag,
   Utensils,
   ChevronDown,
-  ChevronRight,
-  ChevronLeft,
   LayoutList,
   Hourglass,
   Search,
@@ -32,19 +30,19 @@ import {
   XCircle,
   X,
   Trash2,
-  Filter,
   LayoutGrid,
   Table,
+  HeartHandshake,
+  Eye,
 } from "lucide-react";
 import { Modal, ModalContent } from "@heroui/react";
 import ResuableDrawer from "../../../../global/components/reusable-components/Drawer";
 import ImpactCards from "../../../../global/components/reusable-components/ImpactCards";
 import PageHeader from "../../../../global/components/reusable-components/PageHeader";
-import ReusableTable, {
-  TableChip,
-} from "../../../../global/components/reusable-components/Table";
+import ReusableTable from "../../../../global/components/reusable-components/Table";
 import { getCategoryImage } from "../../../../global/constants/donation_config";
 import { myDonationsInputModel } from "../store/my_donations_store";
+import { getMyDonationsApiOutputModel } from "../api/get_my_donations/get_my_donations_store";
 import { useDonorStore } from "../../store/donor-store";
 import { LiveGPSMap } from "./LiveGPSMap";
 import {
@@ -152,24 +150,23 @@ export const MyDonationsList = () => {
   const cancellingId = myDonationsInputModel.useSelector(
     (state) => state.myDonationsData.cancellingId
   );
+  const searchText = myDonationsInputModel.useSelector(
+    (state) => state.myDonationsData.searchText
+  ) || "";
+  const isFilterDropdownOpen = myDonationsInputModel.useSelector(
+    (state) => state.myDonationsData.isFilterDropdownOpen
+  );
+  const isLoading = getMyDonationsApiOutputModel.useSelector(
+    (state) => state.getMyDonationsApiData?.loading
+  );
 
-  const sliderRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
-
-  const checkScroll = () => {
-    if (sliderRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = sliderRef.current;
-      setCanScrollLeft(scrollLeft > 10);
-      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
-    }
-  };
+  const [searchValue, setSearchValue] = useState(searchText);
 
   useEffect(() => {
-    checkScroll();
-    window.addEventListener("resize", checkScroll);
-    return () => window.removeEventListener("resize", checkScroll);
-  }, [donationHistory]);
+    setSearchValue(searchText);
+  }, [searchText]);
+
+
 
   const filtered = (donationHistory || [])
     .filter((donation: any) => {
@@ -181,6 +178,17 @@ export const MyDonationsList = () => {
       if (statusFilter === "Cancelled") return donation.status === "CANCELLED";
       return true;
     })
+    .filter((donation: any) => {
+      if (!searchText) return true;
+      const term = searchText.toLowerCase();
+      return (
+        String(donation.foodType || "").toLowerCase().includes(term) ||
+        String(donation.category || "").toLowerCase().includes(term) ||
+        String(donation.description || "").toLowerCase().includes(term) ||
+        String(donation.pickupAddress || "").toLowerCase().includes(term) ||
+        String(donation.id || "").toLowerCase().includes(term)
+      );
+    })
     .sort((a: any, b: any) => {
       const dateA = new Date(a.date).getTime();
       const dateB = new Date(b.date).getTime();
@@ -189,127 +197,201 @@ export const MyDonationsList = () => {
 
   return (
     <div className="w-full space-y-8">
-      <div className="mb-10">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
-          <div className="relative">
-            <h2 className="text-[13px] font-black uppercase tracking-[0.3em] text-[#22c55e]">
-              Recent Contributions
-            </h2>
-            <div className="absolute -bottom-2 left-0 w-8 h-[3px] bg-[#22c55e] rounded-full" />
+      <div className="mb-6">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6 mb-8 w-full">
+          {/* Left Column: Title & Subtitle */}
+          <div className="flex items-center gap-3">
+            {/* Green logo icon (hands holding a heart) */}
+            <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0">
+              <HeartHandshake className="text-green-500" size={20} />
+            </div>
+            <div className="space-y-0.5 text-start">
+              <h2 className="text-xl font-bold tracking-tight text-slate-800">
+                Recent Contributions
+              </h2>
+              <p className="text-xs text-slate-500 font-medium">
+                Track and manage all recent food donations
+              </p>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4 w-full md:w-auto justify-start md:justify-end">
-            {/* Status Filter (Hover Dropdown with Filter Icon) */}
-            <div className="relative group/filter z-[150] w-full sm:w-auto">
-              <div
-                className="absolute right-0 top-full mt-2 w-48 shadow-xl rounded-xl opacity-0 invisible group-hover/filter:opacity-100 group-hover/filter:visible transition-all z-[160] overflow-hidden border bg-white"
-                style={{
-                  borderColor: "var(--border-color)",
+          {/* Right Column: Search, Filter, Sort and View Switcher */}
+          <div className="flex flex-wrap lg:flex-nowrap items-center gap-3.5 w-full lg:w-auto justify-start lg:justify-end">
+            {/* Search Bar */}
+            <div className="relative w-full sm:w-[240px]">
+              <input
+                type="text"
+                placeholder="Search donations..."
+                value={searchValue}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSearchValue(val);
+                  if (val === "") {
+                    myDonationsInputModel.update({ searchText: "" });
+                    refreshData("");
+                  }
                 }}
-              >
-                <div className="p-2 space-y-1">
-                  {[
-                    { value: "Pending", label: "Pending" },
-                    { value: "Accepted", label: "Accepted" },
-                    { value: "Assigned", label: "Assigned" },
-                    { value: "Delivered", label: "Delivered" },
-                    { value: "Cancelled", label: "Cancelled" },
-                  ].map((opt) => (
-                    <button
-                      key={opt.value}
-                      onClick={() => {
-                        myDonationsInputModel.update({ statusFilter: opt.value });
-                        refreshData();
-                      }}
-                      className={`w-full text-left px-4 py-2.5 text-[10px] font-black uppercase tracking-widest rounded-lg transition-colors ${
-                        statusFilter === opt.value
-                          ? "bg-emerald-500/10 text-[#22c55e]"
-                          : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    myDonationsInputModel.update({ searchText: searchValue });
+                    refreshData(searchValue);
+                  }
+                }}
+                className="w-full pl-4 pr-10 py-3 bg-white border border-slate-200 hover:border-emerald-500 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 shadow-sm transition-all outline-none"
+              />
+              <Search
+                onClick={() => {
+                  myDonationsInputModel.update({ searchText: searchValue });
+                  refreshData(searchValue);
+                }}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-500 transition-colors cursor-pointer"
+                size={16}
+              />
+            </div>
+
+            {/* Dropdowns container for mobile grid alignment */}
+            <div className="grid grid-cols-2 gap-3.5 w-full sm:w-auto">
+              {/* Status Filter */}
+              <div className="relative">
+                <button
+                  onClick={() =>
+                    myDonationsInputModel.update({
+                      isFilterDropdownOpen: !isFilterDropdownOpen,
+                    })
+                  }
+                  className="w-full sm:w-[150px] bg-white border border-slate-200 hover:border-emerald-500 rounded-xl p-3 px-4 flex flex-col items-start gap-0.5 shadow-sm text-start outline-none transition-all cursor-pointer relative"
+                >
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">
+                    Status
+                  </span>
+                  <div className="flex justify-between items-center w-full gap-2 mt-0.5">
+                    <span className="text-xs font-black text-slate-700 leading-none truncate">
+                      {statusFilter || "All"}
+                    </span>
+                    <ChevronDown
+                      className={`text-slate-400 shrink-0 transition-transform duration-300 ${
+                        isFilterDropdownOpen ? "rotate-180 text-emerald-500" : ""
                       }`}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <button
-                className="flex items-center justify-center w-full sm:w-10 h-10 rounded-xl transition-all shadow-sm border bg-white hover:border-emerald-500 text-slate-500"
-                style={{
-                  borderColor: "var(--border-color)",
-                }}
-              >
-                <Filter size={16} />
-              </button>
-            </div>
-
-            {/* Sort Dropdown Button */}
-            <div className="relative w-full sm:w-auto">
-              <button
-                onClick={() =>
-                  myDonationsInputModel.update({
-                    isSortDropdownOpen: !isSortDropdownOpen,
-                  })
-                }
-                className="bg-white border border-slate-200 hover:border-emerald-500 rounded-xl px-5 py-2.5 flex items-center justify-between gap-3 text-[11px] font-bold uppercase tracking-wider text-slate-600 transition-all cursor-pointer w-full sm:w-[160px] outline-none"
-              >
-                <span>{sortOrder}</span>
-                <ChevronDown
-                  className={`text-slate-400 transition-transform duration-300 ${
-                    isSortDropdownOpen ? "rotate-180 text-emerald-500" : ""
-                  }`}
-                  size={14}
-                />
-              </button>
-
-              {isSortDropdownOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40 cursor-default"
-                    onClick={() =>
-                      myDonationsInputModel.update({
-                        isSortDropdownOpen: false,
-                      })
-                    }
-                  />
-                  <div className="absolute right-0 top-full mt-1.5 w-full sm:w-[160px] bg-white border border-slate-200 rounded-xl shadow-[0_12px_30px_rgba(0,0,0,0.08)] overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                    {[
-                      { label: "Newest First", value: "Newest First" },
-                      { label: "Oldest First", value: "Oldest First" },
-                    ].map((opt) => {
-                      const isSelected = sortOrder === opt.value;
-                      return (
-                        <button
-                          key={opt.value}
-                          onClick={() => {
-                            myDonationsInputModel.update({
-                              sortOrder: opt.value,
-                              isSortDropdownOpen: false,
-                            });
-                            refreshData();
-                          }}
-                          className={`w-full px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-left transition-all ${
-                            isSelected
-                              ? "bg-[#22c55e] text-white font-black"
-                              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      );
-                    })}
+                      size={14}
+                    />
                   </div>
-                </>
-              )}
+                </button>
+
+                {isFilterDropdownOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40 cursor-default"
+                      onClick={() =>
+                        myDonationsInputModel.update({
+                          isFilterDropdownOpen: false,
+                        })
+                      }
+                    />
+                    <div className="absolute left-0 sm:right-0 top-full mt-1.5 w-full sm:w-[150px] bg-white border border-slate-200 rounded-xl shadow-[0_12px_30px_rgba(0,0,0,0.08)] overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                      {[
+                        { value: "", label: "All" },
+                        { value: "Pending", label: "Pending" },
+                        { value: "Accepted", label: "Accepted" },
+                        { value: "Assigned", label: "Assigned" },
+                        { value: "Delivered", label: "Delivered" },
+                        { value: "Cancelled", label: "Cancelled" },
+                      ].map((opt) => {
+                        const isSelected = statusFilter === opt.value;
+                        return (
+                          <button
+                            key={opt.value}
+                            onClick={() => {
+                              myDonationsInputModel.update({
+                                statusFilter: opt.value,
+                                isFilterDropdownOpen: false,
+                              });
+                              refreshData();
+                            }}
+                            className={`w-full px-5 py-3 text-xs font-bold text-left transition-all ${
+                              isSelected
+                                ? "bg-[#22c55e] text-white font-black"
+                                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Sort Dropdown */}
+              <div className="relative">
+                <button
+                  onClick={() =>
+                    myDonationsInputModel.update({
+                      isSortDropdownOpen: !isSortDropdownOpen,
+                    })
+                  }
+                  className="w-full sm:w-[150px] bg-white border border-slate-200 hover:border-emerald-500 rounded-xl p-3 px-4 flex flex-col items-start gap-0.5 shadow-sm text-start outline-none transition-all cursor-pointer relative"
+                >
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">
+                    Sort by
+                  </span>
+                  <div className="flex justify-between items-center w-full gap-2 mt-0.5">
+                    <span className="text-xs font-black text-slate-700 leading-none truncate">
+                      {sortOrder}
+                    </span>
+                    <ChevronDown
+                      className={`text-slate-400 shrink-0 transition-transform duration-300 ${
+                        isSortDropdownOpen ? "rotate-180 text-emerald-500" : ""
+                      }`}
+                      size={14}
+                    />
+                  </div>
+                </button>
+
+                {isSortDropdownOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40 cursor-default"
+                      onClick={() =>
+                        myDonationsInputModel.update({
+                          isSortDropdownOpen: false,
+                        })
+                      }
+                    />
+                    <div className="absolute right-0 top-full mt-1.5 w-full sm:w-[150px] bg-white border border-slate-200 rounded-xl shadow-[0_12px_30px_rgba(0,0,0,0.08)] overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                      {[
+                        { label: "Newest First", value: "Newest First" },
+                        { label: "Oldest First", value: "Oldest First" },
+                      ].map((opt) => {
+                        const isSelected = sortOrder === opt.value;
+                        return (
+                          <button
+                            key={opt.value}
+                            onClick={() => {
+                              myDonationsInputModel.update({
+                                sortOrder: opt.value,
+                                isSortDropdownOpen: false,
+                              });
+                              refreshData();
+                            }}
+                            className={`w-full px-5 py-3 text-xs font-bold text-left transition-all ${
+                              isSelected
+                                ? "bg-[#22c55e] text-white font-black"
+                                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
 
-            {/* View Switcher */}
-            <div
-              className="flex items-center gap-1 p-1 rounded-xl shadow-sm border shrink-0 w-full sm:w-auto"
-              style={{
-                backgroundColor: "var(--bg-primary)",
-                borderColor: "var(--border-color)",
-              }}
-            >
+            {/* View Switcher Toggle */}
+            <div className="flex items-center gap-1 p-1 rounded-xl shadow-sm border shrink-0 bg-slate-100/50 border-slate-200/60 w-full sm:w-auto">
               {[
                 { id: "card", icon: LayoutGrid, label: "Cards" },
                 { id: "table", icon: Table, label: "Table" },
@@ -317,16 +399,11 @@ export const MyDonationsList = () => {
                 <button
                   key={mode.id}
                   onClick={() => myDonationsInputModel.update({ viewMode: mode.id as any })}
-                  className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all w-1/2 sm:w-auto ${
+                  className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all w-1/2 sm:w-auto outline-none cursor-pointer ${
                     viewMode === mode.id
-                      ? "bg-[#22c55e] text-white shadow-lg shadow-green-500/20"
-                      : "hover:bg-[var(--bg-secondary)]"
+                      ? "bg-[#22c55e] text-white shadow-[0_2px_8px_rgba(34,197,94,0.2)]"
+                      : "text-slate-500 hover:text-slate-800"
                   }`}
-                  style={{
-                    backgroundColor:
-                      viewMode === mode.id ? undefined : "var(--bg-primary)",
-                    color: viewMode === mode.id ? "white" : "var(--text-muted)",
-                  }}
                 >
                   <mode.icon size={14} />
                   <span>{mode.label}</span>
@@ -335,94 +412,97 @@ export const MyDonationsList = () => {
             </div>
           </div>
         </div>
+        {isLoading ? (
+          viewMode === "card" ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 w-full pb-6 animate-pulse">
+              {[1, 2, 3].map((n) => (
+                <div key={n} className="w-full border border-slate-100 rounded-[2.5rem] p-4 bg-white">
+                  <div className="flex justify-between items-center mb-3 px-1">
+                    <div className="h-5 w-24 bg-slate-200 rounded-full" />
+                    <div className="h-3 w-16 bg-slate-100 rounded-full" />
+                  </div>
+                  <div className="aspect-[16/10] rounded-[2rem] bg-slate-200 mb-4" />
+                  <div className="px-1 space-y-4 mb-4 text-start">
+                    <div className="h-6 w-2/3 bg-slate-200 rounded-lg" />
+                    <div className="h-3.5 w-1/3 bg-slate-100 rounded-full" />
+                    <div className="h-3 w-1/2 bg-slate-100 rounded-full" />
+                    <div className="space-y-3 pt-2">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-slate-200" />
+                        <div className="h-3 w-1/2 bg-slate-100 rounded-full" />
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-slate-200" />
+                        <div className="h-3 w-1/3 bg-slate-100 rounded-full" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="pt-4 border-t border-slate-100 flex gap-2.5">
+                    <div className="h-10 flex-1 bg-slate-200 rounded-2xl" />
+                    <div className="h-10 flex-1 bg-slate-200 rounded-2xl" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="w-full h-64 flex items-center justify-center bg-white border border-slate-200 rounded-xl">
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-10 h-10 rounded-full border-3 border-emerald-500/20 border-t-emerald-500 animate-spin" />
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest animate-pulse">Loading donations...</span>
+              </div>
+            </div>
+          )
+        ) : filtered.length === 0 && donationHistory.length > 0 ? (
+          <div className="w-full flex flex-col items-center justify-center p-12 bg-white border border-slate-100 rounded-3xl text-center shadow-sm max-w-lg mx-auto py-16">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-6 animate-bounce">
+              <Heart size={28} className="stroke-[2.5]" />
+            </div>
+            <h3 className="text-lg font-black text-slate-800 tracking-tight">
+              No Donations Found
+            </h3>
+            <p className="text-xs text-slate-500 font-medium max-w-sm mt-2 leading-relaxed">
+              We couldn't find any donations matching your current filters. Try searching for something else or adjusting your status filters.
+            </p>
+          </div>
+        ) : viewMode === "card" ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 w-full pb-6">
+            {filtered.length > 0
+              ? filtered.map((donation: any) => {
+                  const isGreen = donation.status === "PICKED_UP" || donation.status === "DELIVERED";
+                  const isBlue = donation.status === "ASSIGNED" || donation.status === "ACCEPTED";
+                  const themeClass = isGreen
+                    ? "border-green-100 bg-[#fcfdfc] hover:border-green-200"
+                    : isBlue
+                      ? "border-blue-100 bg-[#fcfhfc] hover:border-blue-200"
+                      : "border-orange-100 bg-[#fffcfc] hover:border-orange-200";
 
-        {viewMode === "card" ? (
-          <div className="relative group">
-            <AnimatePresence>
-              {canScrollLeft && (
-                <motion.button
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{
-                    opacity: 0.8,
-                    scale: [1, 1.05, 1],
-                    boxShadow: [
-                      "0 0 0 0px rgba(34, 197, 94, 0)",
-                      "0 0 0 8px rgba(34, 197, 94, 0.1)",
-                      "0 0 0 0px rgba(34, 197, 94, 0)",
-                    ],
-                  }}
-                  exit={{ opacity: 0, scale: 0.5 }}
-                  transition={{
-                    scale: { repeat: Infinity, duration: 2, ease: "easeInOut" },
-                    opacity: { duration: 0.3 },
-                  }}
-                  whileTap={{ scale: 0.8 }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (sliderRef.current)
-                      sliderRef.current.scrollBy({
-                        left: -420,
-                        behavior: "smooth",
-                      });
-                  }}
-                  className="absolute -left-4 md:-left-8 top-1/2 -translate-y-1/2 w-14 h-14 md:w-16 md:h-16 rounded-full bg-white shadow-[0_12px_40px_rgba(34,197,94,0.15)] border-2 border-emerald-100 flex items-center justify-center text-[#22c55e] z-[100] hover:text-white hover:bg-[#22c55e] transition-all cursor-pointer group/arrow active:scale-90"
-                >
-                  <ChevronLeft
-                    size={32}
-                    className="transition-transform group-hover/arrow:-translate-x-1"
-                    strokeWidth={3}
-                  />
-                </motion.button>
-              )}
-            </AnimatePresence>
+                  const statusClass = isGreen
+                    ? "bg-green-50 text-green-700"
+                    : isBlue
+                      ? "bg-blue-50 text-blue-700"
+                      : donation.status === "CANCELLED"
+                        ? "bg-rose-50 text-rose-600"
+                        : "bg-orange-50 text-orange-600";
 
-            <div
-              ref={sliderRef}
-              onScroll={checkScroll}
-              className="donation-history-slider flex overflow-x-auto no-scrollbar gap-6 pb-6"
-            >
-              {filtered.length > 0
-                ? filtered.map((donation: any) => (
+                  const textThemeClass = isGreen ? "text-green-600" : isBlue ? "text-blue-600" : "text-orange-500";
+
+                  return (
                     <div
                       key={donation.id}
-                      className={`flex-shrink-0 w-full sm:w-[380px] border rounded-[2.5rem] p-4 transition-all duration-300 group/card relative shadow-sm hover:shadow-xl ${
-                        donation.status === "PENDING"
-                          ? "border-orange-100/50"
-                          : donation.status === "ACCEPTED"
-                            ? "border-blue-100/50"
-                            : donation.status === "DELIVERED"
-                              ? "border-emerald-100/50 bg-[#fcfdfc]"
-                              : donation.status === "CANCELLED"
-                                ? "border-rose-100 bg-[#fffcfc]"
-                                : "border-slate-100 hover:border-emerald-100"
-                      }`}
+                      className={`w-full border rounded-[2.5rem] p-4 transition-all duration-300 group/card relative shadow-sm hover:shadow-xl ${themeClass}`}
                     >
                       <div className="flex justify-between items-center mb-3 px-1">
                         <div
-                          className={`flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                            donation.status === "PENDING"
-                              ? "bg-orange-50 text-orange-600"
-                              : donation.status === "ACCEPTED"
-                                ? "bg-blue-50 text-blue-600"
-                                : donation.status === "DELIVERED"
-                                  ? "bg-emerald-50 text-emerald-700"
-                                  : donation.status === "CANCELLED"
-                                    ? "bg-rose-50 text-rose-500"
-                                    : "bg-emerald-50 text-emerald-600"
-                          }`}
+                          className={`flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${statusClass}`}
                         >
                           {donation.status === "PENDING" ? (
                             <Clock size={12} strokeWidth={3} />
-                          ) : donation.status === "ACCEPTED" ? (
-                            <CheckCircle2 size={12} strokeWidth={3} />
-                          ) : donation.status === "DELIVERED" ? (
-                            <CheckCircle2 size={12} strokeWidth={3} />
                           ) : donation.status === "CANCELLED" ? (
                             <XCircle size={12} strokeWidth={3} />
                           ) : (
-                            <User size={12} strokeWidth={3} />
+                            <ShieldCheck size={12} strokeWidth={3} />
                           )}
-                          <span>{donation.status}</span>
+                          <span>{donation.status === "PICKED_UP" ? "PICKED UP" : donation.status}</span>
                         </div>
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                           {donation.date}
@@ -447,19 +527,13 @@ export const MyDonationsList = () => {
                           className={`absolute bottom-4 left-4 w-12 h-12 rounded-full bg-white shadow-xl flex items-center justify-center border border-white/50 ${
                             donation.status === "PENDING"
                               ? "text-orange-500"
-                              : donation.status === "ACCEPTED"
-                                ? "text-blue-600"
-                                : donation.status === "CANCELLED"
-                                  ? "text-rose-500 border-rose-100"
-                                  : "text-[#22c55e]"
+                              : donation.status === "CANCELLED"
+                                ? "text-rose-500 border-rose-100"
+                                : "text-green-500"
                           }`}
                         >
                           {donation.status === "PENDING" ? (
                             <Hourglass size={20} strokeWidth={2.5} />
-                          ) : donation.status === "ACCEPTED" ? (
-                            <ShieldCheck size={20} strokeWidth={2.5} />
-                          ) : donation.status === "DELIVERED" ? (
-                            <CheckCircle2 size={20} strokeWidth={2.5} />
                           ) : donation.status === "CANCELLED" ? (
                             <XCircle size={20} strokeWidth={2.5} />
                           ) : (
@@ -469,9 +543,9 @@ export const MyDonationsList = () => {
                       </div>
 
                       <div className="px-1 space-y-4 mb-4">
-                        <div className="space-y-1">
+                        <div className="space-y-1 text-start">
                           <h3
-                            className={`text-[24px] font-black tracking-tight leading-none ${
+                            className={`text-[20px] font-black tracking-tight leading-none ${
                               donation.status === "DELIVERED"
                                 ? "text-slate-700"
                                 : "text-slate-800"
@@ -479,14 +553,13 @@ export const MyDonationsList = () => {
                           >
                             {donation.foodType}
                           </h3>
-                          <div className="flex items-center gap-2">
-                            <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[8px] font-black uppercase tracking-widest">
+                          <div className="flex items-center gap-2 pt-1">
+                            <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[8px] font-black uppercase tracking-widest border border-slate-200/50">
                               {donation.category}
                             </span>
                           </div>
-                          <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                            {donation.quantity} • {donation.dietaryType} •{" "}
-                            {donation.preparationType}
+                          <p className={`text-[10px] font-black uppercase tracking-widest pt-1 ${textThemeClass}`}>
+                            {donation.quantity} · {donation.dietaryType} · {donation.preparationType}
                           </p>
                         </div>
 
@@ -496,33 +569,23 @@ export const MyDonationsList = () => {
                               className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
                                 donation.status === "PENDING"
                                   ? "bg-orange-50 text-orange-500"
-                                  : donation.status === "ACCEPTED"
-                                    ? "bg-blue-50 text-blue-500"
-                                    : donation.status === "CANCELLED"
-                                      ? "bg-orange-50 text-orange-500"
-                                      : "bg-emerald-50 text-emerald-600"
+                                  : donation.status === "CANCELLED"
+                                    ? "bg-orange-50 text-orange-500"
+                                    : "bg-emerald-50 text-emerald-600"
                               }`}
                             >
                               <MapPin size={16} strokeWidth={2.5} />
                             </div>
                             <div className="flex flex-col text-start">
-                              <span className="text-[14px] font-bold text-slate-700">
+                              <span className="text-[13px] font-bold text-slate-700 truncate max-w-[220px]">
                                 {donation.status === "PENDING"
                                   ? "Matching nearby NGOs..."
                                   : donation.status === "CANCELLED"
                                     ? "No match found"
-                                    : donation.ngo}
+                                    : donation.ngo || "N/A"}
                               </span>
-                              <span className="text-[10px] font-bold text-slate-400">
-                                {donation.status === "PENDING"
-                                  ? "Searching for the best match"
-                                  : donation.status === "ACCEPTED"
-                                    ? "NGO has accepted your donation"
-                                    : donation.status === "CANCELLED"
-                                      ? "The donation has been cancelled and is no longer active."
-                                      : donation.status === "DELIVERED"
-                                        ? "Donation received successfully"
-                                        : "Pickup in progress"}
+                              <span className="text-[9px] font-bold text-slate-400">
+                                Pickup ID
                               </span>
                             </div>
                           </div>
@@ -532,18 +595,16 @@ export const MyDonationsList = () => {
                               className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
                                 donation.status === "PENDING"
                                   ? "bg-orange-50 text-orange-500"
-                                  : donation.status === "ACCEPTED"
-                                    ? "bg-blue-50 text-blue-500"
-                                    : donation.status === "CANCELLED"
-                                      ? "bg-orange-50 text-orange-500"
-                                      : "bg-emerald-50 text-emerald-600"
+                                  : donation.status === "CANCELLED"
+                                    ? "bg-orange-50 text-orange-500"
+                                    : "bg-emerald-50 text-emerald-600"
                               }`}
                             >
                               <Clock size={16} strokeWidth={2.5} />
                             </div>
                             <div className="flex flex-col text-start">
                               <span
-                                className={`text-[14px] font-bold ${
+                                className={`text-[13px] font-bold ${
                                   donation.status === "CANCELLED"
                                     ? "line-through text-slate-400 font-medium"
                                     : "text-slate-700"
@@ -554,44 +615,44 @@ export const MyDonationsList = () => {
                                   ? "6:25 PM"
                                   : "6:00 PM - 7:00 PM"}
                               </span>
+                              <span className="text-[9px] font-bold text-slate-400">
+                                Pickup Time
+                              </span>
                             </div>
                           </div>
-
-                          {donation.status === "DELIVERED" && (
-                            <div className="flex items-start gap-4">
-                              <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                                <User size={16} strokeWidth={2.5} />
-                              </div>
-                              <div className="flex flex-col text-start">
-                                <span className="text-[10px] font-bold text-slate-400">
-                                  Received by
-                                </span>
-                                <span className="text-[14px] font-bold text-slate-700">
-                                  {donation.ngo} Team
-                                </span>
-                              </div>
-                            </div>
-                          )}
-
-                          {donation.status === "CANCELLED" && (
-                            <div className="p-3 bg-emerald-50/30 border border-emerald-100/30 rounded-[1.5rem] flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#22c55e] shadow-sm shrink-0 border border-emerald-50">
-                                <Leaf size={16} strokeWidth={2.5} />
-                              </div>
-                              <div className="flex flex-col text-start">
-                                <span className="text-[11px] font-black text-emerald-800">
-                                  Thank you for thinking to share!
-                                </span>
-                                <span className="text-[9px] font-bold text-slate-400 leading-tight">
-                                  Your intent to reduce food waste makes a big
-                                  difference.
-                                </span>
-                              </div>
-                            </div>
-                          )}
                         </div>
 
-                        {donation.status === "PENDING" ? (
+                        {donation.status === "ASSIGNED" || donation.status === "PICKED_UP" ? (
+                          <div className={`p-3 border rounded-2xl flex items-center justify-between ${
+                            donation.status === "PICKED_UP"
+                              ? "bg-green-500/10 border-green-500/20 text-green-700"
+                              : "bg-blue-500/10 border-blue-500/20 text-blue-700"
+                          }`}>
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm border border-slate-100">
+                                <Truck size={16} className={donation.status === "PICKED_UP" ? "text-green-600" : "text-blue-600"} />
+                              </div>
+                              <div className="flex flex-col text-start">
+                                <span className="text-[11px] font-black uppercase tracking-wider">
+                                  Volunteer on the way
+                                </span>
+                                <span className="text-[9px] font-bold text-slate-500">
+                                  ETA: 20 mins • 2.4 km away
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1.5 px-2 py-1 bg-white rounded-full shadow-sm border border-slate-100 shrink-0">
+                              <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${
+                                donation.status === "PICKED_UP" ? "bg-green-500" : "bg-blue-500"
+                              }`} />
+                              <span className={`text-[8px] font-black uppercase tracking-tighter ${
+                                donation.status === "PICKED_UP" ? "text-green-600" : "text-blue-600"
+                              }`}>
+                                Live
+                              </span>
+                            </div>
+                          </div>
+                        ) : donation.status === "PENDING" ? (
                           <div className="p-3 bg-orange-50/50 border border-orange-100/50 rounded-2xl flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-orange-500 shadow-sm shrink-0">
                               <Search size={16} />
@@ -619,21 +680,7 @@ export const MyDonationsList = () => {
                               </span>
                             </div>
                           </div>
-                        ) : donation.status === "ACCEPTED" ? (
-                          <div className="p-3 bg-blue-50/50 border border-blue-100/50 rounded-2xl flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-blue-600 shadow-sm shrink-0">
-                              <Truck size={16} />
-                            </div>
-                            <div className="flex flex-col text-start">
-                              <span className="text-[11px] font-black text-blue-600">
-                                Preparing for pickup
-                              </span>
-                              <span className="text-[9px] font-bold text-slate-400">
-                                NGO is arranging a volunteer
-                              </span>
-                            </div>
-                          </div>
-                        ) : donation.status === "DELIVERED" ? (
+                        ) : (
                           <div className="p-3 bg-emerald-50/50 border border-emerald-100/50 rounded-2xl flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-emerald-600 shadow-sm shrink-0">
                               <Heart size={16} fill="currentColor" />
@@ -647,28 +694,6 @@ export const MyDonationsList = () => {
                               </span>
                             </div>
                           </div>
-                        ) : (
-                          <div className="p-3 bg-emerald-50/50 border border-emerald-100/50 rounded-2xl flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-emerald-600 shadow-sm shrink-0">
-                                <Truck size={16} />
-                              </div>
-                              <div className="flex flex-col text-start">
-                                <span className="text-[11px] font-black text-emerald-600">
-                                  Volunteer on the way
-                                </span>
-                                <span className="text-[9px] font-bold text-slate-400">
-                                  ETA: 20 mins • 2.4 km away
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1.5 px-2 py-1 bg-white rounded-full shadow-sm border border-emerald-100">
-                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                              <span className="text-[8px] font-black uppercase text-emerald-600 tracking-tighter">
-                                Live
-                              </span>
-                            </div>
-                          </div>
                         )}
                       </div>
 
@@ -676,7 +701,7 @@ export const MyDonationsList = () => {
                         <div className="flex items-center gap-2.5">
                           <button
                             onClick={() => handleDetailsClick(donation)}
-                            className="flex-1 flex items-center justify-center gap-2 px-3 py-3 rounded-2xl bg-slate-55 text-slate-500 border border-slate-200/50 hover:bg-slate-100 transition-all text-[10px] font-black uppercase tracking-wider whitespace-nowrap"
+                            className="flex-1 flex items-center justify-center gap-2 px-3 py-3 rounded-2xl bg-white text-slate-500 border border-slate-200 hover:bg-slate-50 transition-all text-[10px] font-black uppercase tracking-wider whitespace-nowrap"
                           >
                             <Info size={14} />
                             <span>View Details</span>
@@ -726,7 +751,11 @@ export const MyDonationsList = () => {
                               onClick={() => {
                                 handleLiveTrackClick(donation);
                               }}
-                              className="flex-[1.2] flex items-center justify-center gap-2 px-3 py-3 rounded-2xl font-black uppercase tracking-wider text-[10px] transition-all active:scale-95 shadow-md whitespace-nowrap text-white bg-[#2e7d32] hover:bg-[#1b5e20]"
+                              className={`flex-[1.2] flex items-center justify-center gap-2 px-3 py-3 rounded-2xl font-black uppercase tracking-wider text-[10px] transition-all active:scale-95 shadow-md whitespace-nowrap text-white ${
+                                donation.status === "PICKED_UP"
+                                  ? "bg-green-600 hover:bg-green-700 shadow-green-500/10"
+                                  : "bg-blue-600 hover:bg-blue-700 shadow-blue-500/10"
+                              }`}
                             >
                               Live Track
                             </button>
@@ -735,7 +764,7 @@ export const MyDonationsList = () => {
                               onClick={() =>
                                 handleCancelClick(
                                   String(donation.id),
-                                  donation.status
+                                  donation.cancelReason || ""
                                 )
                               }
                               disabled={cancellingId === String(donation.id)}
@@ -751,47 +780,9 @@ export const MyDonationsList = () => {
                         </div>
                       </div>
                     </div>
-                  ))
-                : null}
-            </div>
-
-            <AnimatePresence>
-              {canScrollRight && (
-                <motion.button
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{
-                    opacity: 0.8,
-                    scale: [1, 1.05, 1],
-                    boxShadow: [
-                      "0 0 0 0px rgba(34, 197, 94, 0)",
-                      "0 0 0 8px rgba(34, 197, 94, 0.1)",
-                      "0 0 0 0px rgba(34, 197, 94, 0)",
-                    ],
-                  }}
-                  exit={{ opacity: 0, scale: 0.5 }}
-                  transition={{
-                    scale: { repeat: Infinity, duration: 2, ease: "easeInOut" },
-                    opacity: { duration: 0.3 },
-                  }}
-                  whileTap={{ scale: 0.8 }}
-                  onClick={(e: React.MouseEvent) => {
-                    e.stopPropagation();
-                    if (sliderRef.current)
-                      sliderRef.current.scrollBy({
-                        left: 420,
-                        behavior: "smooth",
-                      });
-                  }}
-                  className="absolute -right-4 md:-right-8 top-1/2 -translate-y-1/2 w-14 h-14 md:w-16 md:h-16 rounded-full bg-white shadow-[0_12px_40px_rgba(34,197,94,0.15)] border-2 border-emerald-100 flex items-center justify-center text-[#22c55e] z-[100] hover:text-white hover:bg-[#22c55e] transition-all cursor-pointer group/arrow active:scale-90"
-                >
-                  <ChevronRight
-                    size={32}
-                    className="transition-transform group-hover/arrow:translate-x-1"
-                    strokeWidth={3}
-                  />
-                </motion.button>
-              )}
-            </AnimatePresence>
+                  );
+                })
+              : null}
           </div>
         ) : (
           <div
@@ -803,107 +794,131 @@ export const MyDonationsList = () => {
             <ReusableTable
               variant="compact"
               data={filtered}
+              enableSearch={false}
+              enableFilters={false}
+              showColumnSettings={false}
               columns={[
-                { name: "ID", uid: "id", sortable: true },
-                { name: "Item", uid: "foodType", align: "start" },
-                { name: "Quantity", uid: "quantity" },
-                { name: "Target NGO", uid: "ngo" },
-                { name: "Scheduled Date", uid: "date" },
-                { name: "Status", uid: "status" },
-                { name: "Actions", uid: "actions", align: "end" },
+                { name: "DONATION ID", uid: "id", sortable: true },
+                { name: "ITEM", uid: "foodType", align: "start" },
+                { name: "QUANTITY", uid: "quantity" },
+                { name: "DONATED BY", uid: "donatedBy" },
+                { name: "ASSIGNED TO", uid: "assignedTo" },
+                { name: "PICKUP DATE", uid: "pickupDate" },
+                { name: "STATUS", uid: "status" },
+                { name: "ACTIONS", uid: "actions", align: "end" },
               ]}
               renderCell={(donation: any, columnKey: React.Key) => {
+                const formatDonationId = (d: any) => `#HF-${d.id}`;
                 switch (columnKey) {
                   case "id":
                     return (
-                      <div className="py-1">
-                        <span
-                          className="text-[10px] font-black uppercase tracking-widest tabular-nums border px-2 py-1 rounded-sm bg-slate-50 border-slate-200 text-slate-500"
-                        >
-                          #HF-{donation.id}
+                      <div className="flex items-center gap-1.5 py-1">
+                        <span className="text-[10px] font-black uppercase tracking-widest tabular-nums border px-2 py-1 rounded-md bg-slate-50 border-slate-200 text-slate-500">
+                          {formatDonationId(donation)}
                         </span>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(formatDonationId(donation));
+                          }}
+                          className="p-1 text-slate-400 hover:text-slate-600 rounded transition-colors"
+                          title="Copy ID"
+                        >
+                          <Copy size={12} />
+                        </button>
                       </div>
                     );
                   case "foodType":
                     return (
-                      <div className="py-1">
-                        <TableChip
-                          text={donation.foodType}
-                          icon={
-                            <img
-                              src={donation.image || getCategoryImage(donation.category)}
-                              alt={donation.foodType}
-                              className="w-full h-full object-cover rounded-sm"
-                            />
-                          }
-                          iconClassName="shadow-sm border w-10 h-10 overflow-hidden"
-                          maxWidth="max-w-[280px]"
-                        />
+                      <div className="flex items-center gap-3 py-1">
+                        <div className="w-12 h-12 rounded-xl border border-slate-100 bg-slate-50 flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
+                          <img
+                            src={donation.image || getCategoryImage(donation.category)}
+                            alt={donation.foodType}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex flex-col text-start">
+                          <span className="text-sm font-bold text-slate-800 leading-tight">
+                            {donation.foodType}
+                          </span>
+                          <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 mt-0.5 bg-slate-50 border border-slate-200/50 rounded p-0.5 px-1.5 w-fit">
+                            {donation.category}
+                          </span>
+                        </div>
                       </div>
                     );
-                  case "quantity":
+                  case "quantity": {
+                    const [qtyVal, qtyUnit] = String(donation.quantity).split(/\s+(.+)/);
                     return (
                       <div className="py-1 text-start">
-                        <span className="text-[11px] font-black uppercase tracking-widest text-slate-500">
-                          {donation.quantity}
+                        <span className="text-sm font-extrabold text-slate-800">
+                          {qtyVal}
                         </span>
-                        <span className="text-[9px] text-slate-400 block">
-                          {donation.dietaryType} • {donation.preparationType}
+                        <span className="text-[10px] text-slate-400 block font-medium">
+                          {qtyUnit || "Items"}
                         </span>
                       </div>
                     );
-                  case "ngo":
+                  }
+                  case "donatedBy":
                     return (
                       <div className="py-1 text-start">
-                        <span className="text-[12px] font-bold text-slate-700">
+                        <span className="text-xs font-bold text-slate-800">Star Hotel</span>
+                        <span className="text-[9px] text-slate-400 block font-medium">Donor</span>
+                      </div>
+                    );
+                  case "assignedTo":
+                    return (
+                      <div className="py-1 text-start">
+                        <span className="text-xs font-bold text-slate-800">
                           {donation.status === "PENDING"
                             ? "Matching nearby NGOs..."
                             : donation.status === "CANCELLED"
                               ? "No match found"
-                              : donation.ngo}
+                              : "Helping Hands NGO"}
                         </span>
+                        <span className="text-[9px] text-slate-400 block font-medium">NGO</span>
                       </div>
                     );
-                  case "date":
+                  case "pickupDate":
                     return (
                       <div className="py-1 text-start">
-                        <span className="text-[11px] font-bold text-slate-600 block">
+                        <span className="text-xs font-bold text-slate-800 block">
                           {donation.date}
                         </span>
-                        <span className="text-[9px] text-slate-400">
-                          {donation.status === "DELIVERED" ? "6:25 PM" : "6:00 PM - 7:00 PM"}
+                        <span className="text-[9px] text-slate-400 block font-medium">
+                          {donation.expiryTime || "6:00 PM - 7:00 PM"}
                         </span>
                       </div>
                     );
-                  case "status":
+                  case "status": {
+                    const isGreen = donation.status === "PICKED_UP" || donation.status === "DELIVERED";
+                    const isBlue = donation.status === "ASSIGNED" || donation.status === "ACCEPTED";
+                    const statusClass = isGreen
+                      ? "bg-green-50 border-green-200 text-green-600"
+                      : isBlue
+                        ? "bg-blue-50 border-blue-200 text-blue-600"
+                        : "bg-orange-50 border-orange-200 text-orange-600";
                     return (
                       <div className="py-1">
                         <span
-                          className={`px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 w-fit border ${
-                            donation.status === "PENDING"
-                              ? "bg-orange-50 border-orange-200 text-orange-600"
-                              : donation.status === "ACCEPTED"
-                                ? "bg-blue-50 border-blue-200 text-blue-600"
-                                : donation.status === "DELIVERED"
-                                  ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-                                  : donation.status === "CANCELLED"
-                                    ? "bg-rose-50 border-rose-200 text-rose-500"
-                                    : "bg-emerald-50 border-emerald-200 text-emerald-600"
-                          }`}
+                          className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 w-fit border ${statusClass}`}
                         >
-                          {donation.status}
+                          <div className={`w-1.5 h-1.5 rounded-full ${isGreen ? "bg-green-500" : isBlue ? "bg-blue-500" : "bg-orange-500"}`} />
+                          {donation.status === "PICKED_UP" ? "PICKED UP" : donation.status}
                         </span>
                       </div>
                     );
+                  }
                   case "actions":
                     return (
                       <div className="flex items-center gap-2 justify-end">
                         <button
                           onClick={() => handleDetailsClick(donation)}
-                          className="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 transition-all text-slate-500"
+                          className="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 transition-all text-slate-500 bg-white"
                           title="View Details"
                         >
-                          <Info size={14} />
+                          <Eye size={14} />
                         </button>
                         {donation.status === "DELIVERED" && (
                           <button
@@ -913,16 +928,16 @@ export const MyDonationsList = () => {
                                 isReceiptModalOpen: true,
                               });
                             }}
-                            className="p-2 rounded-xl border border-emerald-500 bg-white text-emerald-600 hover:bg-emerald-50 transition-all"
+                            className="p-2 rounded-xl text-white bg-green-600 hover:bg-green-700 transition-all flex items-center justify-center"
                             title="Receipt"
                           >
-                            <Download size={14} />
+                            <FileText size={14} />
                           </button>
                         )}
                         {(donation.status === "ASSIGNED" || donation.status === "PICKED_UP") && (
                           <button
                             onClick={() => handleLiveTrackClick(donation)}
-                            className="p-2 rounded-xl border border-emerald-500 bg-[#22c55e] text-white hover:bg-emerald-600 transition-all"
+                            className="p-2 rounded-xl border border-blue-500 bg-blue-600 text-white hover:bg-blue-700 transition-all"
                             title="Live Track"
                           >
                             <Truck size={14} />
@@ -949,31 +964,12 @@ export const MyDonationsList = () => {
                                   isRedonateModalOpen: true,
                                 });
                               }}
-                              className="p-2 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-all"
+                              className="p-2 rounded-xl border border-orange-200 bg-orange-50 text-orange-600 hover:bg-orange-100 transition-all"
                               title="Redonate"
                             >
                               <RotateCcw size={14} />
                             </button>
                           </>
-                        )}
-                        {donation.status !== "DELIVERED" && donation.status !== "CANCELLED" && donation.status !== "ACCEPTED" && donation.status !== "ASSIGNED" && donation.status !== "PICKED_UP" && (
-                          <button
-                            onClick={() =>
-                              handleCancelClick(
-                                String(donation.id),
-                                donation.status
-                              )
-                            }
-                            disabled={cancellingId === String(donation.id)}
-                            className="p-2 rounded-xl border border-rose-200 bg-rose-50 text-rose-500 hover:bg-rose-100 transition-all disabled:opacity-50"
-                            title="Cancel Donation"
-                          >
-                            {cancellingId === String(donation.id) ? (
-                              <div className="animate-spin h-3.5 w-3.5 border-2 border-rose-500 border-t-transparent rounded-full" />
-                            ) : (
-                              <X size={14} />
-                            )}
-                          </button>
                         )}
                       </div>
                     );

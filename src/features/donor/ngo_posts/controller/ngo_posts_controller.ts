@@ -6,9 +6,16 @@ import { createDonationApi } from "../api/create_donation/create_donation_api";
 import { getCategoryImage } from "../../../../global/constants/donation_config";
 import { useAuthStore } from "../../../../global/store/auth-store";
 
-export const fetchNeeds = async () => {
+export const fetchNeeds = async (searchOverride?: string, urgencyOverride?: string) => {
+  const state = ngoPostsInputModel.useStore.getState().ngoPostsData;
+  const search = searchOverride !== undefined ? searchOverride : state.searchQuery;
+  const urgency = urgencyOverride !== undefined ? urgencyOverride : state.categoryFilter;
   try {
-    await getNeedsApi({ status: "Open" });
+    await getNeedsApi({
+      status: "Open",
+      search,
+      urgency: urgency === "ALL" ? null : urgency,
+    });
   } catch (err) {
     console.error("Failed to load requests:", err);
     toast.error("Failed to load requests");
@@ -16,13 +23,10 @@ export const fetchNeeds = async () => {
 };
 
 export const onInit = () => {
-  console.log("NGOPosts page initialized");
   fetchNeeds();
 };
 
-export const onDestroy = () => {
-  console.log("NGOPosts page destroyed");
-};
+export const onDestroy = () => {};
 
 export const handleApplyToHelp = (need: any, user: any) => {
   if (

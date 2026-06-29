@@ -45,6 +45,9 @@ export const useVolunteerStore = create<VolunteerState>((set) => ({
     verificationStatus: "Verified Volunteer",
     vehicleType: "Two Wheeler",
     licenseNumber: "PY-01-2024-0001234",
+    bankName: "State Bank of India",
+    accountNumber: "**** 1234",
+    upiId: "rahul@okaxis",
   },
   stats: {
     deliveries: 842,
