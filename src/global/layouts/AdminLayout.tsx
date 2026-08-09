@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import Header from "../components/Header";
-import SidebarIcons from "../components/Sidebar";
+import Header from "../components/layout-components/Header";
+import SidebarIcons from "../components/layout-components/Sidebar";
 import { SidebarProvider, useSidebar } from "../contexts/SidebarContext";
 import { Outlet } from "react-router-dom";
 
@@ -16,7 +16,7 @@ const AdminLayoutContent: React.FC = () => {
 
       <main
         className={
-          "fixed top-16 md:top-20 bottom-0 right-0 no-scrollbar transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] overflow-auto " +
+          "fixed top-16 md:top-20 bottom-0 right-0 custom-scrollbar transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] overflow-auto " +
           (expanded ? "left-0 md:left-[260px]" : "left-0 md:left-[70px]")
         }
         style={{ backgroundColor: "var(--bg-primary)" }}

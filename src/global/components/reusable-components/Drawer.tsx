@@ -66,7 +66,7 @@ const ResuableDrawer = ({
         base: `rounded-none w-full ${sizeClasses[size as keyof typeof sizeClasses] || "sm:max-w-md"} shadow-none thin-scrollbar`,
         backdrop: "bg-black/40 backdrop-blur-sm",
         header: `${hideHeaderBorder ? "border-none shadow-none" : "border-b border-[var(--border-color)]"} p-0`,
-        body: "p-0 overflow-hidden",
+        body: "p-0 overflow-y-auto thin-scrollbar",
         footer: "border-t border-[var(--border-color)] p-5",
       }}
       style={{

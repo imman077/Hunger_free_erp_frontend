@@ -22,110 +22,24 @@ import {
 } from "@heroui/react";
 import type { SortDescriptor, Selection } from "@heroui/react";
 import HeroDateRangePicker from "./HeroDateRangePicker";
-import { Eye, Mail, CheckCircle, Ban, Trash2 } from "lucide-react";
-import ResuableButton from "./Button";
-
-// --- Icons ---
-
-const ChevronDownIconSvg = ({ strokeWidth = 1.5, ...otherProps }: any) => {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      focusable="false"
-      height="1em"
-      role="presentation"
-      viewBox="0 0 24 24"
-      width="1em"
-      {...otherProps}
-    >
-      <path
-        d="m19.92 8.95-6.52 6.52c-.77.77-2.03.77-2.8 0L4.08 8.95"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeMiterlimit={10}
-        strokeWidth={strokeWidth}
-      />
-    </svg>
-  );
-};
-
-const SearchIconSvg = (props: any) => {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      focusable="false"
-      height="1em"
-      role="presentation"
-      viewBox="0 0 24 24"
-      width="1em"
-      {...props}
-    >
-      <path
-        d="M11.5 21C16.7467 21 21 16.7467 21 11.5C21 6.25329 16.7467 2 11.5 2C6.25329 2 2 6.25329 2 11.5C2 16.7467 6.25329 21 11.5 21Z"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      />
-      <path
-        d="M22 22L20 20"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      />
-    </svg>
-  );
-};
-
-const FilterIcon = (props: any) => {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      focusable="false"
-      height="1em"
-      role="presentation"
-      viewBox="0 0 24 24"
-      width="1em"
-      {...props}
-    >
-      <path
-        d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="1.5"
-      />
-    </svg>
-  );
-};
-
-const RowIcon = (props: any) => {
-  return (
-    <svg
-      aria-hidden="true"
-      fill="none"
-      focusable="false"
-      height="1em"
-      role="presentation"
-      viewBox="0 0 24 24"
-      width="1em"
-      {...props}
-    >
-      <path
-        d="M3 12h18M3 6h18M3 18h18"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      />
-    </svg>
-  );
-};
+import {
+  Eye,
+  Mail,
+  CheckCircle,
+  Ban,
+  Trash2,
+  Search,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  LayoutGrid,
+  Table as TableIcon,
+  MapPin,
+  Heart,
+  Utensils,
+  MoreVertical,
+  ChevronsUpDown,
+} from "lucide-react";
 
 // --- Types ---
 export interface ColumnDef {
@@ -193,6 +107,241 @@ export const TableChip: React.FC<TableChipProps> = ({
   );
 };
 
+// --- Reusable Helper Cell Components ---
+
+export interface TableStatusBadgeProps {
+  status: string;
+  className?: string;
+}
+
+export const TableStatusBadge: React.FC<TableStatusBadgeProps> = ({
+  status,
+  className = "",
+}) => {
+  const norm = status?.toLowerCase() || "";
+  let config = {
+    bg: "bg-emerald-50 dark:bg-emerald-950/40",
+    text: "text-emerald-700 dark:text-emerald-400",
+    border: "border-emerald-200/60 dark:border-emerald-800/60",
+    dot: "bg-emerald-500",
+    label: status || "Approved",
+  };
+
+  if (
+    norm.includes("pending") ||
+    norm.includes("draft") ||
+    norm.includes("waiting")
+  ) {
+    config = {
+      bg: "bg-amber-50 dark:bg-amber-950/40",
+      text: "text-amber-700 dark:text-amber-400",
+      border: "border-amber-200/60 dark:border-amber-800/60",
+      dot: "bg-amber-500",
+      label: status,
+    };
+  } else if (
+    norm.includes("approved") ||
+    norm.includes("delivered") ||
+    norm.includes("active")
+  ) {
+    config = {
+      bg: "bg-emerald-50 dark:bg-emerald-950/40",
+      text: "text-emerald-700 dark:text-emerald-400",
+      border: "border-emerald-200/60 dark:border-emerald-800/60",
+      dot: "bg-emerald-500",
+      label: status,
+    };
+  } else if (
+    norm.includes("completed") ||
+    norm.includes("in progress") ||
+    norm.includes("assigned") ||
+    norm.includes("picked")
+  ) {
+    config = {
+      bg: "bg-indigo-50 dark:bg-indigo-950/40",
+      text: "text-indigo-700 dark:text-indigo-400",
+      border: "border-indigo-200/60 dark:border-indigo-800/60",
+      dot: "bg-indigo-500",
+      label: status,
+    };
+  } else if (
+    norm.includes("rejected") ||
+    norm.includes("cancelled") ||
+    norm.includes("failed") ||
+    norm.includes("deactivated")
+  ) {
+    config = {
+      bg: "bg-rose-50 dark:bg-rose-950/40",
+      text: "text-rose-700 dark:text-rose-400",
+      border: "border-rose-200/60 dark:border-rose-800/60",
+      dot: "bg-rose-500",
+      label: status,
+    };
+  }
+
+  return (
+    <div
+      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${config.bg} ${config.text} ${config.border} ${className}`}
+    >
+      <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} />
+      <span className="capitalize">{config.label}</span>
+    </div>
+  );
+};
+
+export interface TableUserAvatarProps {
+  name: string;
+  email?: string;
+  avatarUrl?: string;
+  initials?: string;
+}
+
+export const TableUserAvatar: React.FC<TableUserAvatarProps> = ({
+  name,
+  email,
+  avatarUrl,
+  initials,
+}) => {
+  const computedInitials =
+    initials ||
+    (name
+      ? name
+          .split(" ")
+          .map((n) => n[0])
+          .slice(0, 2)
+          .join("")
+          .toUpperCase()
+      : "U");
+  return (
+    <div className="flex items-center gap-3 text-start">
+      {avatarUrl ? (
+        <img
+          src={avatarUrl}
+          alt={name}
+          className="w-9 h-9 rounded-full object-cover border border-slate-200 shrink-0"
+        />
+      ) : (
+        <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 font-bold text-xs flex items-center justify-center shrink-0 border border-emerald-200/50">
+          {computedInitials}
+        </div>
+      )}
+      <div className="flex flex-col min-w-0">
+        <span className="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">
+          {name}
+        </span>
+        {email && (
+          <span className="text-[11px] text-slate-400 font-medium truncate">
+            {email}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export interface TableItemBoxProps {
+  title: string;
+  subtitle?: string;
+  icon?: React.ReactNode;
+}
+
+export const TableItemBox: React.FC<TableItemBoxProps> = ({
+  title,
+  subtitle,
+  icon,
+}) => {
+  return (
+    <div className="flex items-center gap-2.5 text-start">
+      <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-100/80 dark:border-emerald-900/50">
+        {icon || <Utensils size={16} />}
+      </div>
+      <div className="flex flex-col min-w-0">
+        <span className="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">
+          {title}
+        </span>
+        {subtitle && (
+          <span className="text-[11px] text-slate-400 font-medium truncate">
+            {subtitle}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export interface TableLocationBadgeProps {
+  location: string;
+  distance?: string;
+}
+
+export const TableLocationBadge: React.FC<TableLocationBadgeProps> = ({
+  location,
+  distance,
+}) => {
+  return (
+    <div className="flex items-center gap-2 text-start">
+      <MapPin size={15} className="text-emerald-500 shrink-0" />
+      <div className="flex flex-col min-w-0">
+        <span className="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">
+          {location}
+        </span>
+        {distance && (
+          <span className="text-[11px] text-slate-400 font-medium truncate">
+            {distance}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export interface TableDateBadgeProps {
+  date: string;
+  time?: string;
+}
+
+export const TableDateBadge: React.FC<TableDateBadgeProps> = ({
+  date,
+  time,
+}) => {
+  return (
+    <div className="flex flex-col text-start min-w-0">
+      <span className="font-bold text-xs text-slate-800 dark:text-slate-100 truncate">
+        {date}
+      </span>
+      {time && (
+        <span className="text-[11px] text-slate-400 font-medium truncate">
+          {time}
+        </span>
+      )}
+    </div>
+  );
+};
+
+export interface TableQuantityBadgeProps {
+  quantity: string | number;
+  unit?: string;
+}
+
+export const TableQuantityBadge: React.FC<TableQuantityBadgeProps> = ({
+  quantity,
+  unit,
+}) => {
+  return (
+    <div className="flex flex-col text-start min-w-0">
+      <span className="font-extrabold text-xs text-slate-800 dark:text-slate-100">
+        {quantity}
+      </span>
+      {unit && (
+        <span className="text-[11px] text-slate-400 font-medium capitalize">
+          {unit}
+        </span>
+      )}
+    </div>
+  );
+};
+
+// --- Table Main Props ---
 interface ERPGridTableProps {
   data: any[];
   columns: ColumnDef[];
@@ -208,18 +357,161 @@ interface ERPGridTableProps {
   ) => void;
   title?: string;
   description?: string;
+  titleIcon?: React.ReactNode;
+  entityName?: string;
   actionConfig?: ActionConfig;
   topContent?: React.ReactNode;
   variant?: "default" | "compact";
   enableSorting?: boolean;
   additionalFilters?: React.ReactNode;
   onRowClick?: (item: any) => void;
+  renderCard?: (item: any) => React.ReactNode;
+  defaultViewMode?: "table" | "cards";
+  sortOptions?: { key: string; label: string }[];
+  onSortChange?: (sortKey: string) => void;
+  enableViewToggle?: boolean;
 }
 
 export function capitalize(s: string) {
   return s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : "";
 }
 
+// --- Default Smart Card Renderer ---
+const DefaultCardItem: React.FC<{
+  item: any;
+  columns: ColumnDef[];
+  renderCell: (item: any, columnKey: React.Key) => React.ReactNode;
+  actionConfig?: ActionConfig;
+  onRowClick?: (item: any) => void;
+}> = ({ item, columns, renderCell, actionConfig, onRowClick }) => {
+  const userCol = columns.find((c) =>
+    ["donor", "user", "name", "username", "customer"].includes(
+      c.uid.toLowerCase(),
+    ),
+  );
+  const itemCol = columns.find((c) =>
+    ["items", "items donated", "itemname", "foodtype", "title", "category"].includes(
+      c.uid.toLowerCase(),
+    ),
+  );
+  const dateCol = columns.find((c) =>
+    ["date", "createdat", "time"].includes(c.uid.toLowerCase()),
+  );
+  const statusCol = columns.find((c) =>
+    ["status"].includes(c.uid.toLowerCase()),
+  );
+  const qtyCol = columns.find((c) =>
+    ["quantity", "count", "amount"].includes(c.uid.toLowerCase()),
+  );
+  const locCol = columns.find((c) =>
+    ["location", "address", "pickupaddress"].includes(c.uid.toLowerCase()),
+  );
+
+  return (
+    <div
+      onClick={onRowClick ? () => onRowClick(item) : undefined}
+      className={`bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between gap-3 ${
+        onRowClick ? "cursor-pointer" : ""
+      }`}
+    >
+      {/* Top Row: User & Actions */}
+      <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+        {userCol ? (
+          renderCell(item, userCol.uid)
+        ) : (
+          <TableUserAvatar
+            name={item.donor || item.name || item.username || "User"}
+            email={item.email}
+          />
+        )}
+        {actionConfig && (
+          <div className="flex items-center gap-1">
+            {actionConfig.showView !== false && actionConfig.onView && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  actionConfig.onView?.(item);
+                }}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-slate-800 transition-colors"
+              >
+                <Eye size={16} />
+              </button>
+            )}
+            {actionConfig.showDelete && actionConfig.onDelete && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  actionConfig.onDelete?.(item);
+                }}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-slate-800 transition-colors"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Main Info */}
+      <div className="flex flex-col gap-2.5 my-1">
+        {itemCol ? (
+          renderCell(item, itemCol.uid)
+        ) : (
+          <TableItemBox
+            title={
+              item.foodType ||
+              item.itemName ||
+              item.title ||
+              "Donation Item"
+            }
+            subtitle={item.category || item.description}
+          />
+        )}
+
+        <div className="flex flex-col gap-1.5 text-xs text-slate-500 font-medium pt-1">
+          {(dateCol || item.date) && (
+            <div className="flex items-center gap-2">
+              <CalendarIcon size={14} className="text-emerald-500 shrink-0" />
+              <span>
+                {item.date || (dateCol ? renderCell(item, dateCol.uid) : "")}
+              </span>
+            </div>
+          )}
+          {(locCol || item.pickupAddress || item.location) && (
+            <div className="flex items-center gap-2">
+              <MapPin size={14} className="text-emerald-500 shrink-0" />
+              <span className="truncate">
+                {item.pickupAddress ||
+                  item.location ||
+                  (locCol ? renderCell(item, locCol.uid) : "")}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Card Footer: Status & Quantity */}
+      <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+        <div>
+          {statusCol ? (
+            renderCell(item, statusCol.uid)
+          ) : (
+            <TableStatusBadge status={item.status || "Pending"} />
+          )}
+        </div>
+        <div className="text-end font-extrabold text-xs text-slate-800 dark:text-slate-100">
+          {qtyCol ? (
+            renderCell(item, qtyCol.uid)
+          ) : (
+            <span>{item.quantity || ""}</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- Main ReusableTable Component ---
 const ReusableTable: React.FC<ERPGridTableProps> = ({
   data,
   columns,
@@ -233,15 +525,24 @@ const ReusableTable: React.FC<ERPGridTableProps> = ({
   onDateRangeChange,
   title,
   description,
+  titleIcon,
+  entityName = "donations",
   actionConfig,
   topContent: customTopContent,
   variant = "compact",
-  enableSorting = false,
+  enableSorting = true,
   additionalFilters,
   onRowClick,
+  renderCard,
+  defaultViewMode = "table",
+  sortOptions,
+  onSortChange,
+  enableViewToggle = true,
 }) => {
   const [filterValue, setFilterValue] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [selectedSort, setSelectedSort] = useState<string>("newest");
+  const [viewMode, setViewMode] = useState<"table" | "cards">(defaultViewMode);
   const [dateRange, setDateRange] = useState<{
     start: string | null;
     end: string | null;
@@ -372,17 +673,19 @@ const ReusableTable: React.FC<ERPGridTableProps> = ({
 
   const statusOptions = useMemo(() => {
     if (data.length === 0) return ["all"];
-    const statusSet = new Set(data.map((item) => item.status).filter(Boolean));
+    const statusSet = new Set(
+      data.map((item) => item.status).filter(Boolean),
+    );
     return ["all", ...Array.from(statusSet)];
   }, [data]);
 
-  // Default action renderer
+  // Default Action Buttons Renderer
   const renderDefaultActions = useCallback(
     (item: any) => {
       if (!actionConfig) return null;
 
       const {
-        showView,
+        showView = true,
         showMessage,
         showApprove,
         showDeactivate,
@@ -395,599 +698,648 @@ const ReusableTable: React.FC<ERPGridTableProps> = ({
       } = actionConfig;
 
       return (
-        <div className="flex items-center justify-center gap-1">
-          {showView && (
-            <ResuableButton
-              variant="ghost"
-              size="sm"
+        <div className="flex items-center justify-center gap-1.5">
+          {showView && onView && (
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 onView?.(item);
               }}
-              className="!p-2 !min-w-0"
+              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 hover:text-emerald-600 hover:border-emerald-300 transition-all shadow-sm"
+              title="View details"
             >
-              <Eye
-                size={19}
-                className="transition-transform group-active:scale-90"
-                style={{ color: "var(--text-muted)" }}
-              />
-            </ResuableButton>
+              <Eye size={15} />
+            </button>
           )}
-          {showMessage && (
-            <ResuableButton
-              variant="ghost"
-              size="sm"
+          {showMessage && onMessage && (
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 onMessage?.(item);
               }}
-              className="!p-2 !min-w-0 hover:!bg-blue-50"
+              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-blue-600 hover:bg-blue-50 transition-all shadow-sm"
+              title="Send message"
             >
-              <Mail size={18} className="text-blue-600" />
-            </ResuableButton>
+              <Mail size={15} />
+            </button>
           )}
-          {showApprove && (
-            <ResuableButton
-              variant="ghost"
-              size="sm"
+          {showApprove && onApprove && (
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 onApprove?.(item);
               }}
-              className="!p-2 !min-w-0 hover:!bg-[#ecfdf5]"
+              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-emerald-600 hover:bg-emerald-50 transition-all shadow-sm"
+              title="Approve"
             >
-              <CheckCircle size={18} className="text-[#22c55e]" />
-            </ResuableButton>
+              <CheckCircle size={15} />
+            </button>
           )}
-          {showDeactivate && (
-            <ResuableButton
-              variant="ghost"
-              size="sm"
+          {showDeactivate && onDeactivate && (
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 onDeactivate?.(item);
               }}
-              className="!p-2 !min-w-0 hover:!bg-red-50"
+              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-amber-600 hover:bg-amber-50 transition-all shadow-sm"
+              title="Deactivate"
             >
-              <Ban size={18} className="text-red-600" />
-            </ResuableButton>
+              <Ban size={15} />
+            </button>
           )}
-          {showDelete && (
-            <ResuableButton
-              variant="ghost"
-              size="sm"
+          {showDelete && onDelete && (
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 onDelete?.(item);
               }}
-              className="!p-2 !min-w-0 hover:!bg-red-50"
+              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-rose-500 hover:bg-rose-50 transition-all shadow-sm"
+              title="Delete"
             >
-              <Trash2
-                size={18}
-                className="text-red-500 transition-transform group-active:scale-90"
-              />
-            </ResuableButton>
+              <Trash2 size={15} />
+            </button>
           )}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onView) onView(item);
+            }}
+            className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-400 hover:text-slate-700 transition-all shadow-sm"
+            title="More actions"
+          >
+            <MoreVertical size={15} />
+          </button>
         </div>
       );
     },
     [actionConfig],
   );
 
-  const topContent = useMemo(() => {
+  // Top Header Content
+  const topHeader = useMemo(() => {
     return (
-      <div className="flex flex-col gap-3 p-3 pb-0">
-        {(title || description) && (
-          <div className="flex flex-col gap-0.5">
-            {title && (
-              <h2
-                className="text-xl font-bold tracking-tight"
-                style={{ color: "var(--text-primary)" }}
-              >
-                {title}
+      <div className="flex flex-col gap-4 p-4 md:p-6 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 rounded-t-2xl">
+        {/* Title & Controls Top Row */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          {/* Title Section */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-sm">
+              {titleIcon || <Heart size={20} className="fill-emerald-500/20" />}
+            </div>
+            <div className="flex flex-col text-start">
+              <h2 className="text-lg md:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                {title || "Recent Contributions"}
               </h2>
-            )}
-            {description && (
-              <p
-                className="text-xs font-medium"
-                style={{ color: "var(--text-muted)" }}
-              >
-                {description}
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-0.5">
+                {description || "Track and manage all recent food donations"}
               </p>
-            )}
-          </div>
-        )}
-
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-wrap items-center gap-3 justify-between">
-            <div className="flex items-center gap-2 flex-1 min-w-[200px]">
-              {enableSearch && (
-                <div className="relative w-full sm:max-w-xs min-w-[150px]">
-                  <Input
-                    isClearable
-                    className="w-full"
-                    placeholder="Search..."
-                    startContent={
-                      <SearchIconSvg style={{ color: "var(--text-muted)" }} />
-                    }
-                    value={filterValue}
-                    onClear={() => onClear()}
-                    onValueChange={onSearchChange}
-                    classNames={{
-                      base: "w-full",
-                      inputWrapper: [
-                        "border-[var(--border-color)]",
-                        "bg-[var(--bg-secondary)]",
-                        "rounded-sm",
-                        "!shadow-none",
-                        "h-10",
-                        "transition-all duration-200",
-                        "data-[hover=true]:border-hf-green/50",
-                        "group-data-[focus=true]:border-hf-green",
-                      ].join(" "),
-                      input:
-                        "text-sm font-medium pl-2 !text-[var(--text-primary)]",
-                      clearButton:
-                        "text-[var(--text-muted)] hover:text-[var(--text-primary)] !border-none !p-0 !bg-transparent",
-                    }}
-                  />
-                </div>
-              )}
-              {showColumnSettings && (
-                <Dropdown placement="bottom-start">
-                  <DropdownTrigger>
-                    <Button
-                      variant="flat"
-                      className="border rounded-sm h-10 px-4 flex-shrink-0 text-[11px] font-bold transition-all"
-                      style={{
-                        backgroundColor: "var(--bg-primary)",
-                        borderColor: "var(--border-color)",
-                        color: "var(--text-muted)",
-                      }}
-                      endContent={
-                        <ChevronDownIconSvg
-                          style={{ color: "var(--text-muted)" }}
-                          className="text-[10px]"
-                        />
-                      }
-                    >
-                      <span className="hidden sm:inline">COLUMNS</span>
-                    </Button>
-                  </DropdownTrigger>
-                  <DropdownMenu
-                    disallowEmptySelection
-                    aria-label="Table Columns"
-                    closeOnSelect={false}
-                    selectedKeys={visibleColumns}
-                    selectionMode="multiple"
-                    onSelectionChange={setVisibleColumns}
-                    classNames={{
-                      base: "border rounded-sm min-w-[180px] p-1 shadow-2xl",
-                    }}
-                    style={{
-                      backgroundColor: "var(--bg-primary)",
-                      borderColor: "var(--border-color)",
-                      color: "var(--text-primary)",
-                    }}
-                    itemClasses={{
-                      base: [
-                        "text-[11px] font-bold uppercase tracking-tight",
-                        "data-[hover=true]:bg-hf-green/10 data-[hover=true]:text-hf-green",
-                        "data-[selected=true]:bg-emerald-500/10 data-[selected=true]:text-hf-green",
-                        "rounded-sm",
-                        "px-3",
-                        "py-2.5",
-                        "transition-all duration-200",
-                      ].join(" "),
-                      selectedIcon: "text-hf-green w-4 h-4 ml-auto",
-                    }}
-                  >
-                    {columns.map((column) => (
-                      <DropdownItem key={column.uid} showDivider={false}>
-                        {column.name}
-                      </DropdownItem>
-                    ))}
-                  </DropdownMenu>
-                </Dropdown>
-              )}
-            </div>
-
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              {additionalFilters}
-
-              {enableFilters && statusOptions.length > 1 && (
-                <Dropdown placement="bottom-end">
-                  <DropdownTrigger>
-                    <Button
-                      variant="flat"
-                      className={`border rounded-sm h-10 px-4 flex-shrink-0 text-[11px] font-bold transition-all ${
-                        selectedStatus !== "all"
-                          ? "border-hf-green/30 bg-hf-green/10 text-hf-green hover:bg-hf-green/20"
-                          : "border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-muted)] hover:bg-[var(--bg-secondary)]"
-                      }`}
-                      startContent={
-                        <FilterIcon
-                          className={
-                            selectedStatus !== "all"
-                              ? "text-hf-green"
-                              : "text-[var(--text-muted)]"
-                          }
-                          size={14}
-                        />
-                      }
-                      endContent={
-                        <ChevronDownIconSvg
-                          className={`text-[10px] ${selectedStatus !== "all" ? "text-hf-green" : "text-[var(--text-muted)]"}`}
-                        />
-                      }
-                    >
-                      <span className="hidden sm:inline ml-1">
-                        {selectedStatus === "all"
-                          ? "STATUS: ALL"
-                          : `STATUS: ${selectedStatus.toUpperCase()}`}
-                      </span>
-                    </Button>
-                  </DropdownTrigger>
-                  <DropdownMenu
-                    aria-label="Status filter"
-                    selectionMode="single"
-                    selectedKeys={[selectedStatus]}
-                    onSelectionChange={(keys) => {
-                      const selected = Array.from(keys)[0] as string;
-                      // Prevent empty selection - if user clicks same item, keep it selected
-                      if (selected && selected !== selectedStatus) {
-                        setSelectedStatus(selected);
-                        setPage(1);
-                      }
-                    }}
-                    classNames={{
-                      base: "border rounded-sm min-w-[160px] p-1 shadow-2xl",
-                    }}
-                    style={{
-                      backgroundColor: "var(--bg-primary)",
-                      borderColor: "var(--border-color)",
-                    }}
-                    itemClasses={{
-                      base: [
-                        "text-[11px] font-bold uppercase tracking-tight",
-                        "data-[hover=true]:bg-hf-green/10 data-[hover=true]:text-hf-green",
-                        "data-[selected=true]:bg-emerald-500/10 data-[selected=true]:text-hf-green",
-                        "rounded-sm",
-                        "px-3",
-                        "py-2.5",
-                        "transition-colors duration-200",
-                      ].join(" "),
-                      selectedIcon: "text-hf-green w-4 h-4 ml-auto",
-                    }}
-                  >
-                    {statusOptions.map((status) => (
-                      <DropdownItem key={status}>
-                        {status === "all" ? "All Status" : status}
-                      </DropdownItem>
-                    ))}
-                  </DropdownMenu>
-                </Dropdown>
-              )}
-
-              {enableFilters && enableDateFilter && (
-                <div className="flex gap-3 relative" ref={pickerRef}>
-                  <button
-                    type="button"
-                    onClick={() => setShowPicker(!showPicker)}
-                    className="flex items-center gap-2.5 px-4 h-10 border rounded-sm font-bold text-[11px] uppercase tracking-tight transition-all group/picker"
-                    style={{
-                      backgroundColor: "var(--bg-primary)",
-                      borderColor: "var(--border-color)",
-                      color: "var(--text-muted)",
-                    }}
-                  >
-                    <CalendarIcon
-                      size={14}
-                      className="transition-colors"
-                      style={{
-                        color:
-                          dateRange.start || dateRange.end
-                            ? "var(--color-emerald)"
-                            : "var(--text-muted)",
-                      }}
-                    />
-                    <span className="min-w-[120px] text-left">
-                      {!dateRange.start && !dateRange.end
-                        ? "SELECT RANGE"
-                        : `${dateRange.start || "..."} — ${
-                            dateRange.end || "..."
-                          }`}
-                    </span>
-                    <ChevronDownIconSvg
-                      className={`text-[10px] transition-transform duration-300 ${
-                        showPicker ? "rotate-180" : ""
-                      }`}
-                      style={{ color: "var(--text-muted)" }}
-                    />
-                  </button>
-
-                  {showPicker && (
-                    <HeroDateRangePicker
-                      initialStart={dateRange.start}
-                      initialEnd={dateRange.end}
-                      onRangeSelect={(start, end) => {
-                        const newRange = { start, end };
-                        setDateRange(newRange);
-                        if (onDateRangeChange) {
-                          onDateRangeChange(newRange);
-                        }
-                      }}
-                      onClose={() => setShowPicker(false)}
-                    />
-                  )}
-                </div>
-              )}
             </div>
           </div>
 
-          <div
-            className="flex flex-row items-center justify-between gap-2 px-3 py-2 rounded-sm border overflow-hidden"
-            style={{
-              backgroundColor: "var(--bg-secondary)",
-              borderColor: "var(--border-color)",
-            }}
-          >
-            <div className="flex items-center gap-2 shrink-0">
-              <span
-                className="text-[9px] md:text-[10px] font-black uppercase tracking-widest whitespace-nowrap"
-                style={{ color: "var(--text-muted)" }}
-              >
-                <span className="hidden sm:inline">TOTAL </span>RECORDS:
-              </span>
-              <span
-                className="text-[10px] md:text-[11px] font-black px-2 py-0.5 rounded-sm border shadow-sm shrink-0"
-                style={{
-                  backgroundColor: "var(--bg-primary)",
-                  borderColor: "var(--border-color)",
-                  color: "var(--text-primary)",
-                }}
-              >
-                {data.length}
-              </span>
-            </div>
-            {enablePagination && (
-              <label
-                className="flex items-center gap-2 text-[9px] md:text-[10px] font-black uppercase tracking-widest whitespace-nowrap shrink-0"
-                style={{ color: "var(--text-muted)" }}
-              >
-                <span className="hidden sm:inline">SHOW </span>ROWS:
-                <select
-                  className="outline-none text-[10px] md:text-[11px] font-black cursor-pointer border rounded-sm px-2 py-0.5 transition-all shadow-sm shrink-0"
-                  style={{
-                    backgroundColor: "var(--bg-primary)",
-                    borderColor: "var(--border-color)",
-                    color: "var(--text-primary)",
+          {/* Action & Filter Controls */}
+          <div className="flex flex-wrap items-center gap-2.5 justify-start lg:justify-end">
+            {/* Search Box */}
+            {enableSearch && (
+              <div className="relative w-full sm:w-56 md:w-64">
+                <Input
+                  isClearable
+                  placeholder={`Search ${entityName}...`}
+                  startContent={
+                    <Search size={15} className="text-slate-400 shrink-0" />
+                  }
+                  value={filterValue}
+                  onClear={() => onClear()}
+                  onValueChange={onSearchChange}
+                  classNames={{
+                    base: "w-full",
+                    inputWrapper: [
+                      "border border-slate-200 dark:border-slate-700",
+                      "bg-white dark:bg-slate-800",
+                      "rounded-xl",
+                      "!shadow-none",
+                      "h-10",
+                      "transition-all duration-200",
+                      "data-[hover=true]:border-emerald-500/50",
+                      "group-data-[focus=true]:border-emerald-500",
+                    ].join(" "),
+                    input:
+                      "text-xs font-semibold text-slate-800 dark:text-slate-100 placeholder:text-slate-400 pl-1",
                   }}
-                  onChange={onRowsPerPageChange}
-                  value={rowsPerPage}
+                />
+              </div>
+            )}
+
+            {/* Status Filter */}
+            {enableFilters && statusOptions.length > 1 && (
+              <Dropdown placement="bottom-end">
+                <DropdownTrigger>
+                  <Button
+                    variant="flat"
+                    className="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl h-10 px-3.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-500 transition-all"
+                    endContent={<ChevronDown size={14} className="text-slate-400" />}
+                  >
+                    <span>
+                      STATUS:{" "}
+                      <span className="text-emerald-600 dark:text-emerald-400 font-extrabold capitalize">
+                        {selectedStatus === "all" ? "All" : selectedStatus}
+                      </span>
+                    </span>
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu
+                  aria-label="Status filter"
+                  selectionMode="single"
+                  selectedKeys={[selectedStatus]}
+                  onSelectionChange={(keys) => {
+                    const selected = Array.from(keys)[0] as string;
+                    if (selected) {
+                      setSelectedStatus(selected);
+                      setPage(1);
+                    }
+                  }}
+                  classNames={{
+                    base: "border border-slate-200 dark:border-slate-700 rounded-xl min-w-[160px] p-1 shadow-xl bg-white dark:bg-slate-800",
+                  }}
                 >
-                  <option value="5">5</option>
-                  <option value="10">10</option>
-                  <option value="15">15</option>
-                  <option value="20">20</option>
-                </select>
-              </label>
+                  {statusOptions.map((status) => (
+                    <DropdownItem
+                      key={status}
+                      className="text-xs font-bold uppercase tracking-tight py-2 rounded-lg data-[hover=true]:bg-emerald-50 data-[hover=true]:text-emerald-600"
+                    >
+                      {status === "all" ? "All Statuses" : status}
+                    </DropdownItem>
+                  ))}
+                </DropdownMenu>
+              </Dropdown>
+            )}
+
+            {/* Sort Dropdown */}
+            {enableSorting && (
+              <Dropdown placement="bottom-end">
+                <DropdownTrigger>
+                  <Button
+                    variant="flat"
+                    className="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl h-10 px-3.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-500 transition-all"
+                    endContent={<ChevronDown size={14} className="text-slate-400" />}
+                  >
+                    <span>
+                      SORT BY:{" "}
+                      <span className="text-emerald-600 dark:text-emerald-400 font-extrabold capitalize">
+                        {selectedSort === "newest"
+                          ? "Newest First"
+                          : selectedSort === "oldest"
+                          ? "Oldest First"
+                          : selectedSort}
+                      </span>
+                    </span>
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu
+                  aria-label="Sort options"
+                  selectionMode="single"
+                  selectedKeys={[selectedSort]}
+                  onSelectionChange={(keys) => {
+                    const selected = Array.from(keys)[0] as string;
+                    if (selected) {
+                      setSelectedSort(selected);
+                      if (onSortChange) onSortChange(selected);
+                    }
+                  }}
+                  classNames={{
+                    base: "border border-slate-200 dark:border-slate-700 rounded-xl min-w-[160px] p-1 shadow-xl bg-white dark:bg-slate-800",
+                  }}
+                >
+                  {sortOptions && sortOptions.length > 0 ? (
+                    sortOptions.map((opt) => (
+                      <DropdownItem key={opt.key} className="text-xs font-bold">
+                        {opt.label}
+                      </DropdownItem>
+                    ))
+                  ) : (
+                    <>
+                      <DropdownItem key="newest" className="text-xs font-bold">
+                        Newest First
+                      </DropdownItem>
+                      <DropdownItem key="oldest" className="text-xs font-bold">
+                        Oldest First
+                      </DropdownItem>
+                    </>
+                  )}
+                </DropdownMenu>
+              </Dropdown>
+            )}
+
+            {/* Columns Dropdown */}
+            {showColumnSettings && (
+              <Dropdown placement="bottom-end">
+                <DropdownTrigger>
+                  <Button
+                    variant="flat"
+                    className="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl h-10 px-3.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-500 transition-all"
+                    endContent={<ChevronDown size={14} className="text-slate-400" />}
+                  >
+                    Columns
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu
+                  disallowEmptySelection
+                  aria-label="Table Columns"
+                  closeOnSelect={false}
+                  selectedKeys={visibleColumns}
+                  selectionMode="multiple"
+                  onSelectionChange={setVisibleColumns}
+                  classNames={{
+                    base: "border border-slate-200 dark:border-slate-700 rounded-xl min-w-[180px] p-1 shadow-xl bg-white dark:bg-slate-800",
+                  }}
+                >
+                  {columns.map((column) => (
+                    <DropdownItem key={column.uid} className="text-xs font-bold">
+                      {column.name}
+                    </DropdownItem>
+                  ))}
+                </DropdownMenu>
+              </Dropdown>
+            )}
+
+            {/* Date Range Picker */}
+            {enableFilters && enableDateFilter && (
+              <div className="relative" ref={pickerRef}>
+                <button
+                  type="button"
+                  onClick={() => setShowPicker(!showPicker)}
+                  className="flex items-center gap-2 px-3.5 h-10 border border-slate-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 font-bold text-xs text-slate-700 dark:text-slate-200 hover:border-emerald-500 transition-all"
+                >
+                  <CalendarIcon size={14} className="text-emerald-500 shrink-0" />
+                  <span>
+                    {!dateRange.start && !dateRange.end
+                      ? "SELECT RANGE"
+                      : `${dateRange.start || "..."} — ${dateRange.end || "..."}`}
+                  </span>
+                </button>
+                {showPicker && (
+                  <HeroDateRangePicker
+                    initialStart={dateRange.start}
+                    initialEnd={dateRange.end}
+                    onRangeSelect={(start, end) => {
+                      const newRange = { start, end };
+                      setDateRange(newRange);
+                      if (onDateRangeChange) onDateRangeChange(newRange);
+                    }}
+                    onClose={() => setShowPicker(false)}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* Additional Filters slot */}
+            {additionalFilters}
+
+            {/* Cards vs Table View Toggle Switch */}
+            {enableViewToggle && (
+              <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700 shrink-0 ml-1">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("cards")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    viewMode === "cards"
+                      ? "bg-[#22c55e] text-white shadow-sm font-extrabold"
+                      : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                  }`}
+                >
+                  <LayoutGrid size={15} />
+                  <span>Cards</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("table")}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    viewMode === "table"
+                      ? "bg-[#22c55e] text-white shadow-sm font-extrabold"
+                      : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                  }`}
+                >
+                  <TableIcon size={15} />
+                  <span>Table</span>
+                </button>
+              </div>
             )}
           </div>
         </div>
       </div>
     );
   }, [
-    filterValue,
-    visibleColumns,
-    onRowsPerPageChange,
-    data.length,
-    filteredItems.length,
-    onSearchChange,
-    columns,
-    enableSearch,
-    enableFilters,
-    showColumnSettings,
-    rowsPerPage,
     title,
     description,
+    titleIcon,
+    entityName,
+    enableSearch,
+    filterValue,
+    onSearchChange,
+    onClear,
+    enableFilters,
     statusOptions,
     selectedStatus,
+    enableSorting,
+    selectedSort,
+    onSortChange,
+    showColumnSettings,
+    visibleColumns,
+    columns,
+    enableDateFilter,
     showPicker,
     dateRange,
-    enableDateFilter,
     onDateRangeChange,
-    enablePagination,
-    onClear,
+    additionalFilters,
+    enableViewToggle,
+    viewMode,
   ]);
 
-  const finalTopContent = customTopContent || topContent;
+  const finalTopContent =
+    customTopContent !== undefined ? customTopContent : topHeader;
 
-  const bottomContent = useMemo(() => {
+  // Pagination Footer Controls
+  const paginationFooter = useMemo(() => {
     if (!enablePagination) return null;
 
+    const startItem = (page - 1) * rowsPerPage + 1;
+    const endItem = Math.min(page * rowsPerPage, filteredItems.length);
+    const totalItems = filteredItems.length;
+
+    // Helper to render pagination range (e.g. 1 2 3 ... 5)
+    const renderPageNumbers = () => {
+      const pageList: (number | string)[] = [];
+      if (pages <= 5) {
+        for (let i = 1; i <= pages; i++) pageList.push(i);
+      } else {
+        if (page <= 3) {
+          pageList.push(1, 2, 3, "...", pages);
+        } else if (page >= pages - 2) {
+          pageList.push(1, "...", pages - 2, pages - 1, pages);
+        } else {
+          pageList.push(1, "...", page, "...", pages);
+        }
+      }
+
+      return pageList.map((p, idx) => {
+        if (typeof p === "string") {
+          return (
+            <span
+              key={`dots-${idx}`}
+              className="w-8 h-8 flex items-center justify-center text-xs font-bold text-slate-400"
+            >
+              ...
+            </span>
+          );
+        }
+        const isActive = page === p;
+        return (
+          <button
+            key={p}
+            onClick={() => setPage(p)}
+            className={`w-8 h-8 rounded-xl text-xs font-extrabold flex items-center justify-center transition-all ${
+              isActive
+                ? "bg-[#22c55e] text-white shadow-sm scale-105"
+                : "border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700"
+            }`}
+          >
+            {p}
+          </button>
+        );
+      });
+    };
+
     return (
-      <div
-        className="px-6 py-4 border-t flex items-center justify-end"
-        style={{
-          backgroundColor: "var(--bg-secondary)",
-          borderTopColor: "var(--border-color)",
-        }}
-      >
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 md:px-6 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 rounded-b-2xl">
+        {/* Left: Showing range text */}
+        <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+          Showing <span className="font-extrabold text-slate-800 dark:text-slate-200">{totalItems === 0 ? 0 : startItem}</span> to{" "}
+          <span className="font-extrabold text-slate-800 dark:text-slate-200">{endItem}</span> of{" "}
+          <span className="font-extrabold text-slate-800 dark:text-slate-200">{totalItems}</span> {entityName}
+        </div>
+
+        {/* Center: Pagination numbers & buttons */}
+        <div className="flex items-center gap-1.5">
           <button
             onClick={onPreviousPage}
             disabled={page === 1}
-            className="w-7 h-7 flex items-center justify-center rounded-sm border transition-all"
-            style={{
-              backgroundColor: page === 1 ? "transparent" : "var(--bg-primary)",
-              borderColor: "var(--border-color)",
-              color: page === 1 ? "var(--text-muted)" : "var(--text-primary)",
-              opacity: page === 1 ? 0.5 : 1,
-            }}
+            className="w-8 h-8 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
           >
-            <ChevronDownIconSvg className="w-3.5 h-3.5 rotate-90" />
+            <ChevronLeft size={16} />
           </button>
-          <div className="flex gap-1 px-1">
-            {Array.from({ length: pages }).map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setPage(i + 1)}
-                className={`w-7 h-7 flex items-center justify-center rounded-sm text-[10px] font-black transition-all ${
-                  page === i + 1
-                    ? "bg-hf-green text-white scale-105 shadow-sm"
-                    : "border"
-                }`}
-                style={{
-                  backgroundColor:
-                    page === i + 1 ? "#22c55e" : "var(--bg-primary)",
-                  borderColor: "var(--border-color)",
-                  color: page === i + 1 ? "white" : "var(--text-primary)",
-                }}
-              >
-                {i + 1}
-              </button>
-            ))}
-          </div>
+
+          <div className="flex items-center gap-1">{renderPageNumbers()}</div>
+
           <button
             onClick={onNextPage}
             disabled={page >= pages}
-            className="w-7 h-7 flex items-center justify-center rounded-sm border transition-all"
-            style={{
-              backgroundColor:
-                page >= pages ? "transparent" : "var(--bg-primary)",
-              borderColor: "var(--border-color)",
-              color:
-                page >= pages ? "var(--text-muted)" : "var(--text-primary)",
-              opacity: page >= pages ? 0.5 : 1,
-            }}
+            className="w-8 h-8 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
           >
-            <ChevronDownIconSvg className="w-3.5 h-3.5 -rotate-90" />
+            <ChevronRight size={16} />
           </button>
+        </div>
+
+        {/* Right: Per page selector */}
+        <div className="flex items-center gap-2">
+          <select
+            className="outline-none text-xs font-bold border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 shadow-sm cursor-pointer hover:border-emerald-500 transition-all"
+            onChange={onRowsPerPageChange}
+            value={rowsPerPage}
+          >
+            <option value="5">5 per page</option>
+            <option value="10">10 per page</option>
+            <option value="20">20 per page</option>
+            <option value="50">50 per page</option>
+          </select>
         </div>
       </div>
     );
   }, [
-    page,
-    pages,
     enablePagination,
+    page,
     rowsPerPage,
-    onRowsPerPageChange,
-    onNextPage,
+    filteredItems.length,
+    entityName,
+    pages,
     onPreviousPage,
+    onNextPage,
+    onRowsPerPageChange,
   ]);
 
   return (
-    <div
-      className="border rounded-sm flex flex-col relative gap-4 w-full"
-      style={{
-        backgroundColor: "var(--bg-primary)",
-        borderColor: "var(--border-color)",
-      }}
-    >
-      <Table
-        isCompact
-        isHeaderSticky
-        aria-label="Master Audit Ledger"
-        bottomContent={bottomContent}
-        bottomContentPlacement="outside"
-        classNames={{
-          base: "border-collapse bg-transparent",
-          table: "bg-transparent",
-          wrapper:
-            "p-0 no-scrollbar rounded-none border-none shadow-none bg-transparent",
-          th: [
-            "bg-transparent",
-            "text-[10px]",
-            "font-bold",
-            "uppercase",
-            "tracking-[0.15em]",
-            "text-[var(--text-muted)]",
-            "whitespace-nowrap",
-            variant === "compact" ? "py-2.5 px-3" : "py-4 px-5",
-            "border-b",
-            "border-[var(--border-color)]",
-            "first:rounded-tl-sm",
-            "last:rounded-tr-sm",
-          ].join(" "),
-          td: [
-            variant === "compact" ? "py-2 px-3" : "py-4 px-5",
-            "border-b",
-            "border-[var(--border-color)]",
-            "group-hover:bg-[var(--bg-secondary)]",
-            "transition-all",
-            "text-[var(--text-primary)]",
-            "text-[13px]",
-            "whitespace-nowrap",
-          ].join(" "),
-          tr: "group cursor-pointer transition-colors duration-200 bg-transparent",
-        }}
-        selectedKeys={undefined}
-        selectionMode="none"
-        sortDescriptor={enableSorting ? sortDescriptor : undefined}
-        onSortChange={enableSorting ? setSortDescriptor : undefined}
-        topContent={finalTopContent}
-        topContentPlacement="outside"
-      >
-        <TableHeader columns={headerColumns}>
-          {(column: ColumnDef) => (
-            <TableColumn
-              key={column.uid}
-              align={column.align || "center"}
-              allowsSorting={enableSorting && column.sortable}
-              className={`${
-                column.align === "start"
-                  ? "text-start px-4"
-                  : column.align === "end"
-                    ? "text-end px-4"
-                    : "text-center px-4"
-              } whitespace-nowrap`}
-            >
-              {column.name}
-            </TableColumn>
-          )}
-        </TableHeader>
-        <TableBody
-          emptyContent={
-            <div className="flex flex-col items-center justify-center min-h-[300px] gap-3">
-              <SearchIconSvg className="w-10 h-10 text-[var(--text-muted)] mb-2" />
-              <p className="text-[var(--text-muted)] font-bold uppercase text-[10px] tracking-widest">
-                No records found
-              </p>
-            </div>
-          }
-          items={sortedItems}
-        >
-          {(item: any) => (
-            <TableRow
-              key={item.id || item.uid || item.name || Math.random().toString()}
-              onClick={onRowClick ? () => onRowClick(item) : undefined}
-            >
-              {(columnKey) => {
-                const column = headerColumns.find((c) => c.uid === columnKey);
-                const alignmentClass = `${
-                  column?.align === "start"
-                    ? "text-start px-4"
-                    : column?.align === "end"
-                      ? "text-end px-4"
-                      : "text-center px-4"
-                } whitespace-nowrap`;
+    <div className="w-full flex flex-col rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-sm bg-white dark:bg-slate-900 overflow-hidden">
+      {/* Top Header Controls */}
+      {finalTopContent}
 
-                return (
-                  <TableCell className={alignmentClass}>
-                    {columnKey === "actions" && actionConfig
-                      ? renderDefaultActions(item)
-                      : renderCell(item, columnKey)}
-                  </TableCell>
-                );
+      {/* Main View Area */}
+      <div className="w-full">
+        {viewMode === "cards" ? (
+          /* --- Cards View Grid --- */
+          <div className="p-4 md:p-6 bg-slate-50/50 dark:bg-slate-950/20">
+            {sortedItems.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <Search size={36} className="text-slate-300 dark:text-slate-600 mb-3" />
+                <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                  No records found
+                </h4>
+                <p className="text-xs text-slate-400 mt-1">
+                  Try adjusting your search query or filters.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                {sortedItems.map((item: any) =>
+                  renderCard ? (
+                    <React.Fragment key={item.id || item.uid || Math.random().toString()}>
+                      {renderCard(item)}
+                    </React.Fragment>
+                  ) : (
+                    <DefaultCardItem
+                      key={item.id || item.uid || Math.random().toString()}
+                      item={item}
+                      columns={headerColumns}
+                      renderCell={renderCell}
+                      actionConfig={actionConfig}
+                      onRowClick={onRowClick}
+                    />
+                  ),
+                )}
+              </div>
+            )}
+          </div>
+        ) : (
+          /* --- Table View --- */
+          <div className="w-full overflow-x-auto">
+            <Table
+              isCompact={variant === "compact"}
+              isHeaderSticky
+              aria-label={title || "Master Audit Table"}
+              classNames={{
+                base: "w-full border-collapse bg-transparent",
+                table: "w-full bg-transparent min-w-[700px]",
+                wrapper:
+                  "p-0 no-scrollbar rounded-none border-none shadow-none bg-transparent",
+                th: [
+                  "bg-slate-50/80 dark:bg-slate-800/60",
+                  "text-[11px]",
+                  "font-extrabold",
+                  "uppercase",
+                  "italic",
+                  "tracking-wider",
+                  "text-slate-400 dark:text-slate-500",
+                  "whitespace-nowrap",
+                  "py-3.5 px-4",
+                  "border-b border-slate-100 dark:border-slate-800",
+                ].join(" "),
+                td: [
+                  "py-3.5 px-4",
+                  "border-b border-slate-100 dark:border-slate-800/60",
+                  "group-hover:bg-slate-50/80 dark:group-hover:bg-slate-800/40",
+                  "transition-colors duration-150",
+                  "text-slate-700 dark:text-slate-200",
+                  "text-xs font-semibold",
+                  "whitespace-nowrap",
+                ].join(" "),
+                tr: "group cursor-pointer transition-colors duration-150 bg-transparent",
               }}
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+              selectedKeys={undefined}
+              selectionMode="none"
+              sortDescriptor={enableSorting ? sortDescriptor : undefined}
+              onSortChange={enableSorting ? setSortDescriptor : undefined}
+            >
+              <TableHeader columns={headerColumns}>
+                {(column: ColumnDef) => (
+                  <TableColumn
+                    key={column.uid}
+                    align={column.align || "start"}
+                    allowsSorting={enableSorting && column.sortable}
+                    className={`${
+                      column.align === "center"
+                        ? "text-center px-4"
+                        : column.align === "end"
+                        ? "text-end px-4"
+                        : "text-start px-4"
+                    } whitespace-nowrap`}
+                  >
+                    <div className="inline-flex items-center gap-1.5">
+                      <span>{column.name}</span>
+                      {column.sortable && (
+                        <ChevronsUpDown size={13} className="text-slate-300 dark:text-slate-600" />
+                      )}
+                    </div>
+                  </TableColumn>
+                )}
+              </TableHeader>
+              <TableBody
+                emptyContent={
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <Search size={36} className="text-slate-300 dark:text-slate-600 mb-3" />
+                    <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      No records found
+                    </h4>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Try adjusting your search query or filters.
+                    </p>
+                  </div>
+                }
+                items={sortedItems}
+              >
+                {(item: any) => (
+                  <TableRow
+                    key={item.id || item.uid || item.name || Math.random().toString()}
+                    onClick={onRowClick ? () => onRowClick(item) : undefined}
+                  >
+                    {(columnKey) => {
+                      const column = headerColumns.find((c) => c.uid === columnKey);
+                      const alignClass =
+                        column?.align === "center"
+                          ? "text-center px-4"
+                          : column?.align === "end"
+                          ? "text-end px-4"
+                          : "text-start px-4";
+
+                      return (
+                        <TableCell className={`${alignClass} whitespace-nowrap`}>
+                          {columnKey === "actions" && actionConfig
+                            ? renderDefaultActions(item)
+                            : renderCell(item, columnKey)}
+                        </TableCell>
+                      );
+                    }}
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
+
+      {/* Footer Pagination Bar */}
+      {paginationFooter}
     </div>
   );
 };
 
-export { RowIcon };
+export const RowIcon = (props: any) => {
+  return (
+    <svg
+      aria-hidden="true"
+      fill="none"
+      focusable="false"
+      height="1em"
+      role="presentation"
+      viewBox="0 0 24 24"
+      width="1em"
+      {...props}
+    >
+      <path
+        d="M3 12h18M3 6h18M3 18h18"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
+      />
+    </svg>
+  );
+};
+
 export default ReusableTable;

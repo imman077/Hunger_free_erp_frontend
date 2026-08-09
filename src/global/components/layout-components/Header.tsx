@@ -3,7 +3,7 @@ import Badge from "@mui/material/Badge";
 import Avatar from "@mui/material/Avatar";
 import IconButton from "@mui/material/IconButton";
 import { BellIcon, CheckCheck, User, LogOut, Star, CreditCard } from "lucide-react";
-import { useSidebar } from "../contexts/SidebarContext";
+import { useSidebar } from "../../contexts/SidebarContext";
 import { formatDistanceToNow } from "date-fns";
 import ThemeToggle from "./ThemeToggle";
 import {
@@ -13,13 +13,13 @@ import {
   DropdownItem,
 } from "@heroui/react";
 import { useNavigate } from "react-router-dom";
-import { Icon } from "./reusable-components/Icon";
-import { useAuthStore } from "../store/auth-store";
-import { useDonorStore } from "../../features/donor/store/donor-store";
-import { useNgoStore } from "../../features/ngo/store/ngo_store";
-import { useVolunteerStore } from "../../features/volunteer/store/volunteer_store";
+import { Icon } from "../reusable-components/Icon";
+import { useAuthStore } from "../../store/auth-store";
+import { useDonorStore } from "../../../features/donor/store/donor-store";
+import { useNgoStore } from "../../../features/ngo/store/ngo_store";
+import { useVolunteerStore } from "../../../features/volunteer/store/volunteer_store";
 import { gql } from "@apollo/client";
-import client from "../api/apollo-client";
+import client from "../../api/apollo-client";
 
 /* ---------------- Interfaces ---------------- */
 

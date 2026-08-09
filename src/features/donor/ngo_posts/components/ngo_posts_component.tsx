@@ -16,6 +16,7 @@ import {
   ChevronDown,
   Check,
   TrendingUp,
+  X,
 } from "lucide-react";
 import { Button } from "@heroui/react";
 import ReusableTable, {
@@ -127,16 +128,32 @@ export const NgoPostsControls = () => {
                 fetchNeeds(searchValue);
               }
             }}
-            className="w-full pl-4 pr-10 py-3 bg-white border border-slate-200 hover:border-emerald-500 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 shadow-sm transition-all outline-none"
+            className="w-full pl-4 pr-16 py-3 bg-white border border-slate-200 hover:border-emerald-500 rounded-xl text-xs font-semibold text-slate-700 placeholder-slate-400 shadow-sm transition-all outline-none"
           />
-          <Search
-            onClick={() => {
-              ngoPostsInputModel.update({ searchQuery: searchValue });
-              fetchNeeds(searchValue);
-            }}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-emerald-500 transition-colors cursor-pointer"
-            size={16}
-          />
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-slate-400 z-10">
+            {searchValue && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchValue("");
+                  ngoPostsInputModel.update({ searchQuery: "" });
+                  fetchNeeds("");
+                }}
+                className="p-1 hover:text-red-500 transition-colors rounded-full hover:bg-red-50"
+                title="Clear search"
+              >
+                <X size={15} />
+              </button>
+            )}
+            <Search
+              onClick={() => {
+                ngoPostsInputModel.update({ searchQuery: searchValue });
+                fetchNeeds(searchValue);
+              }}
+              className="hover:text-emerald-500 transition-colors cursor-pointer p-0.5"
+              size={16}
+            />
+          </div>
         </div>
 
         {/* Category Filter */}

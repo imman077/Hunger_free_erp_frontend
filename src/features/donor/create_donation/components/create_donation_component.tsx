@@ -669,15 +669,15 @@ export const LogisticsFields = () => {
         </div>
       </div>
       <div className="p-5 sm:p-8 space-y-8">
-        <ResuableInput
-          label="Full Pickup Address"
-          value={logistics.pickupAddress}
-          onChange={(val) => handleLogisticsChange("pickupAddress", val)}
-          required
-          placeholder="e.g. Block A, Community Hub, Zip 12345"
-          align="left"
-        />
-        <div className="grid grid-cols-1 md:grid-cols-1 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <ResuableInput
+            label="Full Pickup Address"
+            value={logistics.pickupAddress}
+            onChange={(val) => handleLogisticsChange("pickupAddress", val)}
+            required
+            placeholder="e.g. Block A, Community Hub, Zip 12345"
+            align="left"
+          />
           <ResuableInput
             label="Contact Phone"
             type="tel"

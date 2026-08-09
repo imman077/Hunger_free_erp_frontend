@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { Icon } from "./reusable-components/Icon";
-import { useSidebar } from "../contexts/SidebarContext";
+
+import { Icon } from "../reusable-components/Icon";
+import { useSidebar } from "../../contexts/SidebarContext";
 import { Link, useLocation } from "react-router-dom";
 import {
   Drawer,
@@ -12,6 +13,7 @@ import {
 type SubItem = {
   label: string;
   to: string;
+  icon: React.ReactNode;
 };
 
 type SidebarItemProps = {
@@ -39,10 +41,6 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
     (item) => location.pathname === item.to,
   );
 
-  React.useEffect(() => {
-    if (isSubItemActive) setIsOpen(true);
-  }, [isSubItemActive]);
-
   const handleClick = () => {
     if (subItems) {
       if (!expanded) {
@@ -53,6 +51,12 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
       }
     }
   };
+
+  React.useEffect(() => {
+    if (isSubItemActive) {
+      setIsOpen(true);
+    }
+  }, [isSubItemActive]);
 
   const content = (
     <div
@@ -65,11 +69,14 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
             : expanded
               ? "w-full p-2.5 text-slate-400 hover:bg-slate-100 hover:text-emerald-500 rounded-xl"
               : "w-11 h-11 text-slate-400 hover:bg-slate-100 hover:text-emerald-500 rounded-xl justify-center"
-        }`}
+        }
+      `}
       onClick={handleClick}
     >
       <div
-        className={`flex items-center justify-center shrink-0 ${expanded ? "w-7 h-7" : ""}`}
+        className={`flex items-center justify-center shrink-0 ${
+          expanded ? "w-7 h-7" : ""
+        }`}
       >
         <Icon
           name={
@@ -90,7 +97,9 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
           {subItems && (
             <Icon
               name="chevron-down"
-              className={`w-4 h-4 transition-transform duration-300 ml-auto ${isOpen ? "rotate-180" : ""}`}
+              className={`w-4 h-4 transition-transform duration-300 ml-auto ${
+                isOpen ? "rotate-180" : ""
+              }`}
             />
           )}
         </div>
@@ -107,6 +116,7 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
       ) : (
         content
       )}
+
       {subItems && expanded && (
         <div
           className={`overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${
@@ -144,21 +154,97 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   );
 };
 
-const NGOSidebar: React.FC = () => {
+const SidebarIcons: React.FC = () => {
   const { expanded, setExpanded, mobileOpen, setMobileOpen } = useSidebar();
   const { onOpenChange } = useDisclosure();
 
-  const inventorySubItems: SubItem[] = [
-    { label: "All Items", to: "/ngo/inventory" },
-    { label: "Add Item", to: "/ngo/inventory/add" },
+  // Submenu configurations
+  const usersSubItems: SubItem[] = [
+    {
+      label: "All Users",
+      to: "/admin/users",
+      icon: <Icon name="users" className="h-4 w-4" />,
+    },
+    {
+      label: "Donors",
+      to: "/admin/users/donors",
+      icon: <Icon name="users" className="h-4 w-4" />,
+    },
+    {
+      label: "NGOs",
+      to: "/admin/users/ngos",
+      icon: <Icon name="office" className="h-4 w-4" />,
+    },
+    {
+      label: "Volunteers",
+      to: "/admin/users/volunteers",
+      icon: <Icon name="users" className="h-4 w-4" />,
+    },
+  ];
+
+  const donationsSubItems: SubItem[] = [
+    {
+      label: "All Donations",
+      to: "/admin/donations",
+      icon: <Icon name="donations" className="h-4 w-4" />,
+    },
+    {
+      label: "Live Tracking",
+      to: "/admin/donations/tracking",
+      icon: <Icon name="donations" className="h-4 w-4" />,
+    },
+    {
+      label: "Pending",
+      to: "/admin/donations/pending",
+      icon: <Icon name="donations" className="h-4 w-4" />,
+    },
+  ];
+
+  const analyticsSubItems: SubItem[] = [
+    {
+      label: "Overview",
+      to: "/admin/analytics",
+      icon: <Icon name="analytics" className="h-4 w-4" />,
+    },
+    {
+      label: "Reports",
+      to: "/admin/analytics/reports",
+      icon: <Icon name="analytics" className="h-4 w-4" />,
+    },
   ];
 
   const rewardsSubItems: SubItem[] = [
-    { label: "My Rewards", to: "/ngo/rewards" },
-    { label: "Tier & Benefits", to: "/ngo/rewards/tiers-benefits" },
-    { label: "Lucky Prize", to: "/ngo/lucky-prize" },
+    {
+      label: "Points & Tiers",
+      to: "/admin/rewards/points",
+      icon: <Icon name="rewards" className="h-4 w-4" />,
+    },
+    {
+      label: "Redemptions",
+      to: "/admin/rewards/redemptions",
+      icon: <Icon name="rewards" className="h-4 w-4" />,
+    },
+    {
+      label: "Reward Catalog",
+      to: "/admin/rewards/catalog",
+      icon: <Icon name="rewards" className="h-4 w-4" />,
+    },
+    {
+      label: "Impact Milestones",
+      to: "/admin/rewards/milestones",
+      icon: <Icon name="rewards" className="h-4 w-4" />,
+    },
   ];
 
+  const settingsSubItems: SubItem[] = [
+    {
+      label: "Configuration",
+      to: "/admin/settings/configuration",
+      icon: <Icon name="settings" className="h-4 w-4" />,
+    },
+  ];
+
+  // Shared nav content used in both desktop aside and mobile drawer
   const NavContent = ({
     inDrawer = false,
     onNavigate,
@@ -176,24 +262,35 @@ const NGOSidebar: React.FC = () => {
           <SidebarItem
             icon={<Icon name="dashboard" />}
             label="Dashboard"
-            to="/ngo/dashboard"
+            to="/admin/dashboard"
             expanded={inDrawer ? true : expanded}
             onNavigate={onNavigate}
           />
+
+          <SidebarItem
+            icon={<Icon name="users" />}
+            label="Users"
+            expanded={inDrawer ? true : expanded}
+            subItems={usersSubItems}
+            onNavigate={onNavigate}
+          />
+
           <SidebarItem
             icon={<Icon name="donations" />}
-            label="Donation Requests"
-            to="/ngo/requests"
+            label="Donations"
             expanded={inDrawer ? true : expanded}
+            subItems={donationsSubItems}
             onNavigate={onNavigate}
           />
+
           <SidebarItem
-            icon={<Icon name="office" />}
-            label="Inventory"
+            icon={<Icon name="analytics" />}
+            label="Analytics"
             expanded={inDrawer ? true : expanded}
-            subItems={inventorySubItems}
+            subItems={analyticsSubItems}
             onNavigate={onNavigate}
           />
+
           <SidebarItem
             icon={<Icon name="rewards" />}
             label="Rewards"
@@ -201,13 +298,40 @@ const NGOSidebar: React.FC = () => {
             subItems={rewardsSubItems}
             onNavigate={onNavigate}
           />
+
           <SidebarItem
-            icon={<Icon name="bell" />}
-            label="Post a Need"
-            to="/ngo/needs/post"
+            icon={<Icon name="settings" />}
+            label="Settings"
             expanded={inDrawer ? true : expanded}
+            subItems={settingsSubItems}
             onNavigate={onNavigate}
           />
+
+          <SidebarItem
+            icon={<Icon name="bell" />}
+            label="Enquiries"
+            to="/admin/enquiries"
+            expanded={inDrawer ? true : expanded}
+            onNavigate={onNavigate}
+            subItems={[
+              {
+                label: "Donor Enquiries",
+                to: "/admin/enquiries/donors",
+                icon: <Icon name="users" className="h-4 w-4" />,
+              },
+              {
+                label: "NGO Enquiries",
+                to: "/admin/enquiries/ngos",
+                icon: <Icon name="office" className="h-4 w-4" />,
+              },
+              {
+                label: "Volunteer Enquiries",
+                to: "/admin/enquiries/volunteers",
+                icon: <Icon name="users" className="h-4 w-4" />,
+              },
+            ]}
+          />
+
         </div>
       </nav>
     </div>
@@ -215,16 +339,20 @@ const NGOSidebar: React.FC = () => {
 
   return (
     <>
-      {/* Desktop sidebar */}
+      {/* ── DESKTOP: persistent fixed aside (md+) ── */}
       <aside
-        className={`hidden md:flex fixed top-0 left-0 h-screen transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)] flex-col z-[50] ${
-          expanded ? "w-[260px]" : "w-[70px]"
-        }`}
+        className={`
+          hidden md:flex fixed top-0 left-0 h-screen
+          transition-all duration-500 ease-[cubic-bezier(0.2,0.8,0.2,1)]
+          flex-col z-[50]
+          ${expanded ? "w-[260px]" : "w-[70px]"}
+        `}
         style={{
           backgroundColor: "var(--bg-primary)",
           borderRight: "1px solid var(--border-color)",
         }}
       >
+        {/* Desktop Sidebar Header */}
         <div className="h-20 flex items-center flex-shrink-0 w-full overflow-hidden mb-4">
           <div className="w-full flex items-center justify-center">
             {expanded ? (
@@ -255,7 +383,9 @@ const NGOSidebar: React.FC = () => {
         <NavContent />
       </aside>
 
-      {/* Mobile backdrop */}
+      {/* ── MOBILE: HeroUI dismissable Drawer (< md) ── */}
+
+      {/* Custom backdrop — closes drawer on tap outside */}
       {mobileOpen && (
         <div
           className="md:hidden fixed inset-0 z-[9998] bg-black/40 backdrop-blur-sm"
@@ -263,7 +393,6 @@ const NGOSidebar: React.FC = () => {
         />
       )}
 
-      {/* Mobile drawer */}
       <Drawer
         isOpen={mobileOpen}
         onOpenChange={(open) => {
@@ -294,6 +423,7 @@ const NGOSidebar: React.FC = () => {
               className="p-0 m-0 flex flex-col overflow-hidden h-full"
               style={{ padding: 0, margin: 0 }}
             >
+              {/* Drawer Header — matches desktop sidebar header exactly */}
               <div
                 className="h-20 flex items-center justify-between px-4 flex-shrink-0 w-full overflow-hidden border-b"
                 style={{ borderColor: "var(--border-color)" }}
@@ -317,4 +447,4 @@ const NGOSidebar: React.FC = () => {
   );
 };
 
-export default NGOSidebar;
+export default SidebarIcons;

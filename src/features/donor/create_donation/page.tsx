@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Heart, CheckCircle } from "lucide-react";
+import { Heart, CheckCircle, Trash2 } from "lucide-react";
 import ResuableButton from "../../../global/components/reusable-components/Button";
 import { toast } from "sonner";
 import PageHeader from "../../../global/components/reusable-components/PageHeader";
@@ -153,85 +153,88 @@ export default function CreateDonationPage() {
 
   return (
     <div
-      className="p-3 sm:p-4 lg:p-5 pb-10 w-full mx-auto min-h-screen"
+      className="w-full mx-auto min-h-screen relative"
       style={{ backgroundColor: "var(--bg-secondary)" }}
     >
-      {/* Header Bar */}
-      <div className="max-w-4xl mx-auto mb-8 sm:mb-12 px-1 sm:px-0">
-        <PageHeader
-          title="Create Donation"
-          subtitle="Contribute food items and schedule a pickup"
-        />
-      </div>
-
-      {needId && (
-        <div className="max-w-4xl mx-auto mb-6 p-4 rounded-md border border-green-500/20 bg-green-500/5 flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white shrink-0">
-            <Heart size={20} fill="currentColor" />
-          </div>
-          <div>
-            <h3 className="text-xs font-black uppercase tracking-tight text-green-600">
-              Responding to NGO Need
-            </h3>
-            <p className="text-[10px] font-medium text-green-700/80 uppercase tracking-widest mt-0.5">
-              Your donation will be directly prioritized for this organization's
-              request.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {isPrefillLoading ? (
-        <div className="max-w-4xl mx-auto flex flex-col items-center justify-center py-32 gap-6 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl shadow-sm">
-          <div className="animate-spin h-10 w-10 border-4 border-[var(--border-color)] border-t-[#16a34a] rounded-full" />
-          <p className="text-[11px] font-black uppercase tracking-[0.2em]" style={{ color: "var(--text-secondary)" }}>
-            Restoring donation details...
-          </p>
-        </div>
-      ) : (
-        <form
-          onSubmit={(e) => handleDonationSubmit(e, needId, ngoId)}
-          className="max-w-4xl mx-auto space-y-6 pb-24"
+      <form
+        id="create-donation-form"
+        onSubmit={(e) => handleDonationSubmit(e, needId, ngoId)}
+        className="w-full"
+      >
+        {/* Sticky Header Bar */}
+        <div
+          className="sticky top-0 z-30 px-4 sm:px-6 lg:px-8 py-4 mb-0 backdrop-blur-md shadow-sm transition-all border-b"
+          style={{
+            backgroundColor: "var(--bg-primary)",
+            borderColor: "var(--border-color)",
+          }}
         >
-          <DonationFields />
-          <LogisticsFields />
-
-          {/* Action Bar */}
-          <div
-            className="p-6 border rounded-3xl shadow-sm flex flex-col-reverse sm:flex-row items-center justify-end gap-4 sm:gap-6 bg-[var(--bg-primary)] border-[var(--border-color)]"
-            style={{
-              backgroundColor: "var(--bg-primary)",
-              borderColor: "var(--border-color)",
-            }}
+          <PageHeader
+            title="Create Donation"
+            subtitle="Contribute food items and schedule a pickup"
           >
-            <ResuableButton
-              variant="ghost"
-              onClick={handleDiscard}
-              className="w-full sm:w-auto font-black text-[11px] uppercase tracking-[0.2em] hover:text-red-500 transition-colors"
-              style={{ color: "var(--text-muted)" }}
-            >
-              Discard Entry
-            </ResuableButton>
-            <ResuableButton
-              type="submit"
-              variant="dark"
-              disabled={loading}
-              className="w-full sm:min-w-[240px] h-[52px] !bg-[#16a34a] hover:!bg-[#15803d] !rounded-2xl shadow-lg shadow-green-500/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-              startContent={
-                loading ? (
-                  <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full" />
+            <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+              <button
+                type="button"
+                onClick={handleDiscard}
+                className="h-[46px] px-6 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2.5 shadow-sm"
+              >
+                <Trash2 size={18} className="text-slate-500 dark:text-slate-400" />
+                <span>Discard</span>
+              </button>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="h-[46px] px-7 rounded-2xl bg-[#22c55e] hover:bg-[#16a34a] text-white text-[11px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2.5 shadow-md shadow-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
                 ) : (
-                  <CheckCircle size={20} />
-                )
-              }
-            >
-              <span className="text-[11px] font-black uppercase tracking-widest">
-                {loading ? "Submitting..." : "Confirm Donation"}
-              </span>
-            </ResuableButton>
-          </div>
-        </form>
-      )}
+                  <CheckCircle size={18} />
+                )}
+                <span>{loading ? "Submitting..." : "Confirm Donation"}</span>
+              </button>
+            </div>
+          </PageHeader>
+        </div>
+
+        <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+          {needId && (
+            <div className="w-full p-4 rounded-md border border-green-500/20 bg-green-500/5 flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white shrink-0">
+                <Heart size={20} fill="currentColor" />
+              </div>
+              <div>
+                <h3 className="text-xs font-black uppercase tracking-tight text-green-600">
+                  Responding to NGO Need
+                </h3>
+                <p className="text-[10px] font-medium text-green-700/80 uppercase tracking-widest mt-0.5">
+                  Your donation will be directly prioritized for this organization's
+                  request.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {isPrefillLoading ? (
+            <div className="w-full flex flex-col items-center justify-center py-32 gap-6 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl shadow-sm">
+              <div className="animate-spin h-10 w-10 border-4 border-[var(--border-color)] border-t-[#16a34a] rounded-full" />
+              <p
+                className="text-[11px] font-black uppercase tracking-[0.2em]"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                Restoring donation details...
+              </p>
+            </div>
+          ) : (
+            <>
+              <DonationFields />
+              <LogisticsFields />
+            </>
+          )}
+        </div>
+      </form>
     </div>
   );
 }

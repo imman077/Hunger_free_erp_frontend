@@ -16,6 +16,7 @@ import {
   CalendarDays,
   Box,
   Activity,
+  X,
 } from "lucide-react";
 import { Button } from "@heroui/react";
 import ReusableTable, {
@@ -315,13 +316,23 @@ const DonationRequests = () => {
                   value={searchQuery}
                   onChange={(e) => setRequestsStateValue("searchQuery", e.target.value)}
                   placeholder="Search..."
-                  className="w-full pl-11 pr-4 py-2.5 rounded-xl text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-[#22c55e]/20 transition-all shadow-sm border"
+                  className="w-full pl-11 pr-10 py-2.5 rounded-xl text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-[#22c55e]/20 transition-all shadow-sm border"
                   style={{
                     backgroundColor: "var(--bg-primary)",
                     borderColor: "var(--border-color)",
                     color: "var(--text-primary)",
                   }}
                 />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setRequestsStateValue("searchQuery", "")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[var(--text-muted)] hover:text-red-500 transition-colors rounded-full hover:bg-red-50 dark:hover:bg-red-950/30"
+                    title="Clear search"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
               </div>
 
               <div className="flex items-center gap-3 shrink-0">

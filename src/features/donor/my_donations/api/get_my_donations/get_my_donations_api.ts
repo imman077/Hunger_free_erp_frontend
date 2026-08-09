@@ -76,8 +76,13 @@ export async function getMyDonationsApi(
       query: GET_MY_DONATIONS_QUERY,
       variables: {
         ...(validatedInput.userId ? { userId: validatedInput.userId } : {}),
-        ...(validatedInput.status && validatedInput.status !== "Assigned"
-          ? { status: validatedInput.status === "Active" ? "PENDING" : validatedInput.status.toUpperCase() }
+        ...(validatedInput.status
+          ? {
+              status:
+                validatedInput.status === "Active"
+                  ? "PENDING"
+                  : validatedInput.status.toUpperCase().replace(/\s+/g, "_"),
+            }
           : {}),
         ...(validatedInput.sortOrder
           ? { sortOrder: validatedInput.sortOrder === "Newest First" ? "NEWEST_FIRST" : "OLDEST_FIRST" }

@@ -1,11 +1,12 @@
 import React, { useRef, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import html2canvas from "html2canvas-pro";
+import { jsPDF } from "jspdf";
 import {
   Package,
   MapPin,
   Clock,
-  Phone,
   Info,
   ShieldCheck,
   CheckCircle2,
@@ -34,6 +35,12 @@ import {
   Table,
   HeartHandshake,
   Eye,
+  Building2,
+  Calendar,
+  Zap,
+  Globe,
+  Mail,
+  Phone,
 } from "lucide-react";
 import { Modal, ModalContent } from "@heroui/react";
 import ResuableDrawer from "../../../../global/components/reusable-components/Drawer";
@@ -61,6 +68,189 @@ import {
   handleOtpFocus,
 } from "../controller/my_donations_controller";
 import { toast } from "sonner";
+
+export const formatDonationExpiry = (donation: any) => {
+  if (!donation) return "";
+  if (donation.expiryTime) {
+    if (donation.expiryTime.includes("T")) {
+      const [datePart, timePart] = donation.expiryTime.split("T");
+      if (datePart && timePart) {
+        const [year, month, day] = datePart.split("-");
+        const [hourStr, minStr] = timePart.split(":");
+        let hour = parseInt(hourStr, 10);
+        const ampm = hour >= 12 ? "PM" : "AM";
+        hour = hour % 12 || 12;
+        const formattedTime = `${hour}:${minStr || "00"} ${ampm}`;
+        const dateObj = new Date(Number(year), Number(month) - 1, Number(day));
+        const monthName = isNaN(dateObj.getTime())
+          ? datePart
+          : dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+        return `${monthName}, ${formattedTime}`;
+      }
+    }
+    if (donation.expiryTime.includes("AM") || donation.expiryTime.includes("PM")) {
+      return donation.expiryTime.includes(",")
+        ? donation.expiryTime
+        : `${donation.date || ""}, ${donation.expiryTime}`;
+    }
+    return `${donation.date || ""}, ${donation.expiryTime}`;
+  }
+  return donation.date ? `${donation.date}, 7:00 PM` : "No Expiry Set";
+};
+
+export const getNgoDetails = (donation: any) => {
+  if (!donation) {
+    return {
+      name: "Not Assigned",
+      address: "Not Available",
+      phone: "N/A",
+      email: "N/A",
+      verified: false,
+      rating: "N/A",
+      impact: "N/A",
+    };
+  }
+
+  if (typeof donation.ngoDetails === "object" && donation.ngoDetails !== null) {
+    return {
+      name: donation.ngoDetails.name || "Matched NGO Partner",
+      address: donation.ngoDetails.address || donation.deliveryAddress || donation.pickupAddress || "Address Not Available",
+      phone: donation.ngoDetails.phone || "N/A",
+      email: donation.ngoDetails.email || "N/A",
+      verified: Boolean(donation.ngoDetails.verified ?? true),
+      rating: donation.ngoDetails.rating || "N/A",
+      impact: donation.ngoDetails.impact || "Community Food Relief Partner",
+    };
+  }
+
+  const rawNgo = donation.ngo;
+  const isMongoId = typeof rawNgo === "string" && Boolean(rawNgo.match(/^[0-9a-fA-F]{24}$/));
+  const ngoName = rawNgo && !isMongoId ? rawNgo : (donation.status === "PENDING" ? "Matching nearby NGOs..." : "Verified NGO Partner");
+
+  return {
+    name: ngoName,
+    address: donation.deliveryAddress || donation.pickupAddress || "Address Not Available",
+    phone: donation.phone || "N/A",
+    email: donation.email || "N/A",
+    verified: true,
+    rating: donation.rating || "N/A",
+    impact: "Community Food Relief Partner",
+  };
+};
+
+export const getFormattedTimeline = (donation: any) => {
+  if (!donation) return [];
+  const allStatuses = ["Pending", "Accepted", "Assigned", "Picked Up", "Delivered"];
+  const statusUpper = (donation.status || "").toUpperCase();
+  const currentStatusIndex =
+    statusUpper === "DELIVERED"
+      ? 4
+      : statusUpper === "PICKED_UP"
+        ? 3
+        : statusUpper === "ASSIGNED"
+          ? 2
+          : statusUpper === "ACCEPTED"
+            ? 1
+            : statusUpper === "CANCELLED"
+              ? -1
+              : 0;
+
+  const timelineData = donation.timeline || [];
+
+  return allStatuses.map((statusName, idx) => {
+    const existingStep = timelineData.find(
+      (t: any) => t.status?.toLowerCase() === statusName.toLowerCase()
+    );
+
+    const isCompleted = idx <= currentStatusIndex;
+    const isCurrent = idx === currentStatusIndex;
+
+    const stepDate = existingStep?.date || (isCompleted ? donation.date || "N/A" : "N/A");
+    const stepTime = existingStep?.time || (isCompleted ? "Recorded" : "Pending");
+
+    return {
+      status: statusName,
+      date: stepDate,
+      time: stepTime,
+      completed: isCompleted,
+      isCurrent: isCurrent,
+    };
+  });
+};
+
+export const getReceiptMetrics = (donation: any) => {
+  if (!donation) return {} as any;
+
+  const ngo = getNgoDetails(donation);
+  const volunteerName = donation.volunteer?.name || "Not Assigned";
+  const volunteerPhone = donation.volunteer?.phone || "N/A";
+  const volunteerRating = donation.volunteer?.rating || "N/A";
+
+  const qtyStr = String(donation.quantity || "");
+  let peopleFedStr = "N/A";
+  const numMatch = qtyStr.match(/\d+/);
+  if (numMatch) {
+    const val = parseInt(numMatch[0], 10);
+    if (qtyStr.toLowerCase().includes("kg")) {
+      peopleFedStr = `~${val * 4} People`;
+    } else if (qtyStr.toLowerCase().includes("meal")) {
+      peopleFedStr = `~${val} People`;
+    } else {
+      peopleFedStr = `~${val * 3} People`;
+    }
+  }
+
+  const expiry = formatDonationExpiry(donation);
+
+  const timeline = donation.timeline || [];
+  const assignedStep = timeline.find((t: any) => t.status?.toUpperCase().includes("ASSIGNED"));
+  const pickedStep = timeline.find((t: any) => t.status?.toUpperCase().includes("PICKED"));
+  const deliveredStep = timeline.find((t: any) => t.status?.toUpperCase().includes("DELIVERED"));
+
+  const createdTimeStr = donation.createdAt
+    ? new Date(donation.createdAt).toLocaleString([], { dateStyle: "short", timeStyle: "short" })
+    : donation.date || "N/A";
+
+  const volunteerReceivedTime = pickedStep
+    ? `${pickedStep.date || ""}${pickedStep.time ? `, ${pickedStep.time}` : ""}`.trim()
+    : assignedStep
+      ? `${assignedStep.date || ""}${assignedStep.time ? `, ${assignedStep.time}` : ""}`.trim()
+      : "N/A";
+
+  const deliveredTime = deliveredStep
+    ? `${deliveredStep.date || ""}${deliveredStep.time ? `, ${deliveredStep.time}` : ""}`.trim()
+    : donation.status === "DELIVERED"
+      ? `${donation.date || "Recorded"}`
+      : "Pending";
+
+  let hoursTakenStr = "N/A";
+  if (donation.createdAt && deliveredStep?.timestamp) {
+    const diffMs = new Date(deliveredStep.timestamp).getTime() - new Date(donation.createdAt).getTime();
+    if (diffMs > 0) {
+      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+      const mins = Math.round((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      hoursTakenStr = hours > 0 ? `${hours} hr ${mins} mins` : `${mins} mins`;
+    }
+  } else if (donation.status === "DELIVERED") {
+    hoursTakenStr = "Completed";
+  }
+
+  return {
+    ngoName: ngo.name,
+    ngoAddress: ngo.address,
+    ngoPhone: ngo.phone,
+    ngoEmail: ngo.email,
+    volunteerName,
+    volunteerPhone,
+    volunteerRating,
+    peopleFed: peopleFedStr,
+    expiry,
+    volunteerReceivedTime: volunteerReceivedTime || "N/A",
+    deliveredTime: deliveredTime || "N/A",
+    createdTimeStr,
+    hoursTakenStr,
+  };
+};
 
 export const MyDonationsHeader = () => {
   const navigate = useNavigate();
@@ -1097,15 +1287,16 @@ export const MyDonationsModals = () => {
           <span className="block text-slate-400 mt-1 break-all">
             Tracking ID:{" "}
             <span className="text-[#22c55e] font-bold">
-              #DON-{selectedDonation?.id}
+              #DON-{selectedDonation?.id || "6a788280868de415dc77cc53"}
             </span>
           </span>
         }
         size="md"
       >
         {selectedDonation ? (
-          <div className="space-y-5 p-6 bg-white">
-            <div className="relative rounded-3xl overflow-hidden shadow-lg min-h-[220px] bg-slate-950">
+          <div className="space-y-4 p-5 md:p-6 bg-white text-start">
+            {/* 1. Hero Image Banner Card */}
+            <div className="relative rounded-3xl overflow-hidden shadow-sm h-48 md:h-52 bg-slate-950">
               <img
                 src={
                   selectedDonation.image ||
@@ -1114,78 +1305,178 @@ export const MyDonationsModals = () => {
                 className="absolute inset-0 w-full h-full object-cover"
                 alt={selectedDonation.foodType}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/45 to-transparent" />
-              <div className="relative z-10 min-h-[220px] p-6 flex flex-col justify-end text-start">
-                <span className="w-fit px-2.5 py-1 rounded-full bg-white/90 text-emerald-700 text-[9px] font-black uppercase tracking-widest mb-3">
-                  {selectedDonation.status}
-                </span>
-                <h3 className="text-2xl font-black text-white tracking-tight leading-tight">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+              <div className="relative z-10 h-full p-5 flex flex-col justify-end text-start">
+                <div>
+                  <span
+                    className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider inline-block mb-2 shadow-xs ${
+                      selectedDonation.status?.toUpperCase() === "CANCELLED"
+                        ? "bg-rose-500 text-white"
+                        : selectedDonation.status?.toUpperCase() === "PENDING"
+                          ? "bg-amber-500 text-white"
+                          : "bg-white/90 text-[#16a34a]"
+                    }`}
+                  >
+                    {selectedDonation.status}
+                  </span>
+                </div>
+                <h3 className="text-xl md:text-2xl font-extrabold text-white leading-tight mb-0.5">
                   {selectedDonation.foodType}
                 </h3>
-                <p className="text-[11px] font-black text-slate-200 uppercase tracking-[0.18em] mt-2">
-                  {selectedDonation.quantity} - {selectedDonation.dietaryType} -{" "}
-                  {selectedDonation.preparationType}
+                <p className="text-xs font-bold text-slate-200 uppercase tracking-wider">
+                  {selectedDonation.quantity} • {selectedDonation.dietaryType} • {selectedDonation.preparationType || "RAW"}
                 </p>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-3">
-              <div className="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100 text-start">
-                <div className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                  <MapPin size={17} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider">
-                    NGO / Location
-                  </p>
-                  <p className="text-[13px] font-bold text-slate-800">
-                    {selectedDonation.ngo || "Matching in progress"}
-                  </p>
-                </div>
+            {/* 2. NGO / Location Info Card */}
+            <div className="p-4 rounded-2xl bg-[#fafafa] border border-slate-100 flex items-center gap-3.5 text-start">
+              <div className="w-10 h-10 rounded-full bg-[#e8fccf]/60 text-[#16a34a] flex items-center justify-center shrink-0 border border-emerald-100/50">
+                <MapPin size={18} strokeWidth={2} />
               </div>
-              <div className="flex items-start gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100 text-start">
-                <div className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                  <Clock size={17} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider">
-                    Pickup Window
-                  </p>
-                  <p className="text-[13px] font-bold text-slate-800">
-                    {selectedDonation.date}, 6:00 PM - 7:00 PM
-                  </p>
-                </div>
+              <div className="min-w-0 flex-1">
+                <span className="text-[9.5px] font-black text-slate-400 uppercase tracking-wider block mb-0.5">
+                  NGO / LOCATION
+                </span>
+                <p className="font-bold text-slate-800 text-[13px] truncate">
+                  {selectedDonation.ngo || "6a19bd8080064a1fc2195a11"}
+                </p>
               </div>
             </div>
 
-            <div className="space-y-3 text-start">
-              <h4 className="text-[12px] font-black uppercase tracking-widest text-slate-700">
-                Recent Updates
-              </h4>
-              {(selectedDonation.timeline || []).map((step: any, idx: number) => (
-                <div
-                  key={idx}
-                  className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between gap-3"
-                >
-                  <div className="min-w-0 text-start">
-                    <p className="text-[12px] font-black text-slate-800 truncate">
-                      {step.status}
-                    </p>
-                    <p className="text-[10px] font-bold text-slate-400 truncate">
-                      {step.date}, {step.time}
+            {/* 3. Expiry Date & Time Card */}
+            <div className="p-4 rounded-2xl bg-[#fafafa] border border-slate-100 flex items-center gap-3.5 text-start">
+              <div className="w-10 h-10 rounded-full bg-[#e8fccf]/60 text-[#16a34a] flex items-center justify-center shrink-0 border border-emerald-100/50">
+                <Clock size={18} strokeWidth={2} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <span className="text-[9.5px] font-black text-slate-400 uppercase tracking-wider block mb-0.5">
+                  EXPIRY DATE & TIME
+                </span>
+                <p className="font-bold text-slate-800 text-[13px] truncate">
+                  {formatDonationExpiry(selectedDonation)}
+                </p>
+              </div>
+            </div>
+
+            {/* 4. CURRENT STATUS Card */}
+            {(() => {
+              const statusUpper = (selectedDonation.status || "").toUpperCase();
+              const isCancelled = statusUpper === "CANCELLED";
+              const isPending = statusUpper === "PENDING";
+
+              const containerClass = isCancelled
+                ? "p-4 rounded-2xl bg-rose-50/80 border border-rose-200/80 flex items-center justify-between text-start"
+                : isPending
+                  ? "p-4 rounded-2xl bg-amber-50/80 border border-amber-200/80 flex items-center justify-between text-start"
+                  : "p-4 rounded-2xl bg-[#f2faf5] border border-[#d3ebd9] flex items-center justify-between text-start";
+
+              const textClass = isCancelled
+                ? "text-lg font-black text-rose-600 tracking-tight uppercase"
+                : isPending
+                  ? "text-lg font-black text-amber-600 tracking-tight uppercase"
+                  : "text-lg font-black text-[#16a34a] tracking-tight uppercase";
+
+              const badgeClass = isCancelled
+                ? "w-11 h-11 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center border border-rose-200 shrink-0 shadow-2xs"
+                : isPending
+                  ? "w-11 h-11 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center border border-amber-200 shrink-0 shadow-2xs"
+                  : "w-11 h-11 rounded-full bg-[#dcfce7] text-[#16a34a] flex items-center justify-center border border-[#bbf7d0] shrink-0 shadow-2xs";
+
+              const Icon = isCancelled ? XCircle : isPending ? Clock : CheckCircle2;
+
+              return (
+                <div className={containerClass}>
+                  <div>
+                    <span className="text-[9.5px] font-black text-slate-400 uppercase tracking-wider block mb-0.5">
+                      CURRENT STATUS
+                    </span>
+                    <p className={textClass}>
+                      {selectedDonation.status}
                     </p>
                   </div>
-                  <span
-                    className={`px-2.5 py-1 rounded-full text-[8px] font-black uppercase ${
-                      step.completed
-                        ? "bg-emerald-50 text-emerald-600"
-                        : "bg-slate-100 text-slate-400"
-                    }`}
-                  >
-                    {step.completed ? "Completed" : "Pending"}
-                  </span>
+                  <div className={badgeClass}>
+                    <Icon size={22} strokeWidth={2.5} />
+                  </div>
                 </div>
-              ))}
+              );
+            })()}
+
+            {/* 5. Delivery Timeline Section */}
+            <div className="pt-2">
+              <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-4 block text-start">
+                DELIVERY TIMELINE
+              </span>
+
+              <div className="space-y-4 relative px-3.5 sm:px-5 text-start">
+                {getFormattedTimeline(selectedDonation).map((step: any, idx: number, arr: any[]) => {
+                  const isLastCompleted = step.completed && (idx === arr.length - 1 || !arr[idx + 1]?.completed);
+                  return (
+                    <div key={idx} className="relative flex items-center justify-between gap-3 text-start">
+                      {/* Vertical line connector */}
+                      {idx < arr.length - 1 && (
+                        <div
+                          className={`absolute left-[9px] top-4 bottom-[-16px] w-[2px] z-0 ${
+                            step.completed && arr[idx + 1]?.completed
+                              ? "bg-[#16a34a]"
+                              : "bg-slate-200"
+                          }`}
+                        />
+                      )}
+
+                      {/* Left timeline node */}
+                      <div className="flex items-center gap-3 min-w-0 flex-1 z-10">
+                        <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 bg-white">
+                          {isLastCompleted ? (
+                            <div className="w-5 h-5 rounded-full bg-[#16a34a] flex items-center justify-center text-white shadow-xs">
+                              <Check size={12} strokeWidth={3} />
+                            </div>
+                          ) : step.completed ? (
+                            <div className="w-5 h-5 rounded-full border-2 border-[#16a34a] bg-white flex items-center justify-center">
+                              <div className="w-2.5 h-2.5 rounded-full bg-[#16a34a]" />
+                            </div>
+                          ) : (
+                            <div className="w-5 h-5 rounded-full border-2 border-slate-300 bg-white" />
+                          )}
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <p className={`text-[13.5px] font-bold ${step.completed ? "text-slate-800" : "text-slate-500"}`}>
+                            {step.status}
+                          </p>
+                          <p className="text-[11px] font-medium text-slate-400 mt-0.5">
+                            {step.date || "Pending"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Right side status badge */}
+                      <div className="shrink-0">
+                        <span
+                          className={`px-3 py-1 rounded-full text-[9.5px] font-black uppercase tracking-wider ${
+                            step.completed
+                              ? "bg-[#e8fccf] text-[#16a34a]"
+                              : "bg-slate-100 text-slate-400"
+                          }`}
+                        >
+                          {step.completed ? "COMPLETED" : "PENDING"}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 6. Bottom Thank You Card */}
+            <div className="p-4 rounded-2xl bg-[#f2faf5] border border-[#d3ebd9] flex items-center justify-between gap-3 text-start">
+              <div className="w-9 h-9 rounded-full bg-[#dcfce7] text-[#16a34a] flex items-center justify-center shrink-0 border border-[#bbf7d0]">
+                <ShieldCheck size={18} strokeWidth={2.2} />
+              </div>
+              <p className="text-[11.5px] font-bold text-slate-700 leading-snug flex-1">
+                Thank you for your generous contribution. You're making a real difference!
+              </p>
+              <Heart size={18} className="text-[#16a34a] fill-[#16a34a]/20 shrink-0" />
             </div>
           </div>
         ) : null}
@@ -1202,15 +1493,16 @@ export const MyDonationsModals = () => {
           <span className="block text-slate-400 mt-1 break-all">
             Tracking ID:{" "}
             <span className="text-[#22c55e] font-bold">
-              #DON-{selectedDonation?.id}
+              #DON-{selectedDonation?.id || "No ID"}
             </span>
           </span>
         }
         size="md"
       >
         {selectedDonation ? (
-          <div className="space-y-5 p-6 bg-white">
-            <div className="relative rounded-3xl overflow-hidden shadow-lg min-h-[220px] bg-slate-950">
+          <div className="space-y-4 p-5 md:p-6 bg-white text-start">
+            {/* 1. Hero Image Banner Card */}
+            <div className="relative rounded-3xl overflow-hidden shadow-sm h-48 md:h-52 bg-slate-950">
               <img
                 src={
                   selectedDonation.image ||
@@ -1219,208 +1511,290 @@ export const MyDonationsModals = () => {
                 className="absolute inset-0 w-full h-full object-cover"
                 alt={selectedDonation.foodType}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/45 to-transparent" />
-              <div className="relative z-10 min-h-[220px] p-6 flex flex-col justify-end text-start">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="px-2.5 py-1 rounded-full bg-white/90 text-emerald-700 text-[9px] font-black uppercase tracking-widest">
-                    {selectedDonation.category}
-                  </span>
-                  <span className="px-2.5 py-1 rounded-full bg-emerald-500 text-white text-[9px] font-black uppercase tracking-widest">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+              <div className="relative z-10 h-full p-5 flex flex-col justify-end text-start">
+                <div>
+                  <span
+                    className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider inline-block mb-2 shadow-xs ${
+                      selectedDonation.status?.toUpperCase() === "CANCELLED"
+                        ? "bg-rose-500 text-white"
+                        : selectedDonation.status?.toUpperCase() === "PENDING"
+                          ? "bg-amber-500 text-white"
+                          : "bg-white/90 text-[#16a34a]"
+                    }`}
+                  >
                     {selectedDonation.status}
                   </span>
                 </div>
-                <h3 className="text-2xl font-black text-white tracking-tight leading-tight">
+                <h3 className="text-xl md:text-2xl font-extrabold text-white leading-tight mb-0.5">
                   {selectedDonation.foodType}
                 </h3>
-                <p className="text-[11px] font-black text-slate-200 uppercase tracking-[0.18em] mt-2">
-                  {selectedDonation.quantity} - {selectedDonation.dietaryType} -{" "}
-                  {selectedDonation.preparationType}
+                <p className="text-xs font-bold text-slate-200 uppercase tracking-wider">
+                  {selectedDonation.quantity} • {selectedDonation.dietaryType} • {selectedDonation.preparationType || "RAW"}
                 </p>
               </div>
             </div>
 
-            <div className="space-y-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100 text-start">
-                  <div className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                    <MapPin size={17} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider">
-                      NGO
-                    </p>
-                    <p className="text-[13px] font-bold text-slate-800 truncate">
-                      {selectedDonation.ngo || "Matching in progress"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-100 text-start">
-                  <div className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                    <Clock size={17} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider">
-                      Pickup Window
-                    </p>
-                    <p className="text-[13px] font-bold text-slate-800 truncate">
-                      {selectedDonation.date}, 6:00 PM - 7:00 PM
-                    </p>
-                  </div>
-                </div>
+            {/* 2. NGO / Location Info Card */}
+            <div className="p-4 rounded-2xl bg-[#fafafa] border border-slate-100 flex items-center gap-3.5 text-start">
+              <div className="w-10 h-10 rounded-full bg-[#e8fccf]/60 text-[#16a34a] flex items-center justify-center shrink-0 border border-emerald-100/50">
+                <MapPin size={18} strokeWidth={2} />
               </div>
+              <div className="min-w-0 flex-1">
+                <span className="text-[9.5px] font-black text-slate-400 uppercase tracking-wider block mb-0.5">
+                  NGO / LOCATION
+                </span>
+                <p className="font-bold text-slate-800 text-[13px] truncate">
+                  {selectedDonation.ngo || "6a19bd8080064a1fc2195a11"}
+                </p>
+              </div>
+            </div>
 
-              {(selectedDonation.volunteer ||
-                selectedDonation.status === "ASSIGNED" ||
-                selectedDonation.status === "PICKED_UP") && (
-                <div className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-3xl shadow-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-[#f8fafc] flex items-center justify-center overflow-hidden border border-[#f1f5f9] shrink-0">
-                      <svg
-                        className="w-10 h-10 text-[#10b981] translate-y-1.5"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                      </svg>
-                    </div>
-                    <div className="flex flex-col text-start">
-                      <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider mb-0.5">
-                        Volunteer
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[14px] font-black text-slate-700">
-                          {selectedDonation.volunteer?.name || "Assigning..."}
-                        </span>
-                        {selectedDonation.volunteer?.name && (
-                          <span className="flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-[#e8fcf0] text-[#10b981] text-[8px] font-black uppercase tracking-wider border border-[#d1fae5]">
-                            Verified ✓
-                          </span>
-                        )}
-                      </div>
-                    </div>
+            {/* 3. Expiry Date & Time Card */}
+            <div className="p-4 rounded-2xl bg-[#fafafa] border border-slate-100 flex items-center gap-3.5 text-start">
+              <div className="w-10 h-10 rounded-full bg-[#e8fccf]/60 text-[#16a34a] flex items-center justify-center shrink-0 border border-emerald-100/50">
+                <Clock size={18} strokeWidth={2} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <span className="text-[9.5px] font-black text-slate-400 uppercase tracking-wider block mb-0.5">
+                  EXPIRY DATE & TIME
+                </span>
+                <p className="font-bold text-slate-800 text-[13px] truncate">
+                  {formatDonationExpiry(selectedDonation)}
+                </p>
+              </div>
+            </div>
+
+            {/* 4. CURRENT STATUS Card */}
+            {(() => {
+              const statusUpper = (selectedDonation.status || "").toUpperCase();
+              const isCancelled = statusUpper === "CANCELLED";
+              const isPending = statusUpper === "PENDING";
+
+              const containerClass = isCancelled
+                ? "p-4 rounded-2xl bg-rose-50/80 border border-rose-200/80 flex items-center justify-between text-start"
+                : isPending
+                  ? "p-4 rounded-2xl bg-amber-50/80 border border-amber-200/80 flex items-center justify-between text-start"
+                  : "p-4 rounded-2xl bg-[#f2faf5] border border-[#d3ebd9] flex items-center justify-between text-start";
+
+              const textClass = isCancelled
+                ? "text-lg font-black text-rose-600 tracking-tight uppercase"
+                : isPending
+                  ? "text-lg font-black text-amber-600 tracking-tight uppercase"
+                  : "text-lg font-black text-[#16a34a] tracking-tight uppercase";
+
+              const badgeClass = isCancelled
+                ? "w-11 h-11 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center border border-rose-200 shrink-0 shadow-2xs"
+                : isPending
+                  ? "w-11 h-11 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center border border-amber-200 shrink-0 shadow-2xs"
+                  : "w-11 h-11 rounded-full bg-[#dcfce7] text-[#16a34a] flex items-center justify-center border border-[#bbf7d0] shrink-0 shadow-2xs";
+
+              const Icon = isCancelled ? XCircle : isPending ? Clock : CheckCircle2;
+
+              return (
+                <div className={containerClass}>
+                  <div>
+                    <span className="text-[9.5px] font-black text-slate-400 uppercase tracking-wider block mb-0.5">
+                      CURRENT STATUS
+                    </span>
+                    <p className={textClass}>
+                      {selectedDonation.status}
+                    </p>
                   </div>
-                  <button
-                    onClick={() => {
-                      if (selectedDonation.volunteer?.phone) {
-                        window.location.href = `tel:${selectedDonation.volunteer.phone}`;
-                      } else {
-                        toast.info(
-                          "Volunteer phone number is not available yet."
-                        );
-                      }
-                    }}
-                    className="w-11 h-11 rounded-full bg-[#10b981] hover:bg-[#059669] text-white flex items-center justify-center shadow-md shadow-emerald-500/10 active:scale-90 transition-all cursor-pointer shrink-0"
-                  >
-                    <Phone size={15} fill="currentColor" />
-                  </button>
+                  <div className={badgeClass}>
+                    <Icon size={22} strokeWidth={2.5} />
+                  </div>
                 </div>
-              )}
+              );
+            })()}
 
-              {(selectedDonation.status === "ASSIGNED" || selectedDonation.status === "PICKED_UP") && (
-                <div className="space-y-4">
-                  <div className="p-5 rounded-[1.75rem] bg-[#f8fdf9] border border-emerald-100/50 space-y-4 shadow-sm">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-[#e8fcf0] flex items-center justify-center text-[#10b981] border border-emerald-100/50 shrink-0">
-                        <ShieldCheck size={22} strokeWidth={2.2} />
-                      </div>
-                      <div className="text-start">
-                        <h4 className="text-[13px] font-black uppercase tracking-wider text-emerald-800">
-                          Delivery Verification
-                        </h4>
-                        <p className="text-[11px] font-medium text-slate-500">
-                          Confirm NGO handoff securely
-                        </p>
-                      </div>
-                    </div>
+            {/* 5. Delivery Timeline Section */}
+            <div className="pt-2">
+              <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-4 block text-start">
+                DELIVERY TIMELINE
+              </span>
 
-                    <div className="space-y-2 text-start">
-                      <div className="flex justify-between items-center">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                          Enter verification code
-                        </label>
-                        <span className="text-[10px] font-black text-slate-400 tracking-wider">
-                          OTP
-                        </span>
-                      </div>
-
-                      <div className="flex gap-2 justify-between items-center py-1">
-                        {otpDigits.map((digit: string, index: number) => (
-                          <input
-                            key={index}
-                            ref={(el) => {
-                              otpRefs.current[index] = el;
-                            }}
-                            type="text"
-                            inputMode="numeric"
-                            maxLength={1}
-                            value={digit}
-                            onChange={(e) =>
-                              handleOtpDigitChange(e.target.value, index, otpRefs)
-                            }
-                            onKeyDown={(e) =>
-                              handleOtpKeyDown(e, index, otpRefs)
-                            }
-                            onFocus={() => handleOtpFocus(index, otpRefs)}
-                            onPaste={
-                              index === 0
-                                ? (e) => handleOtpPaste(e, otpRefs)
-                                : undefined
-                            }
-                            autoFocus={index === 0}
-                            className="w-10 h-12 sm:w-12 sm:h-14 rounded-2xl bg-white border border-slate-200 focus:border-[#10b981] outline-none text-center text-lg sm:text-xl font-black text-slate-800 transition-all shadow-sm focus:ring-4 focus:ring-emerald-500/10"
-                            placeholder="0"
-                          />
-                        ))}
-                      </div>
-                    </div>
-
-                    {otpError && (
-                      <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-center">
-                        <p className="text-[10px] font-black text-red-500 uppercase tracking-widest">
-                          {otpError}
-                        </p>
-                      </div>
-                    )}
-
-                    <button
-                      onClick={onOtpSubmit}
-                      disabled={isVerifying || otpValue.length !== 6}
-                      className="w-full py-4 rounded-[1.25rem] bg-[#10b981] hover:bg-[#059669] text-white flex items-center justify-center gap-2.5 transition-all active:scale-[0.98] disabled:opacity-40 font-black uppercase tracking-widest text-[12px] shadow-lg shadow-emerald-500/15"
-                    >
-                      {isVerifying ? (
-                        <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
-                      ) : (
-                        <>
-                          <ShieldCheck size={16} strokeWidth={2.5} />
-                          <span>Verify Delivery</span>
-                        </>
+              <div className="space-y-4 relative px-3.5 sm:px-5 text-start">
+                {getFormattedTimeline(selectedDonation).map((step: any, idx: number, arr: any[]) => {
+                  const isLastCompleted = step.completed && (idx === arr.length - 1 || !arr[idx + 1]?.completed);
+                  return (
+                    <div key={idx} className="relative flex items-center justify-between gap-3 text-start">
+                      {/* Vertical line connector */}
+                      {idx < arr.length - 1 && (
+                        <div
+                          className={`absolute left-[9px] top-4 bottom-[-16px] w-[2px] z-0 ${
+                            step.completed && arr[idx + 1]?.completed
+                              ? "bg-[#16a34a]"
+                              : "bg-slate-200"
+                          }`}
+                        />
                       )}
-                    </button>
-                  </div>
 
-                  <div className="p-4 rounded-2xl bg-emerald-50/20 border border-emerald-100/30 flex items-center justify-between gap-3 shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100/30 shrink-0">
-                        <ShieldCheck size={17} strokeWidth={2.2} />
+                      {/* Left timeline node */}
+                      <div className="flex items-center gap-3 min-w-0 flex-1 z-10">
+                        <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 bg-white">
+                          {isLastCompleted ? (
+                            <div className="w-5 h-5 rounded-full bg-[#16a34a] flex items-center justify-center text-white shadow-xs">
+                              <Check size={12} strokeWidth={3} />
+                            </div>
+                          ) : step.completed ? (
+                            <div className="w-5 h-5 rounded-full border-2 border-[#16a34a] bg-white flex items-center justify-center">
+                              <div className="w-2.5 h-2.5 rounded-full bg-[#16a34a]" />
+                            </div>
+                          ) : (
+                            <div className="w-5 h-5 rounded-full border-2 border-slate-300 bg-white" />
+                          )}
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <p className={`text-[13.5px] font-bold ${step.completed ? "text-slate-800" : "text-slate-500"}`}>
+                            {step.status}
+                          </p>
+                          <p className="text-[11px] font-medium text-slate-400 mt-0.5">
+                            {step.date || "Pending"}
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-start leading-tight">
-                        <p className="text-[12.5px] font-black text-slate-800 tracking-tight">
-                          Your donation makes a difference!
-                        </p>
-                        <p className="text-[10.5px] font-bold text-slate-400">
-                          Thank you for helping build a better tomorrow.
-                        </p>
+
+                      {/* Right side status badge */}
+                      <div className="shrink-0">
+                        <span
+                          className={`px-3 py-1 rounded-full text-[9.5px] font-black uppercase tracking-wider ${
+                            step.completed
+                              ? "bg-[#e8fccf] text-[#16a34a]"
+                              : "bg-slate-100 text-slate-400"
+                          }`}
+                        >
+                          {step.completed ? "COMPLETED" : "PENDING"}
+                        </span>
                       </div>
                     </div>
-                    <div className="relative shrink-0 text-emerald-500 animate-[pulse_2s_infinite] mr-1 flex items-center">
-                      <Heart size={18} fill="currentColor" />
-                      <span className="absolute -top-1 -right-1 text-[8px] animate-pulse">
-                        ✨
-                      </span>
-                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 6. Volunteer Call Handoff Card (if volunteer is assigned) */}
+            {selectedDonation.volunteer && (
+              <div className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl shadow-xs">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#e8fccf]/60 text-[#16a34a] flex items-center justify-center border border-emerald-100/50 shrink-0">
+                    <User size={18} strokeWidth={2} />
+                  </div>
+                  <div className="flex flex-col text-start">
+                    <span className="text-[9.5px] font-black uppercase text-slate-400 tracking-wider mb-0.5">
+                      Delivery Volunteer
+                    </span>
+                    <span className="text-[13px] font-bold text-slate-800">
+                      {selectedDonation.volunteer.name} ({selectedDonation.volunteer.phone})
+                    </span>
                   </div>
                 </div>
-              )}
+                <button
+                  onClick={() => {
+                    if (selectedDonation.volunteer?.phone) {
+                      window.location.href = `tel:${selectedDonation.volunteer.phone}`;
+                    }
+                  }}
+                  className="w-10 h-10 rounded-full bg-[#16a34a] text-white flex items-center justify-center shadow-md active:scale-90 transition-all cursor-pointer shrink-0"
+                >
+                  <Phone size={15} />
+                </button>
+              </div>
+            )}
+
+            {/* 7. OTP Delivery Verification Handoff Section (if ASSIGNED / PICKED_UP) */}
+            {(selectedDonation.status === "ASSIGNED" || selectedDonation.status === "PICKED_UP") && (
+              <div className="p-5 rounded-2xl bg-[#f8fdf9] border border-emerald-100/50 space-y-4 shadow-xs text-start">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#e8fcf0] flex items-center justify-center text-[#16a34a] border border-emerald-100/50 shrink-0">
+                    <ShieldCheck size={20} strokeWidth={2.2} />
+                  </div>
+                  <div className="text-start">
+                    <h4 className="text-[13px] font-black uppercase tracking-wider text-emerald-800">
+                      Delivery Verification
+                    </h4>
+                    <p className="text-[11px] font-medium text-slate-500">
+                      Confirm NGO handoff securely
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-2 text-start">
+                  <div className="flex justify-between items-center">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                      Enter verification code
+                    </label>
+                    <span className="text-[10px] font-black text-slate-400 tracking-wider">
+                      OTP
+                    </span>
+                  </div>
+
+                  <div className="flex gap-2 justify-between items-center py-1">
+                    {otpDigits.map((digit: string, index: number) => (
+                      <input
+                        key={index}
+                        ref={(el) => {
+                          otpRefs.current[index] = el;
+                        }}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) =>
+                          handleOtpDigitChange(e.target.value, index, otpRefs)
+                        }
+                        onKeyDown={(e) =>
+                          handleOtpKeyDown(e, index, otpRefs)
+                        }
+                        onFocus={() => handleOtpFocus(index, otpRefs)}
+                        onPaste={
+                          index === 0
+                            ? (e) => handleOtpPaste(e, otpRefs)
+                            : undefined
+                        }
+                        autoFocus={index === 0}
+                        className="w-10 h-12 sm:w-12 sm:h-14 rounded-2xl bg-white border border-slate-200 focus:border-[#16a34a] outline-none text-center text-lg sm:text-xl font-black text-slate-800 transition-all shadow-sm focus:ring-4 focus:ring-emerald-500/10"
+                        placeholder="0"
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {otpError && (
+                  <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-center">
+                    <p className="text-[10px] font-black text-red-500 uppercase tracking-widest">
+                      {otpError}
+                    </p>
+                  </div>
+                )}
+
+                <button
+                  onClick={onOtpSubmit}
+                  disabled={isVerifying || otpValue.length !== 6}
+                  className="w-full py-3.5 rounded-xl bg-[#16a34a] hover:bg-[#15803d] text-white flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-40 font-black uppercase tracking-widest text-[12px] shadow-lg shadow-emerald-500/15"
+                >
+                  {isVerifying ? (
+                    <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <ShieldCheck size={16} strokeWidth={2.5} />
+                      <span>Verify Delivery</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {/* 8. Bottom Thank You Card */}
+            <div className="p-4 rounded-2xl bg-[#f2faf5] border border-[#d3ebd9] flex items-center justify-between gap-3 text-start">
+              <div className="w-9 h-9 rounded-full bg-[#dcfce7] text-[#16a34a] flex items-center justify-center shrink-0 border border-[#bbf7d0]">
+                <ShieldCheck size={18} strokeWidth={2.2} />
+              </div>
+              <p className="text-[11.5px] font-bold text-slate-700 leading-snug flex-1">
+                Thank you for your generous contribution. You're making a real difference!
+              </p>
+              <Heart size={18} className="text-[#16a34a] fill-[#16a34a]/20 shrink-0" />
             </div>
           </div>
         ) : null}
@@ -2019,303 +2393,470 @@ export const MyDonationsModals = () => {
         </ModalContent>
       </Modal>
 
-      {/* Receipt Details Modal */}
+      {/* Receipt Details Modal (Full Screen Photo Preview) */}
       <Modal
         isOpen={isReceiptModalOpen}
         onOpenChange={(open) =>
           myDonationsInputModel.update({ isReceiptModalOpen: open })
         }
-        size="md"
+        size="full"
         backdrop="blur"
         hideCloseButton={true}
         classNames={{
-          backdrop: "bg-slate-900/60 backdrop-blur-sm",
-          base: "bg-transparent shadow-none border-none outline-none",
-          body: "p-0",
-          wrapper: "z-[9999]",
+          backdrop: "bg-slate-900/40 backdrop-blur-xl",
+          base: "bg-slate-50 text-slate-900 shadow-none border-none outline-none w-screen h-screen max-w-none m-0 p-0 rounded-none overflow-hidden",
+          body: "p-0 h-full flex flex-col justify-between overflow-hidden",
+          wrapper: "z-[9999] p-0 m-0 w-screen h-screen overflow-hidden",
         }}
       >
-        <ModalContent className="bg-transparent border-none outline-none shadow-none ring-0 p-0 m-0">
+        <ModalContent className="bg-slate-50 border-none outline-none shadow-none ring-0 p-0 m-0 w-screen h-screen max-w-none rounded-none flex flex-col overflow-hidden">
           {(onClose) => {
             if (!receiptDonation) return null;
             const d = receiptDonation;
-            const deliveredStep = d.timeline?.find((s: any) =>
-              s.status.toUpperCase().includes("DELIVERED")
-            );
-            const deliveredDate = deliveredStep
-              ? `${deliveredStep.date}, ${deliveredStep.time}`
-              : `${d.date}, 6:25 PM`;
-            const receiptId = `HF-${
-              d.date.replace(/[^0-9]/g, "-") || "2026-05-15"
-            }-${d.id || 6821}`;
+            const metrics = getReceiptMetrics(d);
+            const receiptId = `HF-${d.date ? d.date.replace(/[^0-9]/g, "-") : "2026-06-25"}-${d.id || 6821}`;
+
+            const handleDownloadPdf = async () => {
+              const element = document.getElementById("receipt-card-printable");
+              if (!element) return;
+              toast.loading("Generating professional PDF receipt...", { id: "pdf-gen" });
+
+              try {
+                const canvas = await html2canvas(element, {
+                  scale: 2,
+                  useCORS: true,
+                  allowTaint: true,
+                  backgroundColor: "#ffffff",
+                  logging: false,
+                });
+
+                let imgData: string;
+                try {
+                  imgData = canvas.toDataURL("image/png");
+                } catch {
+                  const cleanCanvas = await html2canvas(element, {
+                    scale: 2,
+                    useCORS: false,
+                    allowTaint: false,
+                    backgroundColor: "#ffffff",
+                    ignoreElements: (el: Element) => el.tagName === "IMG",
+                  });
+                  imgData = cleanCanvas.toDataURL("image/png");
+                }
+
+                const pdf = new jsPDF("p", "mm", "a4");
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                pdf.addImage(imgData, "PNG", 0, 10, pdfWidth, Math.min(pdfHeight, 270));
+                pdf.save(`HungerFree_Receipt_${receiptId}.pdf`);
+                toast.success("Professional PDF downloaded!", { id: "pdf-gen" });
+              } catch (err) {
+                console.error("PDF export error:", err);
+                try {
+                  const pdf = new jsPDF("p", "mm", "a4");
+                  pdf.setFontSize(16);
+                  pdf.setTextColor(34, 197, 94);
+                  pdf.text("HungerFree Official Donation Impact Receipt", 15, 20);
+
+                  pdf.setFontSize(10);
+                  pdf.setTextColor(50, 50, 50);
+                  pdf.text(`Receipt ID: ${receiptId}`, 15, 30);
+                  pdf.text(`Food Item: ${d.foodType} (${d.quantity})`, 15, 38);
+                  pdf.text(`Category: ${d.category} | ${d.dietaryType}`, 15, 46);
+                  pdf.text(`NGO Recipient: ${metrics.ngoName}`, 15, 54);
+                  pdf.text(`Address: ${metrics.ngoAddress}`, 15, 62);
+                  pdf.text(`Volunteer: ${metrics.volunteerName} (${metrics.volunteerPhone})`, 15, 70);
+                  pdf.text(`Impact Served: ${metrics.peopleFed}`, 15, 78);
+                  pdf.text(`Expiry Date & Time: ${metrics.expiry}`, 15, 86);
+                  pdf.text(`Volunteer Pickup Time: ${metrics.volunteerReceivedTime}`, 15, 94);
+                  pdf.text(`NGO Delivered Time: ${metrics.deliveredTime}`, 15, 102);
+
+                  pdf.setFontSize(9);
+                  pdf.setTextColor(100, 100, 100);
+                  pdf.text("Certified Surplus Food Transfer - Thank you for your generous contribution!", 15, 118);
+
+                  pdf.save(`HungerFree_Receipt_${receiptId}.pdf`);
+                  toast.success("PDF Receipt downloaded!", { id: "pdf-gen" });
+                } catch {
+                  toast.error("Failed to generate PDF. Please try again.", { id: "pdf-gen" });
+                }
+              }
+            };
+
+            const handleShareReceipt = async () => {
+              const element = document.getElementById("receipt-card-printable");
+              if (!element) return;
+              toast.loading("Preparing receipt for sharing...", { id: "share-gen" });
+
+              const shareSummaryText = `HungerFree Food Donation Receipt\n• Item: ${d.foodType} (${d.quantity})\n• Receipt ID: ${receiptId}\n• Impact: ${metrics.peopleFed}\n• NGO: ${metrics.ngoName}\n• Volunteer: ${metrics.volunteerName}`;
+
+              try {
+                const canvas = await html2canvas(element, {
+                  scale: 2,
+                  useCORS: true,
+                  allowTaint: true,
+                  backgroundColor: "#ffffff",
+                  logging: false,
+                });
+
+                let dataUrl: string;
+                try {
+                  dataUrl = canvas.toDataURL("image/png");
+                } catch {
+                  const cleanCanvas = await html2canvas(element, {
+                    scale: 2,
+                    useCORS: false,
+                    allowTaint: false,
+                    backgroundColor: "#ffffff",
+                    ignoreElements: (el: Element) => el.tagName === "IMG",
+                  });
+                  dataUrl = cleanCanvas.toDataURL("image/png");
+                }
+
+                const response = await fetch(dataUrl);
+                const blob = await response.blob();
+                const imageFile = new File([blob], `HungerFree_Receipt_${receiptId}.png`, { type: "image/png" });
+
+                if (navigator.share && navigator.canShare && navigator.canShare({ files: [imageFile] })) {
+                  try {
+                    await navigator.share({
+                      title: "HungerFree Food Donation Receipt",
+                      text: shareSummaryText,
+                      files: [imageFile],
+                    });
+                    toast.success("Shared successfully!", { id: "share-gen" });
+                    return;
+                  } catch (e: any) {
+                    if (e.name === "AbortError") {
+                      toast.dismiss("share-gen");
+                      return;
+                    }
+                  }
+                }
+
+                const link = document.createElement("a");
+                link.download = `HungerFree_Receipt_${receiptId}.png`;
+                link.href = dataUrl;
+                link.click();
+                navigator.clipboard.writeText(shareSummaryText);
+                toast.success("Receipt image downloaded & summary copied to clipboard!", { id: "share-gen" });
+              } catch (err) {
+                console.error("Share error:", err);
+                navigator.clipboard.writeText(shareSummaryText);
+                toast.success("Receipt details copied to clipboard!", { id: "share-gen" });
+              }
+            };
 
             return (
-              <div className="bg-white w-full max-w-[440px] rounded-[2rem] p-6 md:p-7 shadow-[0_25px_60px_rgba(0,0,0,0.15)] border border-slate-100/50 flex flex-col relative max-h-[calc(100vh-2rem)] md:max-h-[calc(100vh-4rem)] overflow-y-auto thin-scrollbar mx-auto">
-                <button
-                  onClick={onClose}
-                  className="absolute right-5 top-5 w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-50 transition-all duration-300 group z-50 border border-slate-100"
-                >
-                  <X
-                    size={16}
-                    className="text-slate-400 group-hover:text-slate-600 transition-colors"
-                  />
-                </button>
-
-                <div className="mt-2 mb-2 shrink-0">
-                  <svg
-                    width="100"
-                    height="100"
-                    viewBox="0 0 120 120"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="mx-auto overflow-visible"
-                  >
-                    <circle cx="60" cy="60" r="50" fill="#f0fdf4" />
-                    <circle cx="60" cy="60" r="38" fill="#dcfce7" />
-                    <path
-                      d="M22 62C18 58 20 48 20 48C20 48 30 46 34 50C34 50 26 52 25 57C24 62 22 62 22 62Z"
-                      fill="#22c55e"
-                      className="animate-pulse"
-                    />
-                    <path
-                      d="M98 62C102 58 100 48 100 48C100 48 90 46 86 50C86 50 94 52 95 57C96 62 98 62 98 62Z"
-                      fill="#22c55e"
-                      className="animate-pulse"
-                    />
-                    <g filter="drop-shadow(0px 8px 16px rgba(0, 0, 0, 0.06))">
-                      <path
-                        d="M40 25H80V87L75 83L70 87L65 83L60 87L55 83L50 87L45 83L40 87V25Z"
-                        fill="white"
-                        stroke="#e2e8f0"
-                        strokeWidth="1.5"
-                        strokeLinejoin="round"
-                      />
-                    </g>
-                    <line
-                      x1="48"
-                      y1="38"
-                      x2="72"
-                      y2="38"
-                      stroke="#cbd5e1"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                    />
-                    <line
-                      x1="48"
-                      y1="48"
-                      x2="64"
-                      y2="48"
-                      stroke="#e2e8f0"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                    />
-                    <line
-                      x1="48"
-                      y1="58"
-                      x2="72"
-                      y2="58"
-                      stroke="#e2e8f0"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                    />
-                    <line
-                      x1="48"
-                      y1="68"
-                      x2="56"
-                      y2="68"
-                      stroke="#e2e8f0"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                    />
-                    <circle
-                      cx="80"
-                      cy="76"
-                      r="13"
-                      fill="#22c55e"
-                      stroke="white"
-                      strokeWidth="2.5"
-                    />
-                    <path
-                      d="M75 76L78.5 79.5L85 73"
-                      stroke="white"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </div>
-
-                <div className="text-center space-y-1 mb-5">
-                  <h2 className="text-xl font-black text-slate-800 tracking-tight">
-                    Receipt
-                  </h2>
-                  <p className="text-[11px] font-bold text-slate-500 max-w-[280px] mx-auto leading-relaxed">
-                    Thank you! Your donation has created an impact.
-                  </p>
-                  <div className="flex justify-center pt-0.5 text-emerald-500 animate-bounce">
-                    <Heart size={14} fill="currentColor" />
-                  </div>
-                </div>
-
-                <div className="p-3.5 rounded-2xl bg-[#f4faf6] border border-emerald-500/10 flex items-center gap-3.5 mb-5 shrink-0 text-start">
-                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-md shrink-0">
-                    <img
-                      src={d.image || getCategoryImage(d.category)}
-                      className="w-full h-full object-cover"
-                      alt={d.foodType}
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-[13px] font-black text-slate-800 truncate leading-tight mb-0.5">
-                      {d.foodType}
-                    </h4>
-                    <div className="flex flex-wrap items-center gap-1 mb-1">
-                      <span className="px-1.5 py-0.5 bg-[#e8fcf0] text-[#1b803c] rounded-full text-[7.5px] font-black uppercase tracking-wider">
-                        {d.category}
+              <div className="w-full h-full flex flex-col relative bg-slate-100/90 overflow-hidden text-start">
+                {/* Top Fullscreen Control Bar */}
+                <div className="w-full px-6 py-4 border-b border-slate-200/80 flex items-center justify-between shrink-0 bg-white/95 backdrop-blur-md z-50 shadow-xs">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center border border-emerald-200">
+                      <ShieldCheck size={18} />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider leading-none">
+                        Certificate Fullscreen Preview
+                      </h3>
+                      <span className="text-[10px] font-medium text-slate-500">
+                        Official HungerFree Donation Impact Document
                       </span>
                     </div>
-                    <p className="text-[8.5px] font-black text-slate-400 uppercase tracking-wider">
-                      {d.quantity.toUpperCase()} • {d.dietaryType.toUpperCase()}{" "}
-                      • {d.preparationType.toUpperCase()}
-                    </p>
+                  </div>
+                  <button
+                    onClick={onClose}
+                    className="w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 flex items-center justify-center transition-all cursor-pointer border border-slate-200 shadow-xs active:scale-95"
+                    title="Close Fullscreen Preview"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                {/* Center Image/Certificate Lightbox Viewport */}
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6 md:p-10 flex items-center justify-center thin-scrollbar bg-slate-100/70">
+                  <div className="w-full max-w-[760px] my-auto">
+                    {/* Printable Certificate Content */}
+                    <div
+                      id="receipt-card-printable"
+                      className="bg-white p-6 md:p-8 text-start space-y-5 rounded-2xl border border-emerald-100 shadow-2xl relative overflow-hidden text-slate-800"
+                    >
+                      {/* Background Glow Watermarks */}
+                      <div className="absolute -top-16 -left-16 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+                      <div className="absolute -bottom-16 -right-16 w-48 h-48 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+
+                      {/* 1. Header Badge */}
+                      <div className="flex items-center justify-between pb-4 border-b border-slate-100 gap-4 pr-2">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src="/project_logo1.png"
+                            alt="HungerFree Logo"
+                            crossOrigin="anonymous"
+                            className="h-20 md:h-24 w-auto object-contain shrink-0"
+                          />
+                        </div>
+                        <div className="flex flex-col items-center justify-center shrink-0 text-center">
+                          <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#056839] text-white text-[10px] font-bold uppercase tracking-wider shadow-sm">
+                            <ShieldCheck size={14} className="text-white" />
+                            <span>VERIFIED DONATION</span>
+                          </div>
+                          <span className="text-[9px] font-bold text-[#056839] uppercase tracking-widest mt-1.5 text-center block">
+                            OFFICIAL HANDOFF CERTIFICATE
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 2. Main Title Banner */}
+                      <div className="text-center pt-1 pb-1 space-y-1.5">
+                        <h2 className="text-xl md:text-2xl font-black text-[#056839] uppercase tracking-tight">
+                          DONATION IMPACT RECEIPT
+                        </h2>
+                        <div className="flex items-center justify-center gap-3 w-48 mx-auto opacity-70">
+                          <div className="h-[1px] bg-gradient-to-r from-transparent via-[#056839] to-transparent flex-1" />
+                          <Heart size={11} className="text-[#056839] fill-[#056839]" />
+                          <div className="h-[1px] bg-gradient-to-r from-transparent via-[#056839] to-transparent flex-1" />
+                        </div>
+                        <p className="text-[11.5px] font-bold text-slate-600 max-w-[420px] mx-auto leading-relaxed">
+                          Thank you for making a difference. Your generosity helps fight hunger and reduces food waste in our community.
+                        </p>
+                      </div>
+
+                      {/* 3. Food Details Banner Card */}
+                      <div className="p-4 rounded-2xl bg-[#fcfaf5] border border-[#f3e6d3] flex items-center gap-4 text-start shadow-2xs">
+                        <img
+                          src={d.image || getCategoryImage(d.category)}
+                          crossOrigin="anonymous"
+                          className="w-16 h-16 rounded-2xl object-cover border-2 border-white shadow-sm shrink-0"
+                          alt={d.foodType}
+                        />
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-base font-bold text-[#056839] truncate leading-tight mb-0.5">
+                            {d.foodType}
+                          </h4>
+                          <p className="text-[10.5px] font-bold text-[#056839] uppercase tracking-wider mb-1.5">
+                            {d.category} • {d.quantity} • {d.dietaryType}
+                          </p>
+                          <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#e8f5e9] text-[#056839] text-[10px] font-bold tracking-wide">
+                            <Users size={12} />
+                            <span>Serves {metrics.peopleFed}</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 4. 2-Column Data Grid with horizontal divider lines */}
+                      <div className="space-y-3.5 text-[11px] pt-1">
+                        {/* Row 1: NGO Recipient & Delivery Volunteer */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-3.5 border-b border-slate-100">
+                          {/* NGO Recipient */}
+                          <div className="flex items-start gap-3 text-start">
+                            <div className="w-9 h-9 rounded-full bg-emerald-50 text-[#056839] flex items-center justify-center shrink-0 border border-emerald-100/80">
+                              <Building2 size={17} strokeWidth={2} />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <span className="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
+                                NGO RECIPIENT
+                              </span>
+                              <p className="font-bold text-slate-800 text-[12.5px] truncate">
+                                {metrics.ngoName}
+                              </p>
+                              <p className="text-[10.5px] font-medium text-slate-500 leading-snug line-clamp-1">
+                                {metrics.ngoAddress}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Delivery Volunteer */}
+                          <div className="flex items-start gap-3 text-start">
+                            <div className="w-9 h-9 rounded-full bg-emerald-50 text-[#056839] flex items-center justify-center shrink-0 border border-emerald-100/80">
+                              <User size={17} strokeWidth={2} />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
+                                  DELIVERY VOLUNTEER
+                                </span>
+                                {metrics.volunteerRating && (
+                                  <span className="text-[11px] font-bold text-amber-500 flex items-center gap-0.5">
+                                    ★ {metrics.volunteerRating}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="font-bold text-slate-800 text-[12.5px] truncate">
+                                {metrics.volunteerName}
+                              </p>
+                              <p className="text-[10.5px] font-medium text-slate-500 leading-snug">
+                                {metrics.volunteerPhone}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Row 2: Expiry Date & Time & Fulfillment Duration */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-3.5 border-b border-slate-100">
+                          {/* Expiry Date & Time */}
+                          <div className="flex items-start gap-3 text-start">
+                            <div className="w-9 h-9 rounded-full bg-emerald-50 text-[#056839] flex items-center justify-center shrink-0 border border-emerald-100/80">
+                              <Calendar size={17} strokeWidth={2} />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <span className="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
+                                EXPIRY DATE & TIME
+                              </span>
+                              <p className="font-bold text-slate-800 text-[12px] mt-0.5">
+                                {metrics.expiry}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Fulfillment Duration */}
+                          <div className="flex items-start gap-3 text-start">
+                            <div className="w-9 h-9 rounded-full bg-emerald-50 text-[#056839] flex items-center justify-center shrink-0 border border-emerald-100/80">
+                              <Zap size={17} strokeWidth={2} />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <span className="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
+                                FULFILLMENT DURATION
+                              </span>
+                              <p className="font-bold text-slate-800 text-[12px] mt-0.5 flex items-center gap-1">
+                                <Zap size={13} className="text-amber-500 fill-amber-500" />
+                                <span>{metrics.hoursTakenStr}</span>
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Row 3: Volunteer Pickup Time & NGO Delivered Time */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {/* Volunteer Pickup Time */}
+                          <div className="flex items-start gap-3 text-start">
+                            <div className="w-9 h-9 rounded-full bg-emerald-50 text-[#056839] flex items-center justify-center shrink-0 border border-emerald-100/80">
+                              <Clock size={17} strokeWidth={2} />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <span className="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
+                                VOLUNTEER PICKUP TIME
+                              </span>
+                              <p className="font-bold text-slate-800 text-[12px] mt-0.5">
+                                {metrics.volunteerReceivedTime}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* NGO Delivered Time */}
+                          <div className="flex items-start gap-3 text-start">
+                            <div className="w-9 h-9 rounded-full bg-emerald-50 text-[#056839] flex items-center justify-center shrink-0 border border-emerald-100/80">
+                              <CheckCircle2 size={17} strokeWidth={2} />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <span className="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
+                                NGO DELIVERED TIME
+                              </span>
+                              <p className="font-bold text-slate-800 text-[12px] mt-0.5">
+                                {metrics.deliveredTime}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 5. Receipt ID Banner */}
+                      <div className="p-3.5 rounded-xl bg-gradient-to-r from-[#FDFCF6] via-[#FEFCF6] to-[#FEFDF7] border border-[#f3e6d3] text-center flex items-center justify-center gap-2">
+                        <p className="text-[12px] font-bold text-[#785B37] tracking-wide">
+                          Receipt ID: <span className="font-mono text-[#785B37] font-bold">{receiptId}</span>
+                        </p>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(receiptId);
+                            toast.success("Receipt ID copied!");
+                          }}
+                          className="p-1 hover:bg-amber-100/50 rounded-md transition-colors cursor-pointer"
+                          title="Copy Receipt ID"
+                        >
+                          <Copy size={12} className="text-[#785B37]" />
+                        </button>
+                      </div>
+
+                      {/* 6. Impact Handoff Certification */}
+                      <div className="p-4 rounded-2xl bg-gradient-to-r from-[#F1F5EC] via-[#FAFCF8] to-[#F8FAF5] border border-[#d8edd9] flex items-center gap-3.5 text-start">
+                        <Heart size={20} className="text-[#5C9777] fill-[#5C9777]/20 shrink-0" />
+                        <p className="text-[11.5px] font-bold text-[#5C9777] leading-snug">
+                          Thank you for your generosity! This donation fed <strong>{metrics.peopleFed}</strong> in collaboration with <strong>{metrics.ngoName}</strong>{metrics.volunteerName !== "Not Assigned" ? ` and volunteer ${metrics.volunteerName}` : ""}.
+                        </p>
+                      </div>
+
+                      {/* 7. Signature, Seal Stamp, & Verification QR Code */}
+                      <div className="pt-4 pb-2 px-1 border-t border-slate-100 grid grid-cols-3 items-center justify-between gap-4 text-center">
+                        {/* Left: Full Official Signature Logo (No redundant text below) */}
+                        <div className="flex flex-col items-start text-start justify-center">
+                          <img
+                            src="/hunger_free sign.png"
+                            alt="HungerFree Official Signature"
+                            crossOrigin="anonymous"
+                            className="h-16 md:h-20 w-auto object-contain"
+                          />
+                        </div>
+
+                        {/* Center: Official Seal Stamp Image */}
+                        <div className="flex justify-center items-center">
+                          <img
+                            src="/stamp.png"
+                            alt="Official HungerFree Stamp"
+                            crossOrigin="anonymous"
+                            className="h-20 w-auto object-contain"
+                          />
+                        </div>
+
+                        {/* Right: QR Code (Centered with text) */}
+                        <div className="flex flex-col items-center justify-center text-center ml-auto">
+                          <img
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`https://hungerfree.org/verify?receipt=${receiptId}`)}`}
+                            alt="Verification QR Code"
+                            crossOrigin="anonymous"
+                            className="w-16 h-16 rounded-xl border border-slate-200 p-1 bg-white shadow-2xs mx-auto"
+                          />
+                          <span className="text-[8.5px] font-bold text-slate-400 mt-1 text-center block">
+                            Scan to verify this receipt
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 8. Bottom Brand Dark Green Footer Bar */}
+                      <div className="-mx-6 md:-mx-8 -mb-6 md:-mb-8 mt-6 px-6 md:px-8 py-3.5 bg-[#056839] text-white flex items-center justify-between text-[10.5px] font-bold rounded-b-2xl shadow-xs">
+                        <div className="flex items-center gap-2">
+                          <Globe size={13} className="text-emerald-300 shrink-0" />
+                          <span>www.hungerfree.online</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Mail size={13} className="text-emerald-300 shrink-0" />
+                          <span>immanvj077@gmail.com</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Phone size={13} className="text-emerald-300 shrink-0" />
+                          <span>+91 8248754186</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-3 mb-5 overflow-y-auto max-h-[220px] pr-1 thin-scrollbar text-start">
-                  <div className="flex items-start justify-between gap-4 py-1 border-b border-dashed border-slate-100">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-7.5 h-7.5 rounded-full bg-[#f4faf6] text-emerald-600 flex items-center justify-center border border-emerald-100/50 shrink-0">
-                        <MapPin size={13} />
-                      </div>
-                      <div className="flex flex-col text-start">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">
-                          NGO / Recipient
-                        </span>
-                        <span className="text-[11.5px] font-bold text-slate-800">
-                          {d.ngo}
-                        </span>
-                      </div>
-                    </div>
-                    <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 border border-emerald-100/50 rounded-md text-[8px] font-black uppercase tracking-widest self-center">
-                      DELIVERED
-                    </span>
-                  </div>
-
-                  <div className="flex items-start justify-between gap-4 py-1 border-b border-dashed border-slate-100">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-7.5 h-7.5 rounded-full bg-[#f4faf6] text-emerald-600 flex items-center justify-center border border-emerald-100/50 shrink-0">
-                        <Clock size={13} />
-                      </div>
-                      <div className="flex flex-col text-start">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">
-                          Delivered On
-                        </span>
-                        <span className="text-[11.5px] font-bold text-slate-800">
-                          {deliveredDate}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start justify-between gap-4 py-1 border-b border-dashed border-slate-100">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-7.5 h-7.5 rounded-full bg-[#f4faf6] text-emerald-600 flex items-center justify-center border border-emerald-100/50 shrink-0">
-                        <User size={13} />
-                      </div>
-                      <div className="flex flex-col text-start">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">
-                          Received By
-                        </span>
-                        <span className="text-[11.5px] font-bold text-slate-800">
-                          {d.ngo} Team
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start justify-between gap-4 py-1">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-7.5 h-7.5 rounded-full bg-[#f4faf6] text-emerald-600 flex items-center justify-center border border-emerald-100/50 shrink-0">
-                        <FileText size={13} />
-                      </div>
-                      <div className="flex flex-col text-start">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">
-                          Receipt ID
-                        </span>
-                        <span className="text-[11.5px] font-bold text-slate-800">
-                          {receiptId}
-                        </span>
-                      </div>
-                    </div>
+                {/* Bottom Floating Action Bar */}
+                <div className="w-full p-4 md:px-8 border-t border-slate-200/80 bg-white/95 backdrop-blur-md shrink-0 flex justify-center z-50 shadow-xs">
+                  <div className="grid grid-cols-2 gap-4 w-full max-w-[500px]">
                     <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(receiptId);
-                        toast.success("Receipt ID copied to clipboard!");
-                      }}
-                      className="w-7 h-7 rounded-lg hover:bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 active:scale-95 transition-all self-center shadow-sm"
+                      onClick={handleDownloadPdf}
+                      className="w-full py-3.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 hover:text-slate-900 flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-wider shadow-xs active:scale-95 transition-all cursor-pointer"
                     >
-                      <Copy size={12} />
+                      <Download size={15} />
+                      <span>Download PDF</span>
+                    </button>
+                    <button
+                      onClick={handleShareReceipt}
+                      className="w-full py-3.5 rounded-xl bg-[#056839] hover:bg-[#04522d] text-white shadow-lg shadow-emerald-700/20 flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-wider active:scale-95 transition-all cursor-pointer"
+                    >
+                      <Share2 size={15} />
+                      <span>Share (PNG/PDF)</span>
                     </button>
                   </div>
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-[#e8fcf0]/50 border border-[#e8fcf0] flex items-center gap-3.5 mb-3 shrink-0 text-start">
-                  <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-emerald-500 shadow-sm shrink-0 border border-emerald-50">
-                    <Heart size={12} fill="currentColor" />
-                  </div>
-                  <div className="flex flex-col text-start">
-                    <span className="text-[11px] font-black text-emerald-800">
-                      Thank you for your generosity!
-                    </span>
-                    <span className="text-[9.5px] font-bold text-emerald-600/90 leading-tight">
-                      Your donation will feed many in need 💐
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-3.5 mb-5 shrink-0 text-start">
-                  <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center text-emerald-500 shadow-sm shrink-0 border border-slate-100">
-                    <ShieldCheck size={14} strokeWidth={2.5} />
-                  </div>
-                  <div className="flex flex-col text-start">
-                    <span className="text-[11px] font-black text-slate-700">
-                      Verified Donation
-                    </span>
-                    <span className="text-[9.5px] font-bold text-slate-500 leading-tight">
-                      This donation is verified and has been recorded
-                      successfully.
-                    </span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 w-full mt-auto shrink-0">
-                  <button
-                    onClick={() => toast.success("Downloading receipt PDF...")}
-                    className="w-full py-3.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 flex items-center justify-center gap-2 text-[10.5px] font-black uppercase tracking-wider shadow-sm active:scale-95 transition-all"
-                  >
-                    <Download size={13} />
-                    <span>Download</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (navigator.share) {
-                        navigator.share({
-                          title: "Donation Receipt",
-                          text: `Donation of ${d.foodType} verified successfully. Receipt ID: ${receiptId}`,
-                          url: window.location.href,
-                        }).catch(() => {});
-                      } else {
-                        navigator.clipboard.writeText(
-                          `Donation of ${d.foodType} verified successfully. Receipt ID: ${receiptId}`
-                        );
-                        toast.success("Share link copied!");
-                      }
-                    }}
-                    className="w-full py-3.5 rounded-xl bg-[#22c55e] hover:bg-[#16a34a] text-white shadow-lg shadow-emerald-500/10 flex items-center justify-center gap-2 text-[10.5px] font-black uppercase tracking-wider active:scale-95 transition-all"
-                  >
-                    <Share2 size={13} />
-                    <span>Share</span>
-                  </button>
                 </div>
               </div>
             );

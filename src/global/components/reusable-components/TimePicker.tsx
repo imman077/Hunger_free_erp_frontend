@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Clock } from "lucide-react";
-import type { TimeValue } from "../types";
+import type { TimeValue } from "./types";
 
 interface ResuableTimePickerProps {
   label?: string;
@@ -168,6 +168,11 @@ const ResuableTimePicker: React.FC<ResuableTimePickerProps> = ({
     }
   };
 
+  const handleSet = () => {
+    handleTimeValueChange(timeValue);
+    setIsOpen(false);
+  };
+
   const handleNow = () => {
     const now = new Date();
     let h = now.getHours();
@@ -176,6 +181,7 @@ const ResuableTimePicker: React.FC<ResuableTimePickerProps> = ({
     const m = now.getMinutes();
     handleTimeValueChange({ hour: h, minute: m, period: p });
     setTimeout(() => scrollToValue(h, m), 50);
+    setIsOpen(false);
   };
 
   const displayTime = `${timeValue.hour
@@ -357,7 +363,7 @@ const ResuableTimePicker: React.FC<ResuableTimePickerProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setIsOpen(false)}
+                  onClick={handleSet}
                   className="bg-[#1e293b] text-white text-[10px] font-black uppercase tracking-widest px-5 py-2.5 rounded-xl hover:bg-black active:scale-95 transition-all shadow-md"
                 >
                   SET

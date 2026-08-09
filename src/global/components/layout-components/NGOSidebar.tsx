@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Icon } from "./reusable-components/Icon";
-import { useSidebar } from "../contexts/SidebarContext";
+import { Icon } from "../reusable-components/Icon";
+import { useSidebar } from "../../contexts/SidebarContext";
 import { Link, useLocation } from "react-router-dom";
 import {
   Drawer,
@@ -144,14 +144,19 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
   );
 };
 
-const VolunteerSidebar: React.FC = () => {
+const NGOSidebar: React.FC = () => {
   const { expanded, setExpanded, mobileOpen, setMobileOpen } = useSidebar();
   const { onOpenChange } = useDisclosure();
 
+  const inventorySubItems: SubItem[] = [
+    { label: "All Items", to: "/ngo/inventory" },
+    { label: "Add Item", to: "/ngo/inventory/add" },
+  ];
+
   const rewardsSubItems: SubItem[] = [
-    { label: "My Rewards", to: "/volunteer/rewards" },
-    { label: "Tier & Benefits", to: "/volunteer/rewards/tiers-benefits" },
-    { label: "Lucky Prize", to: "/volunteer/lucky-prize" },
+    { label: "My Rewards", to: "/ngo/rewards" },
+    { label: "Tier & Benefits", to: "/ngo/rewards/tiers-benefits" },
+    { label: "Lucky Prize", to: "/ngo/lucky-prize" },
   ];
 
   const NavContent = ({
@@ -171,15 +176,22 @@ const VolunteerSidebar: React.FC = () => {
           <SidebarItem
             icon={<Icon name="dashboard" />}
             label="Dashboard"
-            to="/volunteer/dashboard"
+            to="/ngo/dashboard"
             expanded={inDrawer ? true : expanded}
             onNavigate={onNavigate}
           />
           <SidebarItem
-            icon={<Icon name="users" />}
-            label="Tasks"
-            to="/volunteer/tasks"
+            icon={<Icon name="donations" />}
+            label="Donation Requests"
+            to="/ngo/requests"
             expanded={inDrawer ? true : expanded}
+            onNavigate={onNavigate}
+          />
+          <SidebarItem
+            icon={<Icon name="office" />}
+            label="Inventory"
+            expanded={inDrawer ? true : expanded}
+            subItems={inventorySubItems}
             onNavigate={onNavigate}
           />
           <SidebarItem
@@ -187,6 +199,13 @@ const VolunteerSidebar: React.FC = () => {
             label="Rewards"
             expanded={inDrawer ? true : expanded}
             subItems={rewardsSubItems}
+            onNavigate={onNavigate}
+          />
+          <SidebarItem
+            icon={<Icon name="bell" />}
+            label="Post a Need"
+            to="/ngo/needs/post"
+            expanded={inDrawer ? true : expanded}
             onNavigate={onNavigate}
           />
         </div>
@@ -298,4 +317,4 @@ const VolunteerSidebar: React.FC = () => {
   );
 };
 
-export default VolunteerSidebar;
+export default NGOSidebar;
