@@ -363,7 +363,8 @@ export const MyDonationsList = () => {
       if (!statusFilter) return true;
       if (statusFilter === "Pending") return donation.status === "PENDING";
       if (statusFilter === "Accepted") return donation.status === "ACCEPTED";
-      if (statusFilter === "Assigned") return donation.status === "ASSIGNED" || donation.status === "PICKED_UP";
+      if (statusFilter === "Assigned") return donation.status === "ASSIGNED";
+      if (statusFilter === "Picked Up") return donation.status === "PICKED_UP";
       if (statusFilter === "Delivered") return donation.status === "DELIVERED";
       if (statusFilter === "Cancelled") return donation.status === "CANCELLED";
       return true;
@@ -483,6 +484,7 @@ export const MyDonationsList = () => {
                         { value: "Pending", label: "Pending" },
                         { value: "Accepted", label: "Accepted" },
                         { value: "Assigned", label: "Assigned" },
+                        { value: "Picked Up", label: "Picked Up" },
                         { value: "Delivered", label: "Delivered" },
                         { value: "Cancelled", label: "Cancelled" },
                       ].map((opt) => {
@@ -1284,9 +1286,9 @@ export const MyDonationsModals = () => {
         }
         title="Donation Details"
         subtitle={
-          <span className="block text-slate-400 mt-1 break-all">
+          <span className="block text-emerald-200 mt-0.5 break-all">
             Tracking ID:{" "}
-            <span className="text-[#22c55e] font-bold">
+            <span className="text-[#4ade80] font-bold">
               #DON-{selectedDonation?.id || "6a788280868de415dc77cc53"}
             </span>
           </span>
@@ -1490,10 +1492,10 @@ export const MyDonationsModals = () => {
         }
         title="Donation Details"
         subtitle={
-          <span className="block text-slate-400 mt-1 break-all">
+          <span className="block text-emerald-200 mt-0.5 break-all">
             Tracking ID:{" "}
-            <span className="text-[#22c55e] font-bold">
-              #DON-{selectedDonation?.id || "No ID"}
+            <span className="text-[#4ade80] font-bold">
+              #DON-{selectedDonation?.id || "6a788280868de415dc77cc53"}
             </span>
           </span>
         }
