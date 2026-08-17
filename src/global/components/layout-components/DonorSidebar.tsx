@@ -153,7 +153,7 @@ const DonorSidebar: React.FC = () => {
   const donationsSubItems: SubItem[] = [
     { label: "My Donations", to: "/donor/donations" },
     { label: "Create Donation", to: "/donor/donations/create" },
-    { label: "NGO Posts", to: "/donor/donations/marketplace" },
+    { label: "NGO Posts", to: "/donor/ngo-posts" },
   ];
 
   const rewardsSubItems: SubItem[] = [
@@ -268,7 +268,7 @@ const DonorSidebar: React.FC = () => {
           setMobileOpen(open);
           onOpenChange();
         }}
-        shouldCloseOnInteractOutside={() => false}
+        isDismissable={false}
         placement="left"
         size="xs"
         hideCloseButton

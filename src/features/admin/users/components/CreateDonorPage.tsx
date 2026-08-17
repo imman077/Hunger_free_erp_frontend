@@ -55,11 +55,11 @@ const CreateDonor = () => {
     address: "",
   });
 
-  const [attachments, setAttachments] = useState<Record<string, File | null>>(
-    {},
-  );
+  const [attachments, setAttachments] = useState<
+    Record<string, File | string | null>
+  >({});
 
-  const handleAttachmentChange = (slot: string, file: File | null) => {
+  const handleAttachmentChange = (slot: string, file: File | string | null) => {
     setAttachments((prev) => ({
       ...prev,
       [slot]: file,
@@ -324,7 +324,7 @@ const CreateDonor = () => {
                   value={formData.phone}
                   onChange={(val) => handleValueChange("phone", val)}
                   required
-                  placeholder="+1 (000) 000-0000"
+                  placeholder="+91 98765 43210"
                   align="left"
                 />
               </div>

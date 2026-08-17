@@ -1,8 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 import { onInit, onDestroy } from "./controller/ngo_posts_controller";
 import { ngoPostsInputModel } from "./store/ngo_posts_store";
 import { getNeedsApiOutputModel } from "./api/get_needs/get_needs_store";
+import { useAuthStore } from "../../../global/store/auth-store";
 import {
   NgoPostsHeader,
   NgoPostsControls,
@@ -22,6 +23,8 @@ export default function NgoPostsPage() {
     };
   }, []);
 
+  const [subTab, setSubTab] = useState<"all" | "mine">("all");
+
   const viewMode = ngoPostsInputModel.useSelector(
     (state) => state.ngoPostsData.viewMode
   );
@@ -31,6 +34,27 @@ export default function NgoPostsPage() {
   const categoryFilter = ngoPostsInputModel.useSelector(
     (state) => state.ngoPostsData.categoryFilter
   );
+  const isFulfillModalOpen = ngoPostsInputModel.useSelector(
+    (state) => state.ngoPostsData.isFulfillModalOpen
+  );
+  const isFulfilling = ngoPostsInputModel.useSelector(
+    (state) => state.ngoPostsData.isFulfilling
+  );
+
+  const [wasFulfilling, setWasFulfilling] = useState(false);
+
+  useEffect(() => {
+    if (isFulfilling) {
+      setWasFulfilling(true);
+    }
+  }, [isFulfilling]);
+
+  useEffect(() => {
+    if (wasFulfilling && !isFulfillModalOpen && !isFulfilling) {
+      setSubTab("mine");
+      setWasFulfilling(false);
+    }
+  }, [isFulfillModalOpen, isFulfilling, wasFulfilling]);
 
   const rawNeeds = getNeedsApiOutputModel.useSelector(
     (state) => state.getNeedsApiData?.data?.needs || EMPTY_ARRAY
@@ -38,6 +62,9 @@ export default function NgoPostsPage() {
   const isLoading = getNeedsApiOutputModel.useSelector(
     (state) => state.getNeedsApiData?.loading
   );
+
+  const { user } = useAuthStore();
+  const currentUserId = user?.id || "";
 
   // Map needs to align with view requirements
   const needs = rawNeeds.map((need: any) => ({
@@ -58,6 +85,7 @@ export default function NgoPostsPage() {
     image: need.image || "",
     distribution_address: need.distributionAddress || "",
     supporters_details: need.supportersDetails || [],
+    supporters: need.supporters || [],
   }));
 
   const filteredNeeds = needs.filter((need: any) => {
@@ -71,16 +99,63 @@ export default function NgoPostsPage() {
       (categoryFilter === "HIGH" && (normalizedUrgency === "HIGH" || normalizedUrgency === "URGENT")) ||
       (categoryFilter === "MEDIUM" && (normalizedUrgency === "MEDIUM" || normalizedUrgency.includes("MEDIUM"))) ||
       (categoryFilter === "LOW" && (normalizedUrgency === "LOW" || normalizedUrgency.includes("LOW")));
-    const isOpen =
-      need.status === "Open" || need.status === "Fulfilling" || !need.status;
 
-    return matchesSearch && matchesCategory && isOpen;
+    if (subTab === "all") {
+      const isOpen =
+        need.status === "Open" || need.status === "Fulfilling" || need.status === "Fulfilled" || !need.status;
+      const isSupported =
+        need.supporter_ids.includes(currentUserId) ||
+        need.supporter_ids.includes(String(currentUserId));
+      return matchesSearch && matchesCategory && isOpen && !isSupported;
+    } else {
+      const isSupported =
+        need.supporter_ids.includes(currentUserId) ||
+        need.supporter_ids.includes(String(currentUserId));
+      return matchesSearch && matchesCategory && isSupported;
+    }
   });
 
   return (
     <div className="w-full min-h-full flex flex-col space-y-6 max-w-[1600px] mx-auto p-6 md:p-10 bg-transparent pb-32">
       <NgoPostsHeader />
       <NgoPostsControls />
+
+      {/* Tabs */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-3 mt-6 mb-4">
+        <div className="flex items-center gap-1.5 p-1 rounded-2xl border bg-[var(--bg-secondary)] border-[var(--border-color)] shadow-sm w-fit">
+          <button
+            onClick={() => setSubTab("all")}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-200 ${
+              subTab === "all"
+                ? "bg-white dark:bg-slate-800 text-[var(--text-primary)] shadow-sm"
+                : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+            }`}
+          >
+            <span>🌐</span>
+            All Requests ({needs.filter((n: any) => {
+              const isOpen = n.status === "Open" || n.status === "Fulfilling" || n.status === "Fulfilled" || !n.status;
+              const isSupported = n.supporter_ids.includes(currentUserId) || n.supporter_ids.includes(String(currentUserId));
+              return isOpen && !isSupported;
+            }).length})
+          </button>
+          <button
+            onClick={() => setSubTab("mine")}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-200 ${
+              subTab === "mine"
+                ? "bg-[#22c55e] text-white shadow-sm shadow-emerald-500/20"
+                : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+            }`}
+          >
+            <span>✅</span>
+            My Records ({needs.filter((n: any) => n.supporter_ids.includes(currentUserId) || n.supporter_ids.includes(String(currentUserId))).length})
+          </button>
+        </div>
+        <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">
+          {subTab === "all"
+            ? "Showing all active food requirements from local NGOs"
+            : "Showing food requirements you have supported"}
+        </span>
+      </div>
 
       <div className="w-full space-y-8">
         {isLoading ? (
@@ -113,14 +188,14 @@ export default function NgoPostsPage() {
             </div>
           )
         ) : filteredNeeds.length === 0 ? (
-          <div className="w-full flex flex-col items-center justify-center p-12 bg-white border border-slate-100 rounded-3xl text-center shadow-sm max-w-lg mx-auto py-16">
+          <div className="w-full flex flex-col items-center justify-center p-16 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-[2.5rem] text-center shadow-sm py-24">
             <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 mb-6 animate-bounce">
               <Heart size={28} className="stroke-[2.5]" />
             </div>
-            <h3 className="text-lg font-black text-slate-800 tracking-tight">
+            <h3 className="text-lg font-black text-[var(--text-primary)] tracking-tight">
               No Active Requests Found
             </h3>
-            <p className="text-xs text-slate-500 font-medium max-w-sm mt-2 leading-relaxed">
+            <p className="text-xs text-[var(--text-muted)] font-medium max-w-md mt-2 leading-relaxed">
               We couldn't find any urgent food requirements matching your current filters. Try searching for something else or adjusting your priority settings.
             </p>
           </div>

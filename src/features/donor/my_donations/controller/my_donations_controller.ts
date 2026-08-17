@@ -68,7 +68,7 @@ export const handleDetailsClick = (donation: any) => {
 };
 
 export const handleLiveTrackClick = (donation: any) => {
-  if (donation.status !== "ASSIGNED") return;
+  if (donation.status !== "ASSIGNED" && donation.status !== "PICKED_UP") return;
   myDonationsInputModel.update({
     selectedDonation: donation,
     isTrackingModalOpen: true,

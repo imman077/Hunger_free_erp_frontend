@@ -72,7 +72,44 @@ export const handleSuggestSubmit = () => {
   }, 1500);
 };
 
-export const handleSubmit = async (e: React.FormEvent, navigate: (path: string) => void) => {
+import { ngoInventoryService } from "../../my_inventory/api/inventory/inventory_api";
+
+export const prefillFormForEdit = async (itemId: string) => {
+  addItemInputModel.update({ isSubmitting: true });
+  try {
+    const items = await ngoInventoryService.getInventory();
+    const item = items.find((i: any) => String(i.id) === String(itemId));
+    if (item) {
+      addItemInputModel.update({
+        formData: {
+          name: item.itemName || item.item_name || item.name || "",
+          category: item.category || "Dry Ration",
+          otherCategory: "",
+          quantity: String(item.quantity || 0),
+          unit: item.unit || "kg",
+          expiryDate: item.expiry_date || (item.expiryDate ? new Date(item.expiryDate).toISOString().split('T')[0] : ""),
+          location: item.location || item.storageLocation || "",
+          condition: item.condition || item.itemCondition || "Excellent",
+          notes: item.notes || "",
+        }
+      });
+    } else {
+      toast.error("Item not found");
+    }
+  } catch (error) {
+    console.error("Error prefilling edit form:", error);
+    toast.error("Failed to load item details");
+  } finally {
+    addItemInputModel.update({ isSubmitting: false });
+  }
+};
+
+export const handleSubmit = async (
+  e: React.FormEvent,
+  navigate: (path: string) => void,
+  isEdit?: boolean,
+  itemId?: string
+) => {
   e.preventDefault();
   const state = addItemInputModel.useStore.getState().addItemData;
   const { formData } = state;
@@ -91,18 +128,25 @@ export const handleSubmit = async (e: React.FormEvent, navigate: (path: string) 
       notes: formData.notes,
     };
 
-    await addItemApi(submitData);
+    if (isEdit && itemId) {
+      await ngoInventoryService.updateItem(itemId, submitData);
+      toast.success("Item Updated", {
+        description: `${formData.name} updated in inventory.`,
+      });
+    } else {
+      await addItemApi(submitData);
+      toast.success("Item Added", {
+        description: `${formData.name} added to inventory.`,
+      });
+    }
 
     addItemInputModel.update({ isSubmitting: false });
-    toast.success("Item Added", {
-      description: `${formData.name} added to inventory.`,
-    });
     onDestroy();
     navigate("/ngo/inventory");
   } catch (error) {
-    console.error("Error adding inventory item:", error);
+    console.error("Error saving inventory item:", error);
     addItemInputModel.update({ isSubmitting: false });
-    toast.error("Failed to add item", {
+    toast.error(isEdit ? "Failed to update item" : "Failed to add item", {
       description: "An error occurred while saving to the database.",
     });
   }

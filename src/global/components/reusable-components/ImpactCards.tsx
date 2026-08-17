@@ -1,9 +1,10 @@
 import React from "react";
 import {
-  type LucideIcon,
   TrendingUp,
   AlertCircle,
 } from "lucide-react";
+
+export type LucideIcon = React.ComponentType<{ size?: number | string; className?: string; strokeWidth?: number }>;
 
 export interface ImpactCardData {
   label: string;

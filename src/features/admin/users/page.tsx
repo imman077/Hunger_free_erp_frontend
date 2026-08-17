@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { Building, Filter, X, ChevronDown, Plus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Building, Filter, X, ChevronDown, Plus, Heart, User, Building2 } from "lucide-react";
 import { Avatar, Spinner } from "@heroui/react";
 import {
   Dropdown,
@@ -18,6 +19,7 @@ const ROLE_OPTIONS = ["Donor", "NGO", "Volunteer", "Admin"];
 const STATUS_OPTIONS = ["Active", "New", "Pending"];
 
 const UsersPage = () => {
+  const navigate = useNavigate();
   const { users, fetchUsers, isLoading } = useUsers();
   const USERS = users;
 
@@ -437,19 +439,63 @@ const UsersPage = () => {
           <Spinner color="success" size="lg" label="Updating from SQL..." />
         </div>
       )}
-      <div className="w-full flex flex-col text-left">
-        <h1
-          className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight break-words"
-          style={{ color: "var(--text-primary)" }}
-        >
-          User Management
-        </h1>
-        <p
-          className="mt-1 md:mt-2 text-xs md:text-sm"
-          style={{ color: "var(--text-muted)" }}
-        >
-          Manage and track all system users and their roles
-        </p>
+      <div className="w-full flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
+        <div>
+          <h1
+            className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight break-words"
+            style={{ color: "var(--text-primary)" }}
+          >
+            User Management
+          </h1>
+          <p
+            className="mt-1 md:mt-2 text-xs md:text-sm"
+            style={{ color: "var(--text-muted)" }}
+          >
+            Manage and track all system users and their roles
+          </p>
+        </div>
+
+        <Dropdown placement="bottom-end">
+          <DropdownTrigger>
+            <Button
+              color="primary"
+              className="bg-[#22c55e] text-white rounded-xl h-11 px-6 font-bold hover:bg-[#1ea34a] transition-all active:scale-95 shrink-0 shadow-lg shadow-[#22c55e]/20"
+              startContent={<Plus size={18} />}
+              endContent={<ChevronDown size={14} />}
+            >
+              Add New Account
+            </Button>
+          </DropdownTrigger>
+          <DropdownMenu
+            aria-label="Create User Options"
+            onAction={(key) => {
+              if (key === "donor") navigate("/admin/users/donors/create");
+              else if (key === "ngo") navigate("/admin/users/ngos/create");
+              else if (key === "volunteer") navigate("/admin/users/volunteers/create");
+              else navigate("/admin/users/create");
+            }}
+            classNames={{
+              base: "border rounded-xl min-w-[200px] p-1.5 shadow-2xl",
+            }}
+            style={{
+              backgroundColor: "var(--bg-primary)",
+              borderColor: "var(--border-color)",
+            }}
+          >
+            <DropdownItem key="donor" startContent={<Heart size={16} className="text-emerald-500" />}>
+              Create Donor
+            </DropdownItem>
+            <DropdownItem key="ngo" startContent={<Building2 size={16} className="text-indigo-500" />}>
+              Create NGO Partner
+            </DropdownItem>
+            <DropdownItem key="volunteer" startContent={<User size={16} className="text-amber-500" />}>
+              Create Volunteer
+            </DropdownItem>
+            <DropdownItem key="hub" startContent={<Plus size={16} className="text-blue-500" />}>
+              Open Creation Hub
+            </DropdownItem>
+          </DropdownMenu>
+        </Dropdown>
       </div>
 
       <ImpactCards data={userStats} />

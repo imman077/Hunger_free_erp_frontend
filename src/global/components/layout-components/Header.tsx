@@ -107,23 +107,36 @@ const Header = () => {
   const ngoPoints = useNgoStore((state) => state.data.currentPoints);
   const volunteerPoints = useVolunteerStore((state) => state.stats.impactPoints);
 
+  const getProfileRoleTitle = () => {
+    if (!user) return "GUEST";
+    const role = user.profile?.role;
+    if (role === "ADMIN") return "ADMINISTRATOR";
+    if (role === "DONOR") return "DONOR ORGANISATION";
+    if (role === "NGO") return "NGO PARTNER";
+    if (role === "VOLUNTEER") return "COMMUNITY VOLUNTEER";
+    return role || "USER";
+  };
+
   const getProfileName = () => {
     if (!user) return "Guest";
     const role = user.profile?.role;
-    if (role === "ADMIN") return "Master Admin";
+    if (role === "ADMIN") return user.username === "admin" ? "Master Admin" : (user.username || "Master Admin");
     
     // Check stores first for clean names
     if (role === "DONOR") {
       const bName = useDonorStore.getState().data.profile.businessName;
-      if (bName) return bName;
+      if (bName && bName !== "Star Grand Hotel") return bName;
+      if (user.username && user.username !== "user") return user.username;
     }
     if (role === "NGO") {
       const nName = user.ngo_profile?.name || useNgoStore.getState().data.profile.ngoName;
       if (nName) return nName;
+      if (user.username && user.username !== "user") return user.username;
     }
     if (role === "VOLUNTEER") {
       const fName = useVolunteerStore.getState().profile.fullName;
-      if (fName) return fName;
+      if (fName && fName !== "John Doe") return fName;
+      if (user.username && user.username !== "user") return user.username;
     }
 
     if (user.first_name || user.last_name) {
@@ -132,7 +145,7 @@ const Header = () => {
     
     // Capitalize username nicely
     const uname = user.username || "";
-    return uname.charAt(0).toUpperCase() + uname.slice(1).replace(/_/g, " ");
+    return uname ? uname.charAt(0).toUpperCase() + uname.slice(1).replace(/_/g, " ") : "User";
   };
 
   const getNavbarLabel = () => {
@@ -145,6 +158,7 @@ const Header = () => {
     if (!name) return "U";
     return name
       .split(" ")
+      .filter(Boolean)
       .map((n) => n[0])
       .slice(0, 2)
       .join("")
@@ -184,15 +198,44 @@ const Header = () => {
   useEffect(() => {
     if (!user?.id) return;
     
-    const fetchPoints = async () => {
+    const fetchFullUserProfile = async () => {
       try {
         const response = await client.query({
           query: gql`
-            query GetUserPoints($userId: ID!) {
+            query GetUserProfileData($userId: ID!) {
               me(userId: $userId) {
                 id
+                username
+                email
+                role
+                phone
+                address
+                isVerified
+                donorProfile {
+                  businessName
+                  businessType
+                  subCategory
+                  verificationLevel
+                  registrationId
+                  taxId
+                }
+                ngoProfile {
+                  name
+                  registrationId
+                  category
+                  currentTier
+                }
+                volunteerProfile {
+                  zone
+                  skills
+                  rating
+                  tasksCompleted
+                  vehicleType
+                  status
+                }
                 gamification {
                   points
+                  lifetimePoints
                 }
               }
             }
@@ -201,31 +244,72 @@ const Header = () => {
           fetchPolicy: "network-only",
         });
         
-        const fetchedPoints = response.data?.me?.gamification?.points ?? 0;
+        const userData = response.data?.me;
+        if (!userData) return;
+
+        const role = userData.role || user.profile?.role || "DONOR";
+        const fetchedPoints = userData.gamification?.points ?? 0;
         
-        const role = user.profile?.role;
+        // 1. Update Auth Store with complete user details
+        useAuthStore.getState().updateUser({
+          username: userData.username || user.username,
+          email: userData.email || user.email,
+          profile: {
+            role: role as any,
+            phone: userData.phone || user.profile?.phone || null,
+            address: userData.address || user.profile?.address || null,
+          },
+          donor_profile: userData.donorProfile ? {
+            total_donations: 0,
+            reliability_score: 98,
+          } : user.donor_profile,
+          ngo_profile: userData.ngoProfile ? {
+            name: userData.ngoProfile.name,
+            registration_id: userData.ngoProfile.registrationId,
+            contact_number: userData.phone || "",
+          } : user.ngo_profile,
+        });
+
+        // 2. Sync Role Stores
         if (role === "DONOR") {
           useDonorStore.getState().setDonorData({
             ...useDonorStore.getState().data,
             currentPoints: fetchedPoints,
+            profile: {
+              ...useDonorStore.getState().data.profile,
+              businessName: userData.donorProfile?.businessName || userData.username || "Donor Account",
+              businessType: userData.donorProfile?.businessType || "Business",
+            },
           });
         } else if (role === "NGO") {
           useNgoStore.getState().setNgoData({
             ...useNgoStore.getState().data,
             currentPoints: fetchedPoints,
+            profile: {
+              ...useNgoStore.getState().data.profile,
+              ngoName: userData.ngoProfile?.name || userData.username || "NGO Partner",
+              ngoType: userData.ngoProfile?.category || "Social Service",
+              registrationId: userData.ngoProfile?.registrationId || "",
+            },
           });
         } else if (role === "VOLUNTEER") {
           useVolunteerStore.getState().setStats({
             ...useVolunteerStore.getState().stats,
             impactPoints: fetchedPoints,
+            deliveries: userData.volunteerProfile?.tasksCompleted || 0,
+          });
+          useVolunteerStore.getState().setProfile({
+            ...useVolunteerStore.getState().profile,
+            fullName: userData.username || "Volunteer Member",
+            location: userData.volunteerProfile?.zone || "City Zone",
           });
         }
       } catch (err) {
-        console.error("Failed to fetch points in navbar:", err);
+        console.error("Failed to fetch full profile data in navbar:", err);
       }
     };
     
-    fetchPoints();
+    fetchFullUserProfile();
   }, [user?.id]);
 
   const handleNotificationClick = () => {
@@ -357,7 +441,7 @@ const Header = () => {
                 </div>
                 <div className="hidden sm:flex flex-col items-start -space-y-0.5">
                   <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#22c55e] leading-none mb-0.5">
-                    Online
+                    {user?.profile?.role || "No Role Data"}
                   </p>
                   <div className="flex items-center gap-1">
                     <span
@@ -402,18 +486,18 @@ const Header = () => {
                 className="h-auto opacity-100 pointer-events-none mb-1.5 border-b border-dashed border-slate-200/60 dark:border-slate-800/60 rounded-none pb-3.5"
               >
                 <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white font-black text-sm shrink-0 shadow-md">
+                  <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white font-black text-sm shrink-0 shadow-md">
                     {getInitials(getProfileName())}
                   </div>
-                  <div className="flex flex-col text-start">
-                    <p className="text-[9px] font-black uppercase tracking-wider text-emerald-500 dark:text-emerald-400 leading-none mb-1.5">
-                      {user?.profile?.role === "ADMIN" ? "Administrator" : user?.profile?.role || "User"}
+                  <div className="flex flex-col text-start min-w-0">
+                    <p className="text-[9px] font-black uppercase tracking-wider text-emerald-500 dark:text-emerald-400 leading-none mb-1">
+                      {getProfileRoleTitle()}
                     </p>
-                    <p className="font-extrabold text-sm text-[var(--text-primary)] leading-tight">
+                    <p className="font-extrabold text-sm text-[var(--text-primary)] leading-tight truncate">
                       {getProfileName()}
                     </p>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold truncate leading-none mt-1.5">
-                      {user?.email}
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold truncate leading-none mt-1">
+                      {user?.email || "user@hungerfree.org"}
                     </p>
                   </div>
                 </div>
@@ -446,7 +530,10 @@ const Header = () => {
                 textValue="Sign Out"
                 className="mt-1.5 pt-3 border-t border-dashed border-slate-200/60 dark:border-slate-800/60 rounded-none text-xs font-bold transition-all duration-200 data-[hover=true]:bg-rose-500/10 data-[hover=true]:text-rose-600 data-[hover=true]:translate-x-1"
                 startContent={<LogOut size={16} className="opacity-70" />}
-                onPress={() => navigate("/auth")}
+                onPress={() => {
+                  useAuthStore.getState().logout();
+                  navigate("/auth");
+                }}
               >
                 <span className="text-xs font-semibold">Sign Out</span>
               </DropdownItem>

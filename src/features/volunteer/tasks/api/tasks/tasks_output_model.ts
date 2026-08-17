@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const VolunteerTaskSchema = z
   .object({
-    id: z.number(),
+    id: z.union([z.string(), z.number()]),
     food_category: z.string().optional().nullable(),
     quantity: z.union([z.string(), z.number()]).optional().nullable(),
     unit: z.string().optional().nullable(),

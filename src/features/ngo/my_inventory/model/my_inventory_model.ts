@@ -2,7 +2,7 @@ import { z } from "zod";
 import { createSchemaBundle } from "../../../../core/utility";
 
 export const inventoryItemSchema = z.object({
-  id: z.number(),
+  id: z.union([z.string(), z.number()]),
   item_name: z.string(),
   category: z.string(),
   quantity: z.number(),
@@ -13,6 +13,7 @@ export const inventoryItemSchema = z.object({
   notes: z.string().nullable().optional(),
   status: z.string().optional(),
   urgency: z.string().optional(),
+  added_on: z.string().optional(),
 });
 
 export const myInventoryStateSchema = z.object({

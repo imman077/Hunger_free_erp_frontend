@@ -288,9 +288,14 @@ const AuthPage = () => {
                 name="email"
                 label="Email Address"
                 type="email"
-                placeholder="Enter your email"
+                placeholder="Enter your email (e.g. admin@hungerfree.org)"
                 value={loginEmail}
-                onChange={setLoginEmail}
+                onChange={(val) => {
+                  setLoginEmail(val);
+                  if (val.toLowerCase().includes("admin")) {
+                    setActiveRole("admin");
+                  }
+                }}
               />
 
               <AuthInput

@@ -182,8 +182,15 @@ const NGOSidebar: React.FC = () => {
           />
           <SidebarItem
             icon={<Icon name="donations" />}
-            label="Donation Requests"
-            to="/ngo/requests"
+            label="Marketplace"
+            to="/ngo/marketplace"
+            expanded={inDrawer ? true : expanded}
+            onNavigate={onNavigate}
+          />
+          <SidebarItem
+            icon={<Icon name="building" />}
+            label="Community Needs"
+            to="/ngo/community-needs"
             expanded={inDrawer ? true : expanded}
             onNavigate={onNavigate}
           />
@@ -233,7 +240,7 @@ const NGOSidebar: React.FC = () => {
                 onClick={() => setExpanded(!expanded)}
               >
                 <img
-                  src="/HungerFree.svg"
+                  src="/project_logo1.png"
                   className="h-[72px] w-auto object-contain mx-auto"
                   alt="HungerFree Logo"
                 />
@@ -270,7 +277,7 @@ const NGOSidebar: React.FC = () => {
           setMobileOpen(open);
           onOpenChange();
         }}
-        shouldCloseOnInteractOutside={() => false}
+        isDismissable={false}
         placement="left"
         size="xs"
         hideCloseButton
@@ -300,7 +307,7 @@ const NGOSidebar: React.FC = () => {
               >
                 <div className="flex-1 flex justify-center">
                   <img
-                    src="/HungerFree.svg"
+                    src="/project_logo1.png"
                     className="h-16 w-auto object-contain"
                     alt="HungerFree Logo"
                   />

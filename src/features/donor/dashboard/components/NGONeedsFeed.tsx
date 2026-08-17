@@ -174,7 +174,7 @@ const NGONeedsFeed = () => {
           <div className="flex-1 flex flex-col items-center justify-center py-10 text-center">
             <div className="relative w-48 h-40 mb-6">
               <img 
-                src="/empty_food.png" 
+                src="/empty card.png" 
                 alt="No active requests" 
                 className="w-full h-full object-contain select-none pointer-events-none"
               />

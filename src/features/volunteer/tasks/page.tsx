@@ -8,8 +8,6 @@ import {
   Truck,
   MapPin,
   Clock,
-  ChefHat,
-  Heart,
   Calendar,
   LayoutGrid,
   List as ListIcon,
@@ -20,6 +18,11 @@ import {
   Hotel,
   Building2,
   ShieldCheck,
+  Search,
+  X,
+  ChevronDown,
+  RotateCcw,
+  Tag,
 } from "lucide-react";
 import ResuableButton from "../../../global/components/reusable-components/Button";
 import ReusableTable, {
@@ -27,7 +30,9 @@ import ReusableTable, {
 } from "../../../global/components/reusable-components/Table";
 import ResuableDrawer from "../../../global/components/reusable-components/Drawer";
 import ResuableModal from "../../../global/components/reusable-components/Modal";
+import Tabs from "../../../global/components/reusable-components/Tabs";
 import React from "react";
+import { Loader } from "../../../global/components/reusable-components/Loader";
 
 interface Task {
   id: string;
@@ -55,6 +60,9 @@ interface Task {
   pickupOtp?: string;
   deliveryOtp?: string;
   rawStatus?: string;
+  createdAt?: string;
+  expiryTime?: string;
+  category?: string;
 }
 
 // Helper to get status styles
@@ -71,138 +79,104 @@ const getStatusStyle = (status: string) => {
   }
 };
 
-const getCategoryIcon = (type: string) => {
-  switch (type) {
-    case "delivery":
-      return <Truck className="w-4 h-4" />;
-    case "kitchen":
-      return <ChefHat className="w-4 h-4" />;
-    case "shelter":
-      return <Heart className="w-4 h-4" />;
-    default:
-      return <Package className="w-4 h-4" />;
-  }
+// --- CARD VIEW COMPONENT ---
+const getCategoryThumbnail = (title?: string) => {
+  const t = (title || "").toLowerCase();
+  if (t.includes("cooked") || t.includes("rice") || t.includes("meal") || t.includes("biryani")) 
+    return "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80";
+  if (t.includes("packaged") || t.includes("ration") || t.includes("grocery") || t.includes("wheat") || t.includes("atta")) 
+    return "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80";
+  if (t.includes("water") || t.includes("beverage")) 
+    return "https://images.unsplash.com/photo-1548839140-29a749e1bc4e?auto=format&fit=crop&w=600&q=80";
+  if (t.includes("bread") || t.includes("bakery")) 
+    return "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80";
+  return "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80";
 };
 
-// --- CARD VIEW COMPONENT ---
 const TaskCard: React.FC<{
   task: Task;
   onDetails: (task: Task) => void;
 }> = ({ task, onDetails }) => {
   return (
     <div
-      className="border rounded-sm p-4 space-y-4 group hover:border-[#22c55e]/40 hover:shadow-lg hover:shadow-[#22c55e]/5 transition-all duration-300 h-full flex flex-col cursor-pointer relative overflow-hidden"
       onClick={() => onDetails(task)}
-      style={{
-        backgroundColor: "var(--bg-primary)",
-        borderColor: "var(--border-color)",
-      }}
+      className="w-full bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-[1.75rem] p-4 shadow-sm hover:shadow-xl hover:border-emerald-500/20 transition-all duration-300 flex flex-col justify-between h-full group/card cursor-pointer relative overflow-hidden text-start"
     >
-      {/* Subtle gradient overlay on hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#22c55e]/0 to-[#22c55e]/0 group-hover:from-[#22c55e]/[0.02] group-hover:to-transparent transition-all duration-300 pointer-events-none" />
-
-      {/* Header Section */}
-      <div className="relative flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div
-            className={`w-10 h-10 rounded-sm flex items-center justify-center border shadow-sm transition-all duration-300 ${
-              task.type === "delivery"
-                ? "bg-green-500/10 text-[#22c55e] border-green-500/20 group-hover:shadow-[#22c55e]/20"
-                : task.type === "kitchen"
-                  ? "bg-orange-500/10 text-orange-600 border-orange-500/20 group-hover:shadow-orange-500/20"
-                  : "bg-rose-500/10 text-rose-600 border-rose-500/20 group-hover:shadow-rose-500/20"
-            }`}
-          >
-            {getCategoryIcon(task.type)}
-          </div>
-
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span
-                className="text-[9px] font-black uppercase tracking-[0.1em] text-[#22c55e] px-2 py-0.5 rounded-sm border"
-                style={{
-                  backgroundColor: "rgba(34, 197, 94, 0.05)",
-                  borderColor: "rgba(34, 197, 94, 0.1)",
-                }}
-              >
-                #{task.routeNumber}
-              </span>
-            </div>
-            <h4
-              className="text-sm font-black tracking-tight group-hover:text-[#22c55e] transition-colors line-clamp-1 leading-tight"
-              style={{ color: "var(--text-primary)" }}
-            >
-              {task.title}
-            </h4>
-            {task.partnerOrg && (
-              <p
-                className="text-[9px] font-bold uppercase tracking-wider truncate"
-                style={{ color: "var(--text-muted)" }}
-              >
-                {task.partnerOrg}
-              </p>
-            )}
-          </div>
-        </div>
-
-        <span
-          className={`text-[8px] font-black uppercase tracking-[0.15em] px-2.5 py-1 rounded-sm border shadow-sm whitespace-nowrap ${getStatusStyle(task.status)}`}
-        >
+      {/* Aspect Ratio Image Container */}
+      <div className="w-full aspect-[16/10] rounded-2xl overflow-hidden relative mb-3.5 bg-slate-100 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 shrink-0">
+        <img
+          src={getCategoryThumbnail(task.title)}
+          alt={task.title}
+          className="w-full h-full object-cover transition-transform duration-500 group-hover/card:scale-105"
+        />
+        
+        {/* Badges on top of image */}
+        <span className="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 text-[9px] font-black text-white uppercase tracking-wider">
+          #{task.routeNumber}
+        </span>
+        <span className={`absolute top-3 right-3 px-2.5 py-1 rounded-lg border text-[9px] font-black uppercase tracking-wider backdrop-blur-md shadow-sm bg-white/90 dark:bg-slate-950/90 ${getStatusStyle(task.status)}`}>
           {task.status}
         </span>
       </div>
 
-      {/* Metrics Section */}
-      <div
-        className="relative flex items-center gap-4 px-3 py-2 rounded-sm border"
-        style={{
-          backgroundColor: "var(--bg-secondary)",
-          borderColor: "var(--border-color)",
-        }}
-      >
-        <div
-          className="flex items-center gap-1.5 text-[10px] font-bold"
-          style={{ color: "var(--text-secondary)" }}
-        >
-          <MapPin size={13} className="text-[#22c55e]" />
-          <span>{task.stops} stops</span>
-        </div>
-        <div
-          className="w-px h-3"
-          style={{ backgroundColor: "var(--border-color)" }}
-        />
-        <div
-          className="flex items-center gap-1.5 text-[10px] font-bold"
-          style={{ color: "var(--text-secondary)" }}
-        >
-          <Clock size={13} className="text-[#22c55e]" />
-          <span>{task.duration}</span>
+      {/* Info Block */}
+      <div className="flex-1 min-w-0">
+        <h4 className="text-base font-extrabold text-slate-800 dark:text-slate-100 tracking-tight leading-snug line-clamp-1 group-hover/card:text-[#22c55e] transition-colors mb-2">
+          {task.title}
+        </h4>
+        <div className="flex flex-col gap-1 mb-3.5">
+          <p className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 dark:text-slate-500">
+            <Hotel size={12} className="text-[#22c55e] shrink-0" />
+            <span className="font-semibold text-slate-400 dark:text-slate-500 mr-0.5 select-none">From:</span>
+            <span className="truncate text-slate-700 dark:text-slate-300 font-extrabold">{task.partnerOrg || "Private Donor"}</span>
+          </p>
+          <p className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 dark:text-slate-500">
+            <Building2 size={12} className="text-blue-500 shrink-0" />
+            <span className="font-semibold text-slate-400 dark:text-slate-500 mr-0.5 select-none">To:</span>
+            <span className="truncate text-slate-700 dark:text-slate-300 font-extrabold">{task.ngoOrgName || "Receiving NGO"}</span>
+          </p>
         </div>
       </div>
 
-      {/* Footer Section */}
-      <div
-        className="relative pt-3 border-t mt-auto flex items-center justify-between gap-3"
-        style={{ borderColor: "var(--border-color)" }}
-      >
-        <div className="flex flex-col">
-          <span
-            className="text-[8px] font-black uppercase tracking-[0.15em] mb-0.5"
-            style={{ color: "var(--text-muted)" }}
-          >
-            Load Capacity
+      {/* 2-Column Metrics Box */}
+      <div className="grid grid-cols-2 gap-2 bg-slate-50/50 dark:bg-slate-950/15 border border-slate-200/50 dark:border-slate-800/60 rounded-2xl p-2.5 mb-3.5">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-full bg-emerald-50 dark:bg-emerald-950/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 border border-emerald-100/50 dark:border-emerald-900/30">
+            <MapPin size={12} className="stroke-[2.2]" />
+          </div>
+          <div className="flex flex-col min-w-0">
+            <span className="text-[8px] font-black text-slate-400 tracking-wider leading-none mb-0.5">STOPS</span>
+            <span className="text-[10px] font-black text-slate-700 dark:text-slate-200 truncate">{task.stops} pts</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-full bg-blue-50 dark:bg-blue-950/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0 border border-blue-100/50 dark:border-blue-900/30">
+            <Package size={12} className="stroke-[2.2]" />
+          </div>
+          <div className="flex flex-col min-w-0">
+            <span className="text-[8px] font-black text-slate-400 tracking-wider leading-none mb-0.5">LOAD</span>
+            <span className="text-[10px] font-black text-slate-700 dark:text-slate-200 truncate">{task.load}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="h-px bg-slate-100 dark:bg-slate-800/80 w-full mb-3.5" />
+
+      {/* Footer Row */}
+      <div className="flex items-center justify-between gap-3 mt-auto">
+        <div className="flex flex-col text-start justify-center">
+          <span className="text-[8px] font-black text-slate-400 tracking-wider uppercase leading-none mb-1">
+            EST. DURATION
           </span>
-          <span
-            className="text-xs font-black uppercase tracking-tight"
-            style={{ color: "var(--text-primary)" }}
-          >
-            {task.load}
+          <span className="text-xs font-black text-slate-600 dark:text-slate-300 uppercase tracking-tight">
+            {task.duration}
           </span>
         </div>
 
         <ResuableButton
           variant="primary"
-          className="h-9 px-5 !rounded-sm text-[9px] font-black uppercase tracking-[0.12em] bg-[#22c55e] hover:bg-[#1ea34d] shadow-md shadow-[#22c55e]/25 hover:shadow-[#22c55e]/40 transition-all duration-300"
+          className="h-8.5 px-4.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-[#22c55e] hover:bg-green-600 text-white shadow-md shadow-emerald-500/10 transition-all duration-300 shrink-0"
           onClick={(e: React.MouseEvent) => {
             e.stopPropagation();
             onDetails(task);
@@ -219,7 +193,6 @@ const TaskCard: React.FC<{
   );
 };
 
-
 const VolunteerTasks = () => {
   const [activeTab, setActiveTab] = useState<"active" | "opps" | "past">(
     "active",
@@ -230,7 +203,15 @@ const VolunteerTasks = () => {
   const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
   const [otpValue, setOtpValue] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Filter and Search States
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [typeFilter, setTypeFilter] = useState("ALL");
+  const [sortFilter, setSortFilter] = useState("NEWEST");
+
   const [tasks, setTasks] = useState<{
     active: Task[];
     opps: Task[];
@@ -251,28 +232,40 @@ const VolunteerTasks = () => {
 
       const mapTask = (d: any): Task => ({
         id: d?.id?.toString() || Math.random().toString(),
-        title: d?.food_category || d?.title || "Donation Dispatch",
+        title: d?.foodType || d?.food_category || d?.title || "Donation Dispatch",
         routeNumber: d?.id ? `PK-${d.id}` : "TBD",
         stops: 1,
         duration: "Quick",
-        load: `${d?.quantity} ${d?.unit || 'Kg'}` || "0",
+        load: (() => {
+          const qty = String(d?.quantity || "").trim();
+          const unit = String(d?.unit || "").trim();
+          if (!qty) return "0";
+          const qtyLower = qty.toLowerCase();
+          if (qtyLower.includes("kg") || qtyLower.includes("meal") || qtyLower.includes("packet") || qtyLower.includes("loaves") || qtyLower.includes("bag") || qtyLower.includes("tin") || qtyLower.includes("litre") || qtyLower.includes("pc")) {
+            return qty;
+          }
+          return unit ? `${qty} ${unit}` : `${qty} Kg`;
+        })(),
         status: d?.status === "ACCEPTED" ? "AVAILABLE" : (d?.status === "ASSIGNED" || d?.status === "PICKED_UP" ? "IN PROGRESS" : (d?.status === "DELIVERED" ? "COMPLETED" : "AVAILABLE")),
         type: "delivery",
         description: d?.description || "High-priority food pickup for community distribution.",
-        location: d?.pickup_address || "TBD",
-        partnerOrg: d?.donor_name || d?.donor?.username || "Private Donor",
-        contactPhone: d?.donor_phone || "Contact via App",
-        donorHotel: d?.donor_name || "Food Source",
-        ngoOrgName: d?.ngo_name || d?.accepted_ngo?.username || "Receiving NGO",
-        ngoPhone: d?.ngo_phone || "Contact via App",
-        baseAddress: d?.pickup_address || "TBD",
-        destinations: [d?.ngo_name || "Assigned NGO Hub"],
+        location: d?.pickupAddress || d?.pickup_address || "TBD",
+        partnerOrg: d?.donor_name || d?.donor?.username || d?.donor || "Private Donor",
+        contactPhone: d?.contactPhone || d?.contact_phone || d?.donor_phone || "Contact via App",
+        donorHotel: d?.donor_name || d?.donor || "Food Source",
+        ngoOrgName: d?.ngo_name || d?.accepted_ngo?.username || d?.ngo || "Receiving NGO",
+        ngoPhone: d?.ngo_phone || d?.ngoPhone || "Contact via App",
+        baseAddress: d?.pickupAddress || d?.pickup_address || "TBD",
+        destinations: [d?.ngo_name || d?.ngo || "Assigned NGO Hub"],
         isPickupReached: d?.status === "PICKED_UP" || d?.status === "DELIVERED",
         completedDestinations: d?.status === "DELIVERED" ? [0] : [],
         trackingHistory: d?.tracking_history || [],
-        pickupOtp: d?.pickup_otp,
-        deliveryOtp: d?.delivery_otp,
+        pickupOtp: d?.pickup_otp || "123456",
+        deliveryOtp: d?.delivery_otp || "123456",
         rawStatus: d?.status || "PENDING",
+        createdAt: d?.createdAt || d?.created_at || new Date().toISOString(),
+        expiryTime: d?.expiryTime || d?.expiry_time || "",
+        category: d?.category || d?.food_category || "Dry Ration",
       });
 
       setTasks({
@@ -306,33 +299,50 @@ const VolunteerTasks = () => {
 
 
   const performVerification = async (type: 'pickup' | 'delivery', code: string) => {
+    console.log("🚀 performVerification started: type =", type, "code =", code, "selectedTask ID =", selectedTask?.id);
     if (!selectedTask) {
       toast.error("No task selected.");
       return;
     }
 
-    if (!code || code.length < 4) {
-      toast.error("Please enter a valid 4-digit code.");
+    const cleanCode = String(code || "").trim();
+    if (!cleanCode || cleanCode.length !== 6) {
+      toast.error("Please enter a valid 6-digit code.");
       return;
     }
 
+    setIsVerifying(true);
     try {
         if (type === "pickup") {
-            await volunteerTasksService.markAsPickedUp(Number(selectedTask.id), code);
-            toast.success("Food picked up successfully!");
+            await volunteerTasksService.markAsPickedUp(selectedTask.id, cleanCode);
+            toast.success("Food picked up successfully! NGO address details and delivery input are now unlocked.");
+            setSelectedTask(prev => prev ? {
+              ...prev,
+              rawStatus: "PICKED_UP",
+              status: "IN PROGRESS",
+              isPickupReached: true
+            } : null);
         } else {
-            await volunteerTasksService.markAsDelivered(Number(selectedTask.id), code);
+            await volunteerTasksService.markAsDelivered(selectedTask.id, cleanCode);
             toast.success("Delivery confirmed! Great job hero.");
+            setSelectedTask(prev => prev ? {
+              ...prev,
+              rawStatus: "DELIVERED",
+              status: "COMPLETED",
+              isPickupReached: true
+            } : null);
         }
         
         setOtpValue("");
-        fetchTasks(); // Refresh state from backend
+        await fetchTasks(); // Refresh state from backend
         
         if (type === "delivery") {
             setIsDrawerOpen(false);
         }
     } catch (error: any) {
-        toast.error(error.response?.data?.error || "Invalid security code. Please check with the coordinator.");
+        toast.error(error?.response?.data?.message || error?.message || "Invalid security code. Please check with the coordinator.");
+    } finally {
+        setIsVerifying(false);
     }
   };
 
@@ -342,9 +352,11 @@ const VolunteerTasks = () => {
     if (!selectedTask) return;
     setIsClaiming(true);
     try {
-      await volunteerTasksService.acceptPickup(Number(selectedTask.id));
+      await volunteerTasksService.acceptPickup(selectedTask.id);
       toast.success("Task accepted and added to your dispatch!");
       setIsClaimModalOpen(false);
+      setIsDrawerOpen(false); // Close details drawer
+      setActiveTab("active"); // Redirect/switch to Active tasks tab
       fetchTasks(); // Refresh
     } catch (error) {
       toast.error("Failed to accept task. It might already be taken.");
@@ -355,94 +367,120 @@ const VolunteerTasks = () => {
 
 
   const getCurrentTasks = () => {
+    let list: Task[] = [];
     switch (activeTab) {
       case "active":
-        return tasks.active;
+        list = tasks.active;
+        break;
       case "opps":
-        return tasks.opps;
+        list = tasks.opps;
+        break;
       case "past":
-        return tasks.past;
+        list = tasks.past;
+        break;
       default:
-        return [];
+        list = [];
     }
+
+    // Apply Search Query
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter((t) => 
+        t.title?.toLowerCase().includes(q) ||
+        t.partnerOrg?.toLowerCase().includes(q) ||
+        t.routeNumber?.toLowerCase().includes(q) ||
+        t.description?.toLowerCase().includes(q) ||
+        t.load?.toLowerCase().includes(q)
+      );
+    }
+
+    // Apply Status Filter
+    if (statusFilter !== "ALL") {
+      const target = statusFilter.toUpperCase();
+      list = list.filter((t) => t.status === target || t.rawStatus === target);
+    }
+
+    // Apply Category/Type Filter
+    if (typeFilter !== "ALL") {
+      const target = typeFilter.toLowerCase();
+      list = list.filter((t) => t.type === target);
+    }
+
+    // Apply Sorting
+    return list.sort((a, b) => {
+      const isANum = a.id && !isNaN(Number(a.id));
+      const isBNum = b.id && !isNaN(Number(b.id));
+      
+      if (sortFilter === "OLDEST") {
+        if (isANum && isBNum) {
+          return Number(a.id) - Number(b.id);
+        }
+        return String(a.id || "").localeCompare(String(b.id || ""));
+      }
+      // Default / NEWEST
+      if (isANum && isBNum) {
+        return Number(b.id) - Number(a.id);
+      }
+      return String(b.id || "").localeCompare(String(a.id || ""));
+    });
   };
 
   const tableColumns: ColumnDef[] = [
+    { uid: "id", name: "ID", sortable: true },
     { uid: "title", name: "Task Details", align: "start" },
-    { uid: "metrics", name: "Metrics", align: "start" },
+    { uid: "source", name: "Route Hubs", align: "start" },
     { uid: "load", name: "Inventory", align: "start" },
+    { uid: "duration", name: "Est. Duration", align: "start" },
     { uid: "status", name: "Status", align: "start" },
     { uid: "actions", name: "Actions", align: "end" },
   ];
 
   const renderCell = useCallback((task: Task, columnKey: React.Key) => {
     switch (columnKey) {
+      case "id":
+        return (
+          <div className="text-start">
+            <span className="text-[10px] font-black tracking-widest uppercase border px-2 py-1 rounded-lg bg-slate-50/50 dark:bg-slate-950/20 border-slate-200/50 dark:border-slate-800 text-slate-500 dark:text-slate-400">
+              #{task.routeNumber}
+            </span>
+          </div>
+        );
       case "title":
         return (
-          <div className="flex items-center gap-3 text-start">
-            <div
-              className={`w-10 h-10 rounded-md border flex items-center justify-center shrink-0 ${
-                task.type === "delivery"
-                  ? "bg-emerald-500/10 text-[#22c55e] border-emerald-500/20"
-                  : task.type === "kitchen"
-                    ? "bg-orange-500/10 text-orange-500 border-orange-500/20"
-                    : "bg-rose-500/10 text-rose-500 border-rose-500/20"
-              }`}
-            >
-              {getCategoryIcon(task.type)}
-            </div>
+          <div className="flex items-center gap-3 text-start py-1.5">
+            <img
+              src={getCategoryThumbnail(task.title)}
+              alt={task.title}
+              className="w-10 h-10 rounded-xl object-cover border border-slate-100 dark:border-slate-800/80 shrink-0"
+            />
             <div>
               <p
-                className="text-sm font-black tracking-tight"
+                className="text-xs font-black tracking-tight"
                 style={{ color: "var(--text-primary)" }}
               >
                 {task.title}
               </p>
-              <div className="flex items-center gap-2">
-                <p
-                  className="text-[10px] font-bold uppercase tracking-widest"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  Route #{task.routeNumber}
-                </p>
-                {task.partnerOrg && (
-                  <span className="text-[10px] font-black text-[#22c55e] uppercase tracking-widest">
-                    • {task.partnerOrg}
-                  </span>
-                )}
-              </div>
+              <span className="text-[9px] font-black text-[#22c55e] uppercase tracking-widest block mt-0.5">
+                {task.type} Stop
+              </span>
             </div>
           </div>
         );
-      case "metrics":
+      case "source":
         return (
-          <div className="flex items-center gap-4 text-start">
-            <div className="flex flex-col">
-              <span
-                className="text-[9px] font-black uppercase tracking-widest"
-                style={{ color: "var(--text-muted)" }}
-              >
-                Stops
-              </span>
-              <span
-                className="text-[11px] font-bold uppercase"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                {task.stops} pts
+          <div className="flex flex-col gap-1 text-start py-1">
+            <div className="flex items-center gap-1.5">
+              <Hotel size={12} className="text-[#22c55e] shrink-0" />
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider mr-0.5 select-none">From:</span>
+              <span className="text-xs font-extrabold truncate max-w-[140px] text-[var(--text-primary)]">
+                {task.partnerOrg || "Private Donor"}
               </span>
             </div>
-            <div className="flex flex-col">
-              <span
-                className="text-[9px] font-black uppercase tracking-widest"
-                style={{ color: "var(--text-muted)" }}
-              >
-                Est.
-              </span>
-              <span
-                className="text-[11px] font-bold uppercase"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                {task.duration}
+            <div className="flex items-center gap-1.5">
+              <Building2 size={12} className="text-blue-500 shrink-0" />
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider mr-0.5 select-none">To:</span>
+              <span className="text-xs font-extrabold truncate max-w-[140px] text-[var(--text-primary)]">
+                {task.ngoOrgName || "Receiving NGO"}
               </span>
             </div>
           </div>
@@ -450,41 +488,39 @@ const VolunteerTasks = () => {
       case "load":
         return (
           <div className="text-start">
-            <span
-              className="px-2.5 py-1 border rounded-md text-[10px] font-black uppercase tracking-widest"
-              style={{
-                backgroundColor: "var(--bg-secondary)",
-                borderColor: "var(--border-color)",
-                color: "var(--text-secondary)",
-              }}
-            >
+            <span className="px-2.5 py-1 border rounded-lg text-[10px] font-black uppercase tracking-widest bg-blue-50/50 dark:bg-blue-950/20 border-blue-100/50 dark:border-blue-900/30 text-blue-600 dark:text-blue-400">
               {task.load}
             </span>
           </div>
         );
+      case "duration":
+        return (
+          <div className="flex items-center gap-1.5 text-start py-1.5 text-xs font-black" style={{ color: "var(--text-secondary)" }}>
+            <Clock size={13} className="text-[#22c55e]" />
+            <span>{task.duration}</span>
+          </div>
+        );
       case "status":
         return (
-          <div className="text-start">
-            <span
-              className={`text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-sm border ${getStatusStyle(task.status)}`}
-            >
+          <div className="text-start py-1.5">
+            <span className={`text-[9px] font-black uppercase tracking-[0.15em] px-2.5 py-1 rounded-lg border shadow-sm bg-white/90 dark:bg-slate-950/90 ${getStatusStyle(task.status)}`}>
               {task.status}
             </span>
           </div>
         );
       case "actions":
         return (
-          <div className="flex items-center justify-end gap-2 pr-4">
+          <div className="flex items-center justify-end gap-2">
             <ResuableButton
               variant="primary"
-              className="h-8 px-6 !rounded-sm text-[10px] font-black tracking-widest uppercase shadow-sm bg-[#22c55e] hover:bg-green-600"
+              className="h-8 px-4 rounded-lg text-[9px] font-black tracking-widest uppercase shadow-sm bg-[#22c55e] hover:bg-green-600 text-white"
               onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
                 handleDetailsClick(task);
               }}
             >
               {task.status === "AVAILABLE"
-                ? "Claim"
+                ? "Accept"
                 : task.status === "IN PROGRESS"
                   ? "Update"
                   : "Details"}
@@ -497,160 +533,249 @@ const VolunteerTasks = () => {
   }, []);
 
   if (loading) {
-    return (
-      <div className="w-full flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500" />
-      </div>
-    );
+    return <Loader text="Syncing Tasks..." minHeight="400px" />;
   }
 
+  const isNgoLocked = selectedTask ? (selectedTask.rawStatus === "ASSIGNED" || selectedTask.rawStatus === "ACCEPTED" || selectedTask.status === "AVAILABLE") : false;
+
+  const getExpiryDateTime = () => {
+    if (!selectedTask) return { date: "--", time: "--" };
+    const createdStr = selectedTask.createdAt;
+    let expiryDate = new Date();
+    if (createdStr) {
+      const parsedCreated = new Date(createdStr);
+      if (!isNaN(parsedCreated.getTime())) {
+        expiryDate = parsedCreated;
+      }
+    }
+    // Add 6 hours default
+    expiryDate.setHours(expiryDate.getHours() + 6);
+    
+    const expiryTimeStr = selectedTask.expiryTime;
+    if (expiryTimeStr && expiryTimeStr !== "No Expiry") {
+      const parsed = new Date(expiryTimeStr);
+      if (!isNaN(parsed.getTime())) {
+        expiryDate = parsed;
+      }
+    }
+    
+    return {
+      date: expiryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      time: expiryDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+    };
+  };
+
   return (
-    <div
-      className="w-full max-w-full flex flex-col"
-      style={{ backgroundColor: "var(--bg-secondary)" }}
-    >
+    <div className="w-full p-0 bg-transparent">
       {/* Header Section */}
       <div
-        className="sticky top-0 z-20 border-b shadow-sm"
+        className="border-b shadow-sm relative"
         style={{
           backgroundColor: "var(--bg-primary)",
           borderColor: "var(--border-color)",
         }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-[300px] h-[300px] bg-[#22c55e] opacity-[0.03] blur-[100px] rounded-full" />
+        </div>
+        <div className="px-4 md:px-8 pt-6 pb-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full mb-2">
             <div className="flex flex-col items-start text-left">
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-1.5 h-1.5 rounded-full bg-[#22c55e] animate-pulse shadow-[0_0_8px_#22c55e]" />
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-[#22c55e]/70">Central Dispatch</span>
               </div>
               <h1
-                className="text-3xl sm:text-4xl font-black tracking-tighter uppercase leading-none mb-3"
+                className="text-3xl font-[1000] uppercase tracking-tight"
                 style={{ color: "var(--text-primary)" }}
               >
-                Volunteer <span className="text-[#22c55e] drop-shadow-[0_0_15px_rgba(34,197,94,0.3)]">Terminal</span>
+                Volunteer <span className="text-[#22c55e]">Terminal</span>
               </h1>
-              <div className="flex flex-wrap items-center justify-start gap-4">
-                <div
-                  className="flex items-center gap-2 px-3 py-1 rounded-sm border bg-black/20"
-                  style={{
-                    borderColor: "rgba(34, 197, 94, 0.2)",
-                  }}
-                >
-                  <Navigation className="w-3.5 h-3.5 text-[#22c55e]" />
-                  <span className="text-[9px] font-black text-[#22c55e] uppercase tracking-widest leading-none">
-                    Mission Control Active
-                  </span>
-                </div>
-                <div
-                  className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  <Calendar size={14} className="text-[#22c55e]/40" />{" "}
-                  {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                </div>
+              <p className="text-[10px] font-bold uppercase tracking-widest mt-1.5" style={{ color: "var(--text-muted)" }}>
+                Central dispatch operations and task tracking manager
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center justify-end gap-3 shrink-0">
+              <div
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border bg-black/5 dark:bg-black/20"
+                style={{
+                  borderColor: "rgba(34, 197, 94, 0.2)",
+                }}
+              >
+                <Navigation className="w-3.5 h-3.5 text-[#22c55e]" />
+                <span className="text-[9px] font-black text-[#22c55e] uppercase tracking-widest leading-none">
+                  Mission Control Active
+                </span>
+              </div>
+              <div
+                className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"
+                style={{ color: "var(--text-muted)" }}
+              >
+                <Calendar size={14} className="text-[#22c55e]/40" />{" "}
+                {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               </div>
             </div>
+          </div>
+        </div>
 
-            {/* Controls Section */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 w-full lg:w-auto">
-              {/* Tabs Switcher - Left Aligned */}
-              <div
-                className="flex items-center gap-1 p-1 rounded-lg w-full sm:w-auto overflow-x-auto no-scrollbar"
-                style={{ backgroundColor: "var(--bg-secondary)" }}
-              >
-                {[
-                  { id: "active", label: "Active", count: tasks.active.length },
-                  {
-                    id: "opps",
-                    label: "Available",
-                    count: tasks.opps.length,
-                  },
-                  { id: "past", label: "History", count: tasks.past.length },
-                ].map((tab) => (
+        {/* Filters Card */}
+        <div className="px-4 md:px-8 pt-2 pb-6">
+          <div className="relative z-10 p-4 sm:p-6 flex flex-col gap-4 border rounded-2xl shadow-sm w-full" style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-color)" }}>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 w-full">
+              {/* Search input */}
+              <div className="relative w-full sm:w-[320px]">
+                <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2" style={{ color: "var(--text-muted)" }} />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search tasks, capacity, route..."
+                  className="w-full pl-11 pr-10 py-2.5 rounded-2xl text-[11px] font-bold focus:outline-none focus:ring-2 focus:ring-[#22c55e]/20 transition-all shadow-sm border"
+                  style={{ backgroundColor: "var(--bg-primary)", borderColor: "var(--border-color)", color: "var(--text-primary)" }}
+                />
+                {searchQuery && (
                   <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id as any)}
-                    className={`px-3 sm:px-4 py-2 rounded-md transition-all flex items-center gap-2 whitespace-nowrap flex-1 sm:flex-none justify-center ${
-                      activeTab === tab.id ? "shadow-sm border" : ""
-                    }`}
-                    style={{
-                      backgroundColor:
-                        activeTab === tab.id
-                          ? "var(--bg-primary)"
-                          : "transparent",
-                      borderColor:
-                        activeTab === tab.id
-                          ? "var(--border-color)"
-                          : "transparent",
-                      color:
-                        activeTab === tab.id ? "#22c55e" : "var(--text-muted)",
-                    }}
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:text-red-500 transition-colors rounded-full"
+                    style={{ color: "var(--text-muted)" }}
                   >
-                    <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest">
-                      {tab.label}
-                    </span>
-                    <span
-                      className="text-[8px] sm:text-[9px] font-black px-1.5 rounded-full"
-                      style={{
-                        backgroundColor:
-                          activeTab === tab.id
-                            ? "rgba(34, 197, 94, 0.1)"
-                            : "rgba(148, 163, 184, 0.1)",
-                        color:
-                          activeTab === tab.id
-                            ? "#22c55e"
-                            : "var(--text-muted)",
-                      }}
-                    >
-                      {tab.count}
-                    </span>
+                    <X size={14} />
                   </button>
-                ))}
+                )}
               </div>
 
-              {/* View Switcher */}
-              <div
-                className="flex items-center gap-1 p-1 rounded-lg shrink-0"
-                style={{ backgroundColor: "var(--bg-secondary)" }}
-              >
+              {/* View Switcher using reusable Tabs */}
+              <Tabs
+                tabs={[
+                  { id: "table", icon: ListIcon, label: "Table" },
+                  { id: "grid", icon: LayoutGrid, label: "Cards" },
+                ]}
+                activeTab={viewMode}
+                onTabChange={(v) => setViewMode(v as any)}
+                layoutId="volunteerTasksViewMode"
+              />
+            </div>
+
+            {/* Dropdown Filters */}
+            <div className="flex flex-wrap items-center gap-3">
+              {[
+                {
+                  label: "STATUS",
+                  value: statusFilter,
+                  onChange: setStatusFilter,
+                  options: [
+                    ["ALL", "All Statuses"],
+                    ["AVAILABLE", "Available"],
+                    ["IN PROGRESS", "In Progress"],
+                    ["COMPLETED", "Completed"],
+                  ],
+                },
+                {
+                  label: "CATEGORY TYPE",
+                  value: typeFilter,
+                  onChange: setTypeFilter,
+                  options: [
+                    ["ALL", "All Types"],
+                    ["delivery", "Delivery Stops"],
+                    ["kitchen", "Kitchen Stops"],
+                    ["shelter", "Shelter Stops"],
+                  ],
+                },
+                {
+                  label: "SORT BY",
+                  value: sortFilter,
+                  onChange: setSortFilter,
+                  options: [
+                    ["NEWEST", "Newest First"],
+                    ["OLDEST", "Oldest First"],
+                  ],
+                },
+              ].map(({ label, value, onChange, options }) => (
+                <div key={label} className="relative inline-flex items-center shrink-0">
+                  <div
+                    className="flex items-center justify-between gap-3 rounded-2xl h-[46px] px-4 shadow-sm hover:border-emerald-500/60 transition-all cursor-pointer relative min-w-[140px] border"
+                    style={{ backgroundColor: "var(--bg-primary)", borderColor: "var(--border-color)" }}
+                  >
+                    <div className="flex flex-col text-left justify-center leading-tight">
+                      <span className="text-[8px] font-black uppercase tracking-wider text-slate-400 select-none">{label}</span>
+                      <span className="text-[12px] font-bold select-none mt-0.5" style={{ color: "var(--text-primary)" }}>
+                        {(options.find(([v]) => v === value) || options[0])[1]}
+                      </span>
+                    </div>
+                    <ChevronDown size={12} className="text-slate-400 pointer-events-none ml-1.5 shrink-0" />
+                    <select
+                      value={value}
+                      onChange={(e) => onChange(e.target.value)}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    >
+                      {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                    </select>
+                  </div>
+                </div>
+              ))}
+
+              {/* Reset Button */}
+              {(searchQuery !== "" || statusFilter !== "ALL" || typeFilter !== "ALL" || sortFilter !== "NEWEST") && (
                 <button
-                  onClick={() => setViewMode("table")}
-                  className={`p-2 rounded-md transition-all ${viewMode === "table" ? "shadow-sm" : ""}`}
-                  style={{
-                    backgroundColor:
-                      viewMode === "table"
-                        ? "var(--bg-primary)"
-                        : "transparent",
-                    color:
-                      viewMode === "table" ? "#22c55e" : "var(--text-muted)",
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setStatusFilter("ALL");
+                    setTypeFilter("ALL");
+                    setSortFilter("NEWEST");
                   }}
+                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-red-500 bg-red-50 hover:bg-red-100 border border-red-200/80 transition-all shadow-sm ml-auto cursor-pointer"
                 >
-                  <ListIcon size={16} />
+                  <RotateCcw size={12} />
+                  Reset
                 </button>
-                <button
-                  onClick={() => setViewMode("grid")}
-                  className={`p-2 rounded-md transition-all ${viewMode === "grid" ? "shadow-sm" : ""}`}
-                  style={{
-                    backgroundColor:
-                      viewMode === "grid" ? "var(--bg-primary)" : "transparent",
-                    color:
-                      viewMode === "grid" ? "#22c55e" : "var(--text-muted)",
-                  }}
-                >
-                  <LayoutGrid size={16} />
-                </button>
-              </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
+      {/* Sub-tabs switch section (Active / Available / History) */}
+      <div className="px-4 md:px-8 pt-6 pb-1 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-1 p-1 rounded-xl border bg-slate-50/90 dark:bg-slate-900/90 border-slate-200/80 shadow-sm">
+          {[
+            { id: "active", label: "Active", count: tasks.active.length, icon: "⚡" },
+            { id: "opps", label: "Available", count: tasks.opps.length, icon: "🌐" },
+            { id: "past", label: "History", count: tasks.past.length, icon: "✅" },
+          ].map((tab) => {
+            const isActive = activeTab === tab.id;
+            const btnColor = tab.id === "opps" ? "bg-[#22c55e]" : tab.id === "active" ? "bg-amber-500" : "bg-blue-500";
+            const shadowColor = tab.id === "opps" ? "shadow-emerald-500/20" : tab.id === "active" ? "shadow-amber-500/20" : "shadow-blue-500/20";
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-200 cursor-pointer ${
+                  isActive ? `${btnColor} text-white shadow-sm ${shadowColor}` : "hover:text-[var(--text-primary)]"
+                }`}
+                style={{ color: isActive ? "white" : "var(--text-muted)" }}
+              >
+                <span>{tab.icon}</span>
+                <span>{tab.label}</span>
+                <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-full ${isActive ? "bg-white/20 text-white" : "bg-slate-200/60 dark:bg-slate-800 text-slate-500"}`}>
+                  {tab.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+        <span className="text-[10px] font-bold uppercase tracking-wider hidden sm:inline" style={{ color: "var(--text-muted)" }}>
+          {activeTab === "active" ? "Showing active dispatch missions" : activeTab === "opps" ? "Showing nearby open pickup opportunities" : "Showing past completed missions"}
+        </span>
+      </div>
+
+      {/* Main Content List */}
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 mt-6 sm:mt-8 pb-16">
         {getCurrentTasks().length > 0 ? (
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
             {viewMode === "table" ? (
-              <div className="w-full">
+              <div className="border rounded-md shadow-sm p-2 overflow-hidden" style={{ backgroundColor: "var(--bg-primary)", borderColor: "var(--border-color)" }}>
                 <ReusableTable
                   data={getCurrentTasks()}
                   columns={tableColumns}
@@ -689,7 +814,7 @@ const VolunteerTasks = () => {
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.2, duration: 0.5 }}
-                  src="/empty_food.png"
+                  src="/empty card.png"
                   alt="No Tasks Illustration"
                   className="w-full h-full object-contain"
                 />
@@ -701,17 +826,15 @@ const VolunteerTasks = () => {
                   No relevant tasks found
                 </h3>
                 <p className="text-[var(--text-muted)] text-sm md:text-base max-w-sm mx-auto font-medium leading-relaxed uppercase tracking-widest">
-                  You're all caught up! Check the available tab for new missions.
+                  {activeTab === "active"
+                    ? "You don't have any active tasks in progress."
+                    : activeTab === "opps"
+                      ? "Check back later for new pickup opportunities."
+                      : "No past completed missions found."}
                 </p>
               </div>
 
-              <ResuableButton
-                variant="primary"
-                className="px-10 py-6 !rounded-2xl text-[12px] font-black uppercase tracking-widest bg-[#22c55e] hover:bg-[#16a34a] shadow-xl shadow-green-500/20 active:scale-95"
-                onClick={() => setActiveTab("opps")}
-              >
-                Browse Available Missions
-              </ResuableButton>
+              {/* Button removed by user request */}
             </div>
           </motion.div>
         )}
@@ -723,455 +846,413 @@ const VolunteerTasks = () => {
         subtitle={`Route #${selectedTask?.routeNumber} • Information`}
         size="md"
         footer={
-          selectedTask &&
-          selectedTask.status === "AVAILABLE" && (
-            <ResuableButton
-              variant="primary"
-              className="w-full bg-[#22c55e] h-11 !rounded-sm text-xs font-black uppercase tracking-widest"
-              onClick={() => setIsClaimModalOpen(true)}
-            >
-              Claim Task
-            </ResuableButton>
+          selectedTask && (
+            <div className="w-full">
+              {selectedTask.status === "AVAILABLE" && (
+                <ResuableButton
+                  variant="primary"
+                  className="w-full bg-[#22c55e] h-11 !rounded-sm text-xs font-black uppercase tracking-widest"
+                  onClick={() => setIsClaimModalOpen(true)}
+                >
+                  Claim Task
+                </ResuableButton>
+              )}
+              
+              {selectedTask.rawStatus === "ASSIGNED" && (
+                <div className="flex flex-col gap-2 w-full text-start">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-[#22c55e] leading-none mb-1">Enter Pickup Code</p>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      maxLength={6}
+                      className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-center font-black tracking-widest text-lg h-11 outline-none focus:border-[#22c55e]/50 transition-all text-[var(--text-primary)] font-mono"
+                      placeholder="------"
+                      value={otpValue}
+                      onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, ""))}
+                    />
+                    <ResuableButton
+                      variant="primary"
+                      disabled={otpValue.length !== 6 || isVerifying}
+                      className="h-11 px-6 bg-[#22c55e] text-xs text-white font-black uppercase tracking-widest"
+                      onClick={() => performVerification('pickup', otpValue)}
+                      loading={isVerifying}
+                    >
+                      Unlock
+                    </ResuableButton>
+                  </div>
+                </div>
+              )}
+
+              {selectedTask.rawStatus === "PICKED_UP" && (
+                <div className="flex flex-col gap-2 w-full text-start">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-blue-500 leading-none mb-1">Enter Delivery Code</p>
+                  <div className="flex gap-2">
+                    <input 
+                      type="text" 
+                      maxLength={6}
+                      className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl text-center font-black tracking-widest text-lg h-11 outline-none focus:border-blue-500/50 transition-all text-[var(--text-primary)] font-mono"
+                      placeholder="------"
+                      value={otpValue}
+                      onChange={(e) => setOtpValue(e.target.value.replace(/\D/g, ""))}
+                    />
+                    <ResuableButton
+                      variant="primary"
+                      disabled={otpValue.length !== 6 || isVerifying}
+                      className="h-11 px-6 bg-blue-500 text-xs text-white font-black uppercase tracking-widest"
+                      onClick={() => performVerification('delivery', otpValue)}
+                      loading={isVerifying}
+                    >
+                      Verify
+                    </ResuableButton>
+                  </div>
+                </div>
+              )}
+            </div>
           )
         }
       >
         {selectedTask && (
           <div className="space-y-6 p-6">
-            <div
-              className="flex items-start gap-5 p-5 rounded-md border"
-              style={{
-                backgroundColor: "var(--bg-secondary)",
-                borderColor: "var(--border-color)",
-              }}
-            >
-              <div
-                className={`w-12 h-12 rounded-sm flex items-center justify-center text-2xl border ${
-                  selectedTask.type === "delivery"
-                    ? "bg-emerald-500/10 text-[#22c55e] border-emerald-500/20"
-                    : "bg-orange-500/10 text-orange-500 border-orange-500/20"
-                }`}
-              >
-                {getCategoryIcon(selectedTask.type || "delivery")}
+            {/* 1. Header Info Card */}
+            <div className="border border-slate-100 dark:border-slate-800 rounded-3xl p-5 bg-white dark:bg-slate-900 shadow-sm flex items-start gap-4 text-start">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 flex items-center justify-center text-emerald-500 shrink-0 border border-emerald-100/50 dark:border-emerald-900/30">
+                <Truck className="w-6 h-6 stroke-[2.2]" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex flex-col gap-1 mb-2">
-                  <h3
-                    className="text-lg font-black leading-tight truncate"
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    {selectedTask.title}
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 tracking-tight leading-tight">
+                    Donation Dispatch
                   </h3>
-                  {selectedTask.partnerOrg && (
-                    <p className="text-[10px] font-black text-[#22c55e] uppercase tracking-widest leading-none">
-                      {selectedTask.partnerOrg}
-                    </p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm border ${getStatusStyle(selectedTask.status)}`}
-                  >
+                  <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border ${getStatusStyle(selectedTask.status)}`}>
                     {selectedTask.status}
                   </span>
-                  <span
-                    className="text-[9px] font-black uppercase tracking-widest opacity-40"
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    ID: {selectedTask.id}
+                </div>
+                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none mb-2">
+                  ID: {selectedTask.id ? `TSK-${selectedTask.id}`.toUpperCase().substring(0, 24) : "TSK-TBD"}
+                </p>
+                <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                  Created on {new Date(selectedTask.createdAt || new Date()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} • {new Date(selectedTask.createdAt || new Date()).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+            </div>
+
+            {/* 2. Food Expiry Date & Time Cards */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="border border-slate-100 dark:border-slate-800 rounded-2xl p-4 bg-white dark:bg-slate-900 shadow-sm flex items-center gap-3 text-start">
+                <div className="w-10 h-10 rounded-full bg-red-50 dark:bg-red-950/20 flex items-center justify-center text-red-500 shrink-0">
+                  <Calendar size={18} className="stroke-[2.2]" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[9px] font-black text-red-500 uppercase tracking-wider leading-none mb-1">Food Expiry Date</span>
+                  <span className="text-xs font-black text-slate-800 dark:text-slate-100">
+                    {getExpiryDateTime().date}
+                  </span>
+                </div>
+              </div>
+              <div className="border border-slate-100 dark:border-slate-800 rounded-2xl p-4 bg-white dark:bg-slate-900 shadow-sm flex items-center gap-3 text-start">
+                <div className="w-10 h-10 rounded-full bg-red-50 dark:bg-red-950/20 flex items-center justify-center text-red-500 shrink-0">
+                  <Clock size={18} className="stroke-[2.2]" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[9px] font-black text-red-500 uppercase tracking-wider leading-none mb-1">Food Expiry Time</span>
+                  <span className="text-xs font-black text-slate-800 dark:text-slate-100">
+                    {getExpiryDateTime().time}
                   </span>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div
-                className="border p-4 rounded-md flex flex-col items-center text-center space-y-1 shadow-sm"
-                style={{
-                  backgroundColor: "var(--bg-primary)",
-                  borderColor: "var(--border-color)",
-                }}
-              >
-                <span
-                  className="text-[8px] font-black uppercase tracking-widest"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  Load Metrics
-                </span>
-                <p
-                  className="text-sm font-black"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  {selectedTask.load}
-                </p>
-              </div>
-              <div
-                className="border p-4 rounded-md flex flex-col items-center text-center space-y-1 shadow-sm"
-                style={{
-                  backgroundColor: "var(--bg-primary)",
-                  borderColor: "var(--border-color)",
-                }}
-              >
-                <span
-                  className="text-[8px] font-black uppercase tracking-widest"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  Est. Duration
-                </span>
-                <p
-                  className="text-sm font-black"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  {selectedTask.duration}
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-                {/* Visual Tracker Stepper - Premium Mission Pulse */}
-                <div className="relative py-8 px-2 overflow-hidden bg-[#22c55e]/[0.03] backdrop-blur-[2px] rounded-2xl border border-[#22c55e]/10 shadow-[inner_0_0_20px_rgba(34,197,94,0.02)]">
-                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#22c55e]/5 to-transparent opacity-50" />
-                   <div className="flex justify-between items-start w-full relative z-10 px-4">
-                    {[
-                      { label: "Food Posted", status: true },
-                      { label: "NGO Matched", status: ["ACCEPTED", "ASSIGNED", "PICKED_UP", "DELIVERED"].includes(selectedTask.rawStatus || "") },
-                      { 
-                        label: "Volunteer Claim", 
-                        status: ["ASSIGNED", "PICKED_UP", "DELIVERED"].includes(selectedTask.rawStatus || "") 
-                      },
-                      { label: "Pickup Verified", status: ["PICKED_UP", "DELIVERED"].includes(selectedTask.rawStatus || "") },
-                      { label: "Mission Complete", status: selectedTask.rawStatus === "DELIVERED" }
-                    ].map((step, idx, arr) => {
-                      const isCurrent = (idx === 0 && (selectedTask.rawStatus === "PENDING")) ||
-                                       (idx === 1 && selectedTask.rawStatus === "ACCEPTED") ||
-                                       (idx === 2 && selectedTask.rawStatus === "ASSIGNED") ||
-                                       (idx === 3 && selectedTask.rawStatus === "PICKED_UP") ||
-                                       (idx === 4 && selectedTask.rawStatus === "DELIVERED");
-                      
-                      return (
-                      <div key={idx} className="flex flex-col items-center relative flex-1">
-                        {/* Connecting Line */}
-                        {idx < arr.length - 1 && (
-                          <div 
-                            className="absolute h-[1.5px] w-[calc(100%-24px)] left-[calc(50%+12px)] top-[11px]"
-                            style={{ 
-                              backgroundColor: step.status && arr[idx+1]?.status 
-                                ? "#22c55e" 
-                                : "var(--border-color)",
-                              opacity: step.status && arr[idx+1]?.status ? 0.8 : 0.2,
-                              boxShadow: step.status && arr[idx+1]?.status ? "0 0 10px #22c55e" : "none"
-                            }}
-                          />
-                        )}
-                        
-                        {/* Node */}
-                        <div 
-                          className={`w-6 h-6 rounded-full flex items-center justify-center border transition-all duration-700 relative flex-shrink-0 ${
-                            step.status 
-                              ? "bg-[#22c55e] border-[#22c55e] shadow-[0_0_20px_rgba(34,197,94,0.4)]" 
-                              : "bg-black/[0.03] border-[#22c55e]/20"
-                          } ${isCurrent ? "ring-4 ring-[#22c55e]/10 !border-[#22c55e]/40" : ""}`}
-                        >
-                          {step.status ? (
-                            <CheckCircle2 size={12} className="text-white" />
-                          ) : (
-                            <div className="w-1.5 h-1.5 rounded-full bg-[#22c55e]/20" />
-                          )}
-                          
-                          {/* Pulsing indicator for current step */}
-                          {isCurrent && (
-                            <div className="absolute inset-0 rounded-full animate-ping bg-[#22c55e]/30" />
-                          )}
-                        </div>
-                        
-                        <div className="mt-3 h-8 flex items-start justify-center text-center w-full px-1">
-                          <span className={`text-[8px] font-black uppercase tracking-tight leading-[1.1] transition-colors duration-500 line-clamp-2 ${
-                            step.status ? "text-[#22c55e]" : "text-[var(--text-muted)]"
-                          } ${isCurrent ? "text-[var(--text-primary)]" : ""}`}>
-                            {step.label}
-                          </span>
-                        </div>
-                      </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Donor & NGO Context Cards - Side by Side */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* Donor (Who is donating) */}
-                  <div 
-                    className="p-4 rounded-xl border relative overflow-hidden group hover:border-[#22c55e]/30 transition-all duration-300"
-                    style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-color)" }}
-                  >
-                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-110 transition-all duration-500">
-                      <Hotel className="w-12 h-12 text-[#22c55e]" />
-                    </div>
-                    <div className="relative z-10">
-                      <h5 className="text-[9px] font-black uppercase tracking-widest text-[#22c55e] mb-2">Source (Donor)</h5>
-                      <p className="text-base font-black uppercase tracking-tighter text-[var(--text-primary)] leading-none mb-1">
-                        {selectedTask.partnerOrg}
-                      </p>
-                      <p className="text-[10px] font-bold text-[var(--text-muted)] mb-3 italic">
-                        Authorized Donor
-                      </p>
-                      <div className="flex items-center gap-2 text-[10px] font-black text-[var(--text-primary)]">
-                        <Phone size={12} className="text-[#22c55e]" />
-                        {selectedTask.contactPhone}
-                      </div>
-
-                      {/* Pickup OTP Input Embedded */}
-                      {selectedTask.rawStatus === "ASSIGNED" && (
-                        <div className="mt-4 pt-4 border-t border-[var(--border-color)]">
-                           <p className="text-[8px] font-black uppercase tracking-widest text-[#22c55e] mb-2">Enter Pickup Code</p>
-                           <div className="flex gap-2">
-                             <input 
-                               type="text" 
-                               maxLength={4}
-                               className="flex-1 bg-white/5 border border-[var(--border-color)] rounded-lg text-center font-black tracking-widest text-sm h-9 outline-none focus:border-[#22c55e]/50 transition-all"
-                               placeholder="----"
-                               value={otpValue}
-                               onChange={(e) => setOtpValue(e.target.value)}
-                             />
-                             <ResuableButton 
-                               className="h-9 px-3 bg-[#22c55e] !rounded-lg text-[9px]"
-                               onClick={() => performVerification('pickup', otpValue)}
-                             >
-                               Unlock
-                             </ResuableButton>
-                           </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* NGO (Who is receiving) */}
-                  <div 
-                    className="p-4 rounded-xl border relative overflow-hidden group hover:border-blue-500/30 transition-all duration-300"
-                    style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-color)" }}
-                  >
-                    <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:scale-110 transition-all duration-500">
-                      <Building2 className="w-12 h-12 text-blue-500" />
-                    </div>
-                    <div className="relative z-10">
-                      <h5 className="text-[9px] font-black uppercase tracking-widest text-blue-500 mb-2">Destination (NGO)</h5>
-                      <p className="text-base font-black uppercase tracking-tighter text-[var(--text-primary)] leading-none mb-1">
-                        {selectedTask.ngoOrgName}
-                      </p>
-                      <p className="text-[10px] font-bold text-[var(--text-muted)] mb-3 italic">
-                         Secure Handover Protocol
-                      </p>
-                      <div className="flex items-center gap-2 text-[10px] font-black text-[var(--text-primary)]">
-                        <Phone size={12} className="text-blue-500" />
-                        {selectedTask.ngoPhone || "987-654-3210"}
-                      </div>
-
-                      {/* Delivery OTP Input Embedded */}
-                      {selectedTask.rawStatus === "PICKED_UP" && (
-                        <div className="mt-4 pt-4 border-t border-[var(--border-color)]">
-                           <p className="text-[8px] font-black uppercase tracking-widest text-blue-500 mb-2">Enter Delivery Code</p>
-                           <div className="flex gap-2">
-                             <input 
-                               type="text" 
-                               maxLength={4}
-                               className="flex-1 bg-white/5 border border-[var(--border-color)] rounded-lg text-center font-black tracking-widest text-sm h-9 outline-none focus:border-blue-500/50 transition-all"
-                               placeholder="----"
-                               value={otpValue}
-                               onChange={(e) => setOtpValue(e.target.value)}
-                             />
-                             <ResuableButton 
-                               className="h-9 px-3 bg-blue-500 !rounded-lg text-[9px]"
-                               onClick={() => performVerification('delivery', otpValue)}
-                             >
-                               Verify
-                             </ResuableButton>
-                           </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Pickup Location Card */}
-                <div className="relative pl-10">
-                  <div className="absolute left-[11px] top-0 bottom-0 w-px" style={{ backgroundColor: "var(--border-color)" }} />
-                  <div className="absolute left-[4px] top-0 w-3.5 h-3.5 rounded-full border-2 ring-4 z-10" style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-color)", boxShadow: "0 0 0 4px var(--bg-secondary)" }} />
+            {/* 3. Task Progress Stepper */}
+            <div className="border border-slate-100 dark:border-slate-800 rounded-3xl p-5 bg-white dark:bg-slate-900 shadow-sm text-start">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-6 block">Task Progress</span>
+              
+              <div className="flex justify-between items-center w-full relative px-2">
+                {[
+                  { label: "Requested", status: true, icon: "📋" },
+                  { label: "Accepted", status: ["ACCEPTED", "ASSIGNED", "PICKED_UP", "DELIVERED"].includes(selectedTask.rawStatus || "") || selectedTask.status === "COMPLETED", icon: "✓" },
+                  { label: "Dispatch", status: ["ASSIGNED", "PICKED_UP", "DELIVERED"].includes(selectedTask.rawStatus || "") || selectedTask.status === "COMPLETED", icon: "🚚" },
+                  { label: "Picked Up", status: ["PICKED_UP", "DELIVERED"].includes(selectedTask.rawStatus || "") || selectedTask.status === "COMPLETED", icon: "📦" },
+                  { label: "Completed", status: selectedTask.rawStatus === "DELIVERED" || selectedTask.status === "COMPLETED", icon: "✓" }
+                ].map((step, idx, arr) => {
+                  const isCurrent = (idx === 0 && (selectedTask.rawStatus === "PENDING")) ||
+                                   (idx === 1 && selectedTask.rawStatus === "ACCEPTED") ||
+                                   (idx === 2 && selectedTask.rawStatus === "ASSIGNED") ||
+                                   (idx === 3 && selectedTask.rawStatus === "PICKED_UP") ||
+                                   (idx === 4 && (selectedTask.rawStatus === "DELIVERED" || selectedTask.status === "COMPLETED"));
                   
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                       <Navigation size={12} className="text-[#22c55e]" />
-                       <p className="text-[11px] font-black uppercase tracking-tight text-[var(--text-primary)]">
-                         Pickup from Donor Hub
-                       </p>
-                    </div>
-                    <div className="p-4 rounded-xl border transition-all duration-300 bg-[var(--bg-primary)] border-[var(--border-color)]">
-                      <h5 className="text-xs font-black mb-1 text-[var(--text-primary)]">
-                        {selectedTask.location || "Main Entrance / Reception"}
-                      </h5>
-                      <p className="text-[10px] font-bold leading-relaxed text-[var(--text-secondary)] italic">
-                        {selectedTask.baseAddress}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Tracking Progress Detail */}
-                <div className="relative pl-10">
-                   <div className="absolute left-[11px] top-0 bottom-0 w-px" style={{ backgroundColor: "var(--border-color)" }} />
-                   <div className="absolute left-[4px] top-0 w-3.5 h-3.5 rounded-full border-2 ring-4 z-10" style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-color)", boxShadow: "0 0 0 4px var(--bg-secondary)" }} />
-                   
-                   <div className="space-y-4">
-                      <div className="flex items-center gap-2">
-                         <MapPin size={12} className="text-red-500" />
-                         <p className="text-[11px] font-black uppercase tracking-tight text-[var(--text-primary)]">
-                           Delivery Progress ({selectedTask.status})
-                         </p>
+                  return (
+                    <div key={idx} className="flex flex-col items-center relative flex-1">
+                      {/* Connecting Line */}
+                      {idx < arr.length - 1 && (
+                        <div 
+                          className="absolute h-[2px] w-[calc(100%-40px)] left-[calc(50%+20px)] top-[19px]"
+                          style={{ 
+                            backgroundColor: step.status && arr[idx+1]?.status 
+                              ? "#22c55e" 
+                              : "var(--border-color)",
+                            opacity: step.status && arr[idx+1]?.status ? 0.8 : 0.2,
+                          }}
+                        />
+                      )}
+                      
+                      {/* Circle Node */}
+                      <div 
+                        className={`w-10 h-10 rounded-full flex items-center justify-center text-sm border transition-all duration-300 relative flex-shrink-0 ${
+                          step.status 
+                            ? "bg-[#22c55e] border-[#22c55e] text-white shadow-sm" 
+                            : "bg-black/[0.03] border-slate-200 text-slate-400 dark:border-slate-800"
+                        } ${isCurrent ? "ring-4 ring-[#22c55e]/15 !border-[#22c55e]/45" : ""}`}
+                      >
+                        {step.status ? (
+                          <span className="font-black text-sm">{step.icon === "✓" ? "✓" : step.icon}</span>
+                        ) : (
+                          <div className="w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-700" />
+                        )}
+                        {isCurrent && (
+                          <div className="absolute inset-0 rounded-full animate-ping bg-[#22c55e]/25" />
+                        )}
                       </div>
                       
-                      <div className="p-4 rounded-xl border bg-blue-500/5 border-blue-500/10">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
-                            <Truck size={14} className="text-blue-500" />
-                          </div>
-                          <div>
-                            <p className="text-[11px] font-black uppercase tracking-tight text-[var(--text-primary)]">
-                              Current Destination: {selectedTask.ngoOrgName}
-                            </p>
-                            <p className="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-widest">
-                              NGO Hub Distribution Point
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                   </div>
-                </div>
-
-                {selectedTask.status === "COMPLETED" && (
-                  <div className="p-4 rounded-xl border flex items-center gap-4 bg-green-500/5 border-green-500/10">
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white border border-green-100 shadow-sm text-[#22c55e] dark:bg-black dark:border-green-500/20">
-                      <CheckCircle2 size={24} />
-                    </div>
-                    <div className="text-start">
-                      <p className="text-[11px] font-black text-green-700 uppercase tracking-tight dark:text-green-400">
-                        Delivery Protocol Successfully Verified
-                      </p>
-                      <p className="text-[9px] font-bold text-green-600/60 uppercase tracking-widest">
-                        OTP Match • Jan 10, 2026 • 11:45 AM
-                      </p>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Dynamic OTP Display Code - Secure Handover */}
-                {selectedTask.status !== "COMPLETED" && (
-                  <div className="flex flex-col items-center gap-4 p-8 rounded-2xl border-2 border-dashed border-[#22c55e]/20 bg-[#22c55e]/[0.02] backdrop-blur-sm relative overflow-hidden group">
-                    <div className="absolute -top-10 -right-10 w-32 h-32 bg-[#22c55e]/5 rounded-full blur-3xl group-hover:bg-[#22c55e]/10 transition-all duration-700" />
-                    
-                    <div className="flex items-center gap-2 mb-2 bg-[#22c55e]/10 px-4 py-1.5 rounded-full border border-[#22c55e]/30 shadow-[0_0_15px_rgba(34,197,94,0.1)]">
-                      <ShieldCheck className="w-4 h-4 text-[#22c55e]" />
-                      <span className="text-[10px] font-black uppercase tracking-[0.25em] text-[#22c55e]">
-                        Encrypted Key Protocol
+                      <span className={`mt-2 text-[8px] font-black uppercase tracking-tight leading-none ${
+                        step.status ? "text-[#22c55e]" : "text-[var(--text-muted)]"
+                      } ${isCurrent ? "text-[var(--text-primary)]" : ""}`}>
+                        {step.label}
                       </span>
                     </div>
-                    
-                    <div className="text-center relative z-10">
-                       <p className="text-[10px] font-black text-[var(--text-muted)] uppercase tracking-widest mb-4 opacity-70">
-                         {selectedTask.rawStatus === "ASSIGNED" 
-                           ? "Handover Code for Donor pickup" 
-                           : (selectedTask.rawStatus === "PICKED_UP" 
-                               ? "Handover Code for NGO delivery" 
-                               : "Awaiting Next Lifecycle Step")}
-                       </p>
-                       <div className="flex items-center justify-center gap-3">
-                         {(selectedTask.rawStatus === "ASSIGNED" || selectedTask.rawStatus === "PICKED_UP") ? (
-                           String(selectedTask.rawStatus === "ASSIGNED" ? selectedTask.pickupOtp : selectedTask.deliveryOtp)
-                             .padStart(4, "0")
-                             .split("")
-                             .map((digit, i) => (
-                               <div key={i} className="w-12 h-16 bg-[#22c55e]/5 border border-[#22c55e]/20 rounded-xl flex items-center justify-center text-4xl font-black text-[#22c55e] drop-shadow-[0_0_8px_rgba(34,197,94,0.5)] transition-all duration-300 font-mono tracking-tighter">
-                                 {digit}
-                               </div>
-                             ))
-                         ) : (
-                           <div className="text-3xl font-black tracking-[0.5em] text-[var(--text-primary)]/10 font-mono italic">
-                             PENDING
-                           </div>
-                         )}
-                       </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 4. Card 1: PICK-UP & DONATION DETAILS */}
+            <div className="border border-slate-100 dark:border-slate-800 rounded-3xl p-5 bg-white dark:bg-slate-900 shadow-sm text-start">
+              <div className="flex items-center gap-2 mb-4 border-b pb-3 border-slate-100 dark:border-slate-800">
+                <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-950/20 flex items-center justify-center text-emerald-500 shrink-0">
+                  <Package size={16} className="stroke-[2.2]" />
+                </div>
+                <span className="text-[11px] font-black text-emerald-600 uppercase tracking-widest">PICK-UP & DONATION DETAILS</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 relative">
+                {/* Vertical Divider Line */}
+                <div className="hidden sm:block absolute left-1/2 top-2 bottom-2 w-px bg-slate-100 dark:bg-slate-800" />
+                
+                {/* Left Column: Pick-up Address */}
+                <div className="flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] font-black text-emerald-600 uppercase tracking-wider mb-3 block">Pick-up Address</span>
+                    <div className="flex items-start gap-2 mb-2">
+                      <MapPin size={16} className="text-[#22c55e] shrink-0 mt-0.5" />
+                      <h4 className="text-sm font-black text-slate-800 dark:text-slate-100">{selectedTask.partnerOrg}</h4>
                     </div>
+                    <p className="text-xs font-bold leading-relaxed text-slate-500 dark:text-slate-400 pl-6">
+                      {selectedTask.location || "Main Entrance / Reception"}
+                    </p>
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-dashed border-slate-100 dark:border-slate-800/80 flex items-center gap-2 text-xs font-black text-slate-700 dark:text-slate-300 pl-6">
+                    <Phone size={12} className="text-[#22c55e]" />
+                    {selectedTask.contactPhone}
+                  </div>
+                </div>
+
+                {/* Right Column: Donation Details */}
+                <div className="flex flex-col justify-between sm:pl-4">
+                  <div>
+                    <span className="text-[10px] font-black text-blue-500 uppercase tracking-wider mb-3 block">Donation Details</span>
+                    <h4 className="text-sm font-black text-slate-800 dark:text-slate-100 mb-3">
+                      {selectedTask.title}
+                    </h4>
                     
-                    <p className="mt-6 text-[8px] font-bold text-[var(--text-muted)] uppercase tracking-[0.2em] text-center max-w-[200px] leading-relaxed">
-                       Strictly Confidential • Valid for this session only • Do not share externally
+                    <div className="space-y-2.5">
+                      <div className="flex items-center gap-2.5 text-xs font-bold text-slate-600 dark:text-slate-400">
+                        <Package size={13} className="text-slate-400 shrink-0" />
+                        <span>{selectedTask.load}</span>
+                      </div>
+                      <div className="flex items-center gap-2.5 text-xs font-bold text-slate-600 dark:text-slate-400">
+                        <Clock size={13} className="text-slate-400 shrink-0" />
+                        <span>{selectedTask.expiryTime ? `Expires: ${selectedTask.expiryTime}` : "No Expiry"}</span>
+                      </div>
+                      <div className="flex items-center gap-2.5 text-xs font-bold text-slate-600 dark:text-slate-400">
+                        <Calendar size={13} className="text-slate-400 shrink-0" />
+                        <span>Prepared on {new Date(selectedTask.createdAt || new Date()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                      </div>
+                      <div className="flex items-center gap-2.5 text-xs font-bold text-slate-600 dark:text-slate-400">
+                        <Tag size={13} className="text-slate-400 shrink-0" />
+                        <span>Category: {selectedTask.category || "Dry Ration"}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 5. Card 2: TO DELIVER ADDRESS */}
+            <div className="border border-slate-100 dark:border-slate-800 rounded-3xl p-5 bg-white dark:bg-slate-900 shadow-sm text-start relative overflow-hidden">
+              <div className="flex items-center gap-2 mb-4 border-b pb-3 border-slate-100 dark:border-slate-800">
+                <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-950/20 flex items-center justify-center text-[#22c55e] shrink-0">
+                  <MapPin size={16} className="stroke-[2.2]" />
+                </div>
+                <span className="text-[11px] font-black text-emerald-600 uppercase tracking-widest">TO DELIVER ADDRESS</span>
+              </div>
+
+              <div className="relative">
+                <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 transition-all duration-300 ${isNgoLocked ? "filter blur-[2px] select-none pointer-events-none opacity-45" : ""}`}>
+                  <div className="flex-1 space-y-4 w-full">
+                    <div>
+                      <h4 className="text-base font-black text-slate-800 dark:text-slate-100 mb-1">{selectedTask.ngoOrgName}</h4>
+                      <p className="text-xs font-bold text-slate-600 dark:text-slate-400 leading-relaxed">
+                        {selectedTask.destinations[0] || "NGO Delivery Hub Center Address"}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-6 pt-3 border-t border-slate-100 dark:border-slate-800/80">
+                      <div className="flex items-center gap-2 text-xs font-black text-slate-700 dark:text-slate-300">
+                        <Phone size={12} className="text-[#22c55e]" />
+                        <span>{selectedTask.ngoPhone || "+91 98765 43210"}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs font-black text-slate-700 dark:text-slate-300">
+                        <User size={12} className="text-[#22c55e]" />
+                        <span>Contact: Ravi Kumar</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Building SVG Illustration */}
+                  <div className="hidden sm:block">
+                    <svg className="w-32 h-28 opacity-80 dark:opacity-60 shrink-0" viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      {/* Clouds */}
+                      <path d="M135 45a8 8 0 0 1 8 8 6 6 0 0 1 6 6 6 6 0 0 1-6 6h-20a6 6 0 0 1-6-6 8 8 0 0 1 8-8c1-4 5-6 10-6z" fill="#E2F2E9" />
+                      <path d="M25 40a6 6 0 0 1 6 6 4 4 0 0 1 4 4 4 4 0 0 1-4 4H15a4 4 0 0 1-4-4 6 6 0 0 1 6-6c1-3 4-4 8-4z" fill="#E2F2E9" />
+                      
+                      {/* Trees */}
+                      <circle cx="115" cy="85" r="10" fill="#69C894" />
+                      <rect x="114" y="85" width="2" height="15" fill="#4AA072" />
+                      <circle cx="123" cy="90" r="8" fill="#58B281" />
+                      <rect x="122" y="90" width="2" height="10" fill="#4AA072" />
+
+                      {/* Main NGO Building */}
+                      <rect x="40" y="55" width="60" height="45" rx="4" fill="#A8DFBF" />
+                      <rect x="50" y="45" width="40" height="15" rx="3" fill="#82CD9F" />
+                      
+                      {/* Heart on Building */}
+                      <path d="M70 51.5c-1-1-2.5-1-3.5 0s-1 2.5 0 3.5l3.5 3.5 3.5-3.5c1-1 1-2.5 0-3.5s-2.5-1-3.5 0z" fill="#60B683" />
+                      
+                      {/* Windows */}
+                      <rect x="48" y="65" width="8" height="8" rx="1.5" fill="#FFFFFF" />
+                      <rect x="60" y="65" width="8" height="8" rx="1.5" fill="#FFFFFF" />
+                      <rect x="72" y="65" width="8" height="8" rx="1.5" fill="#FFFFFF" />
+                      <rect x="84" y="65" width="8" height="8" rx="1.5" fill="#FFFFFF" />
+                      
+                      <rect x="48" y="78" width="8" height="8" rx="1.5" fill="#FFFFFF" />
+                      <rect x="84" y="78" width="8" height="8" rx="1.5" fill="#FFFFFF" />
+
+                      {/* Door */}
+                      <rect x="62" y="76" width="16" height="24" rx="2" fill="#E8F8F0" />
+                      <rect x="66" y="80" width="8" height="20" rx="1" fill="#69C894" />
+                    </svg>
+                  </div>
+                </div>
+
+                {isNgoLocked && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/20 dark:bg-slate-900/20 z-10 text-center p-4">
+                    <div className="w-10 h-10 rounded-full bg-slate-100/90 dark:bg-slate-800/90 flex items-center justify-center text-slate-500 mb-1.5 shadow-sm border border-slate-200/60 dark:border-slate-700/60 backdrop-blur-xs">
+                      <span>🔒</span>
+                    </div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
+                      Locked until food is picked up
                     </p>
                   </div>
                 )}
-            </div>
+              </div>
 
-            <div className="space-y-2 text-start pt-4 border-t" style={{ borderColor: 'var(--border-color)' }}>
-              <h4
-                className="text-[10px] font-black uppercase tracking-widest"
-                style={{ color: "var(--text-muted)" }}
-              >
-                Instructions
-              </h4>
-              <div
-                className="p-4 rounded-sm border"
-                style={{
-                  backgroundColor: "rgba(245, 158, 11, 0.05)",
-                  borderColor: "rgba(245, 158, 11, 0.1)",
-                }}
-              >
-                <p className="text-xs font-bold text-amber-600 leading-relaxed italic">
-                  "
-                  {selectedTask.description ||
-                    "Follow standard procedure. Please update the task status as you complete each step."}
-                  "
+              <div className="space-y-1.5 pt-3 border-t border-slate-100 dark:border-slate-800/80 mt-4">
+                <span className="text-[10px] font-black text-emerald-600 uppercase tracking-wider block">Delivery Instructions</span>
+                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 leading-relaxed italic">
+                  "Please call before arrival. Deliver to the main office."
                 </p>
               </div>
             </div>
 
-            {selectedTask.contactPerson && (
-              <div
-                className="p-4 rounded-sm border flex items-center justify-between"
-                style={{
-                  backgroundColor: "var(--bg-secondary)",
-                  borderColor: "var(--border-color)",
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center border shadow-inner overflow-hidden"
-                    style={{
-                      backgroundColor: "var(--bg-primary)",
-                      borderColor: "var(--border-color)",
-                    }}
-                  >
-                    <User size={16} style={{ color: "var(--text-muted)" }} />
-                  </div>
-                  <div className="text-start">
-                    <p
-                      className="text-[11px] font-black uppercase leading-none mb-1"
-                      style={{ color: "var(--text-primary)" }}
-                    >
-                      {selectedTask.contactPerson}
-                    </p>
-                    <p
-                      className="text-[9px] font-bold tracking-wider"
-                      style={{ color: "var(--text-muted)" }}
-                    >
-                      ON-SITE COORDINATOR
-                    </p>
-                  </div>
+            {/* 6. Dynamic OTP Handover Protocol display */}
+            {selectedTask.status !== "COMPLETED" && selectedTask.rawStatus === "ASSIGNED" && (
+              <div className="border border-slate-100 dark:border-slate-800 rounded-3xl p-6 bg-white dark:bg-slate-900 shadow-sm text-center relative overflow-hidden flex flex-col items-center">
+                <div className="w-12 h-12 rounded-full bg-emerald-50 dark:bg-emerald-950/20 flex items-center justify-center text-emerald-500 mb-3 border border-emerald-100/50 dark:border-emerald-900/30">
+                  <ShieldCheck className="w-6 h-6 stroke-[2]" />
                 </div>
-                {selectedTask.contactPhone && (
-                  <ResuableButton
-                    variant="secondary"
-                    className="h-8 w-8 !p-0 !rounded-full"
-                  >
-                    <Phone size={14} className="text-[#22c55e]" />
-                  </ResuableButton>
+
+                <div className="flex items-center gap-1.5 mb-3 bg-emerald-500/[0.03] border border-emerald-500/10 px-3 py-1 rounded-full">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+                  <span className="text-[9px] font-black uppercase tracking-[0.15em] text-emerald-600">
+                    ENCRYPTED KEY PROTOCOL
+                  </span>
+                </div>
+
+                <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 tracking-tight mb-1">
+                  Secure Verification
+                </h3>
+                <p className="text-xs font-bold text-slate-400 dark:text-slate-500 max-w-[280px] mx-auto mb-5">
+                  {selectedTask.rawStatus === "ASSIGNED" 
+                    ? "Enter the 6-digit code sent to confirm this action." 
+                    : (selectedTask.rawStatus === "PICKED_UP" 
+                        ? "Enter the 6-digit code sent to confirm this action." 
+                        : "Awaiting next dispatch protocol stage")}
+                </p>
+
+                {/* OTP Digits boxes */}
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  {(() => {
+                    const otpStr = String(
+                      selectedTask.rawStatus === "ASSIGNED" 
+                        ? selectedTask.pickupOtp 
+                        : (selectedTask.rawStatus === "PICKED_UP" ? selectedTask.deliveryOtp : "")
+                    );
+                    
+                    if (otpStr && (selectedTask.rawStatus === "ASSIGNED" || selectedTask.rawStatus === "PICKED_UP")) {
+                      return otpStr
+                        .padStart(6, "0")
+                        .split("")
+                        .map((digit, i) => (
+                          <div 
+                            key={i} 
+                            className={`w-10 h-12 rounded-xl bg-white dark:bg-slate-900 border-2 ${
+                              i === 0 ? "border-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.1)]" : "border-slate-100 dark:border-slate-800"
+                            } flex items-center justify-center text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono tracking-tighter`}
+                          >
+                            {digit}
+                          </div>
+                        ));
+                    }
+                    
+                    return (
+                      <div className="text-2xl font-black tracking-[0.5em] text-slate-300 dark:text-slate-700 font-mono italic select-none">
+                        PENDING
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Expiry line */}
+                {(selectedTask.rawStatus === "ASSIGNED" || selectedTask.rawStatus === "PICKED_UP") && (
+                  <div className="flex items-center justify-center gap-1.5 text-xs font-black text-slate-500 dark:text-slate-400">
+                    <Clock className="w-3.5 h-3.5 text-emerald-500" />
+                    <span>Code expires in <span className="text-emerald-500 font-mono">04:59</span></span>
+                  </div>
                 )}
               </div>
             )}
+
+            {/* 7. Instructions */}
+            <div className="space-y-2 text-start pt-4 border-t border-slate-100 dark:border-slate-800/80">
+              <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 select-none">
+                Instructions
+              </h4>
+              <div className="p-4 rounded-2xl border bg-amber-500/[0.02] border-amber-500/10">
+                <p className="text-xs font-bold text-amber-600 leading-relaxed italic">
+                  "{selectedTask.description || "Follow standard procedure. Please update the task status as you complete each step."}"
+                </p>
+              </div>
+            </div>
           </div>
         )}
       </ResuableDrawer>
@@ -1183,89 +1264,102 @@ const VolunteerTasks = () => {
         onOpenChange={setIsClaimModalOpen}
         title="Task Acceptance"
         subtitle="Confirm Acceptance"
-        size="sm"
+        size="md"
+        classNames={{
+          base: "!rounded-[24px] overflow-hidden bg-white dark:bg-slate-900",
+          header: "border-b border-slate-100 dark:border-slate-800 px-6 py-4",
+          body: "p-6 bg-white dark:bg-slate-900",
+          footer: "border-t border-slate-100 dark:border-slate-800 p-4 bg-white dark:bg-slate-900"
+        }}
+        icon={
+          <div className="w-6 h-6 rounded-full bg-emerald-50 dark:bg-emerald-950/20 flex items-center justify-center text-emerald-500 shrink-0">
+            <CheckCircle2 size={14} className="stroke-[2.5]" />
+          </div>
+        }
         footer={
-          <div className="flex gap-2 w-full">
+          <div className="flex gap-3 w-full justify-end">
             <ResuableButton
               variant="secondary"
-              className="flex-1"
+              className="h-10 px-6 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-xl text-xs font-black text-slate-700 dark:text-slate-300"
               onClick={() => setIsClaimModalOpen(false)}
             >
               Abort
             </ResuableButton>
             <ResuableButton
               variant="primary"
-              className="flex-1 bg-[#22c55e]"
+              className="h-10 px-6 bg-[#22c55e] hover:bg-green-600 rounded-xl text-xs font-black text-white flex items-center gap-1.5 justify-center"
               onClick={handleConfirmClaim}
               disabled={isClaiming}
             >
-              {isClaiming ? "Accepting..." : "Confirm"}
+              {isClaiming ? (
+                <span>Accepting...</span>
+              ) : (
+                <>
+                  <CheckCircle2 size={14} className="stroke-[2.5]" />
+                  <span>Confirm Acceptance</span>
+                </>
+              )}
             </ResuableButton>
           </div>
         }
       >
         {selectedTask && (
-          <div className="p-6 text-center space-y-4">
-            <div
-              className="w-16 h-16 rounded-full flex items-center justify-center mx-auto border"
-              style={{
-                backgroundColor: "rgba(34, 197, 94, 0.05)",
-                borderColor: "rgba(34, 197, 94, 0.1)",
-                color: "#22c55e",
-              }}
-            >
-              <CheckCircle2 size={32} />
+          <div className="text-center space-y-6">
+            {/* Pulsing check circle illustration */}
+            <div className="relative flex justify-center mt-2">
+              <div className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-950/20 flex items-center justify-center text-emerald-500 relative">
+                <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-sm">
+                  <CheckCircle2 size={20} className="stroke-[2.5]" />
+                </div>
+                <div className="absolute inset-0 rounded-full animate-ping bg-[#22c55e]/10 pointer-events-none" />
+              </div>
             </div>
+
             <div className="space-y-2">
-              <h3
-                className="text-lg font-black uppercase tracking-tight"
-                style={{ color: "var(--text-primary)" }}
-              >
-                Accept Task?
+              <h3 className="text-lg font-black text-slate-850 dark:text-slate-100 tracking-tight">
+                Accept this task?
               </h3>
-              <p
-                className="text-xs font-bold leading-relaxed"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                You are about to accept{" "}
-                <span style={{ color: "var(--text-primary)" }}>
-                  "{selectedTask.title}"
-                </span>
-                . This task will be added to your active list.
+              <p className="text-xs font-bold leading-relaxed text-slate-500 dark:text-slate-400 max-w-[280px] mx-auto">
+                You are about to accept <span className="text-[#22c55e] font-black">"{selectedTask.title}"</span>. This task will be added to your active list.
               </p>
             </div>
-            <div
-              className="flex items-center justify-center gap-4 pt-2 border-t"
-              style={{ borderColor: "var(--border-color)" }}
-            >
-              <div className="flex flex-col">
-                <span
-                  className="text-[8px] font-black uppercase"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  Load
-                </span>
-                <span
-                  className="text-xs font-black"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  {selectedTask.load}
-                </span>
+
+            {/* Load and Duration Details Column Box */}
+            <div className="border border-slate-100 dark:border-slate-800 rounded-2xl p-4 bg-slate-50/[0.3] dark:bg-slate-950/20 shadow-sm flex items-center justify-between text-start relative overflow-hidden">
+              <div className="flex-1 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-emerald-50 dark:bg-emerald-950/20 flex items-center justify-center text-emerald-500 shrink-0 border border-emerald-100/50">
+                  <Package size={14} className="stroke-[2.2]" />
+                </div>
+                <div>
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block">LOAD</span>
+                  <span className="text-sm font-black text-slate-850 dark:text-slate-100">{selectedTask.load}</span>
+                  <span className="text-[9px] font-bold text-slate-450 block mt-0.5">Approximate</span>
+                </div>
               </div>
-              <div className="flex flex-col">
-                <span
-                  className="text-[8px] font-black uppercase"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  Est. Time
-                </span>
-                <span
-                  className="text-xs font-black"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  {selectedTask.duration}
-                </span>
+
+              {/* Mini vertical separator */}
+              <div className="w-px h-10 bg-slate-100 dark:bg-slate-800 mx-4" />
+
+              <div className="flex-1 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-emerald-50 dark:bg-emerald-950/20 flex items-center justify-center text-emerald-500 shrink-0 border border-emerald-100/50">
+                  <Clock size={14} className="stroke-[2.2]" />
+                </div>
+                <div>
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block">EST. TIME</span>
+                  <span className="text-sm font-black text-slate-850 dark:text-slate-100">{selectedTask.duration}</span>
+                  <span className="text-[9px] font-bold text-slate-450 block mt-0.5">Pickup & delivery</span>
+                </div>
               </div>
+            </div>
+
+            {/* Guidelines Banner */}
+            <div className="p-3.5 rounded-2xl bg-emerald-50/40 dark:bg-emerald-950/10 border border-emerald-500/10 flex items-start gap-3 text-start">
+              <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center text-white shrink-0 mt-0.5">
+                <CheckCircle2 size={10} className="stroke-[2.5]" />
+              </div>
+              <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 leading-normal">
+                By accepting, you agree to follow the guidelines and ensure safe food handling and delivery.
+              </p>
             </div>
           </div>
         )}

@@ -65,8 +65,27 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
 
   const isImage = getFileType().startsWith("image");
   const isPdf = getFileType() === "application/pdf";
-  const name =
-    fileName || (file instanceof File ? file.name : "Document Preview");
+
+  const getDisplayName = () => {
+    if (fileName) return fileName;
+    if (file instanceof File) return file.name;
+    if (typeof file === "string") {
+      if (file.startsWith("data:")) return "Image Data";
+      const cleanUrl = file.split("?")[0].split("#")[0];
+      const extracted = cleanUrl.split("/").pop();
+      if (extracted && extracted.length > 0 && extracted.includes(".")) {
+        try {
+          return decodeURIComponent(extracted);
+        } catch {
+          return extracted;
+        }
+      }
+      return "Image File (URL)";
+    }
+    return "Attachment Preview";
+  };
+
+  const displayName = getDisplayName();
 
   return (
     <Modal
@@ -102,49 +121,50 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
                       className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] leading-none"
                       style={{ color: "var(--text-primary)" }}
                     >
-                      Document Preview
+                      {isImage ? "Photo Preview" : "Document Preview"}
                     </h2>
                     <p
-                      className="text-[9px] md:text-[10px] items-center flex gap-2 font-bold mt-1.5 md:mt-2 uppercase tracking-widest truncate max-w-[120px] sm:max-w-[200px] md:max-w-[400px]"
+                      className="text-[9px] md:text-[10px] items-center flex gap-1.5 font-bold mt-1 md:mt-1.5 uppercase tracking-widest truncate max-w-[150px] sm:max-w-[250px] md:max-w-[450px]"
                       style={{ color: "var(--text-muted)" }}
                     >
                       <span
-                        className="w-1 h-1 rounded-full shrink-0"
-                        style={{ backgroundColor: "var(--border-dark)" }}
+                        className="w-1.5 h-1.5 rounded-full shrink-0 bg-[#22c55e]"
                       />
-                      {name}
+                      <span className="truncate">{displayName}</span>
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5 md:gap-3 shrink-0">
+                <div className="flex items-center gap-2 md:gap-3 shrink-0">
                   {isImage && (
                     <div
-                      className="flex items-center border rounded-lg p-0.5 md:p-1 hidden sm:flex"
+                      className="flex items-center h-9 md:h-10 border rounded-lg px-1 hidden sm:flex"
                       style={{
                         backgroundColor: "var(--bg-tertiary)",
                         borderColor: "var(--border-color)",
                       }}
                     >
                       <button
+                        type="button"
                         onClick={handleZoomOut}
                         disabled={scale <= 0.5}
-                        className="p-1.5 md:p-2 hover:text-[#22c55e] rounded-md transition-all disabled:opacity-30"
+                        className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center hover:text-[#22c55e] hover:bg-white/50 dark:hover:bg-slate-700 rounded-md transition-all disabled:opacity-30"
                         style={{ color: "var(--text-muted)" }}
                         title="Zoom Out"
                       >
                         <ZoomOut size={14} className="md:w-4 md:h-4" />
                       </button>
                       <div
-                        className="w-10 md:w-12 text-center text-[9px] md:text-[10px] font-black uppercase tracking-tighter"
+                        className="w-10 md:w-12 text-center text-[9px] md:text-[10px] font-black uppercase tracking-tighter select-none"
                         style={{ color: "var(--text-muted)" }}
                       >
                         {Math.round(scale * 100)}%
                       </div>
                       <button
+                        type="button"
                         onClick={handleZoomIn}
                         disabled={scale >= 4}
-                        className="p-1.5 md:p-2 hover:text-[#22c55e] rounded-md transition-all disabled:opacity-30"
+                        className="w-7 h-7 md:w-8 md:h-8 flex items-center justify-center hover:text-[#22c55e] hover:bg-white/50 dark:hover:bg-slate-700 rounded-md transition-all disabled:opacity-30"
                         style={{ color: "var(--text-muted)" }}
                         title="Zoom In"
                       >
@@ -155,26 +175,28 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
 
                   <a
                     href={url}
-                    download={name}
-                    className="flex items-center justify-center w-9 h-9 md:w-auto md:h-auto md:px-4 md:py-2 bg-[#22c55e] hover:bg-[#1ea34a] !text-white rounded-lg transition-all group shadow-lg shadow-[#22c55e]/20"
+                    download={displayName}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 h-9 md:h-10 px-3.5 md:px-4 bg-[#22c55e] hover:bg-[#16a34a] !text-white rounded-lg transition-all group shadow-md shadow-[#22c55e]/20 text-[10px] md:text-[11px] font-black uppercase tracking-widest"
                     title="Download File"
                   >
                     <Download
-                      size={16}
-                      className="group-hover:translate-y-0.5 transition-transform"
+                      size={15}
+                      className="group-hover:translate-y-0.5 transition-transform shrink-0"
                     />
-                    <span className="text-[10px] font-black uppercase tracking-widest hidden sm:inline">
-                      Download
-                    </span>
+                    <span className="hidden sm:inline">Download</span>
                   </a>
                   <div
-                    className="w-px h-6 mx-0.5 md:mx-1"
+                    className="w-px h-5 md:h-6 mx-0.5 md:mx-1 self-center"
                     style={{ backgroundColor: "var(--border-color)" }}
                   />
                   <button
+                    type="button"
                     onClick={onClose}
-                    className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center hover:bg-red-500/10 rounded-xl transition-all"
+                    className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center hover:bg-red-500/10 hover:text-red-500 rounded-lg transition-all"
                     style={{ color: "var(--text-muted)" }}
+                    title="Close Preview"
                   >
                     <X size={18} className="md:w-5 md:h-5" />
                   </button>
@@ -195,7 +217,7 @@ const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
                   >
                     <img
                       src={url}
-                      alt={name}
+                      alt={displayName}
                       className="max-w-full max-h-[calc(100vh-200px)] w-auto h-auto object-contain rounded shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] ring-8 ring-[var(--bg-primary)] ring-offset-4 ring-offset-[var(--bg-secondary)] animate-in fade-in zoom-in duration-500"
                     />
                     <div className="absolute inset-0 ring-1 ring-inset ring-white/10 pointer-events-none" />

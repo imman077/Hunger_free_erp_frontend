@@ -2,65 +2,86 @@ import { toast } from "sonner";
 import { requestsInputModel } from "../store/requests_store";
 import { ngoDonationsService } from "../api/donations/donations_api";
 import { ngoNeedsService } from "../../post_need/api/needs/needs_api";
+import { useAuthStore } from "../../../../global/store/auth-store";
 import type { DonationRequest } from "../model/requests_model";
 
 let timerId: any = null;
 let startTime = 0;
+let activeFetchPromise: Promise<void> | null = null;
+let currentFetchingTab = "";
 
-export const fetchDonations = async (user: any) => {
+export const fetchDonations = async (userParam?: any, overrideTab?: string) => {
   const state = requestsInputModel.useStore.getState().requestsState;
-  const { activeTab } = state;
+  const activeTab = overrideTab || state.activeTab;
+  const user = userParam || useAuthStore.getState().user;
 
-  try {
-    let rawDonations: any[] = [];
-    let rawNeeds: any[] = [];
+  if (activeFetchPromise && currentFetchingTab === activeTab) {
+    return activeFetchPromise;
+  }
 
-    if (activeTab === "marketplace") {
-      const response = await ngoDonationsService.getMarketplaceDonations();
-      rawDonations = Array.isArray(response) ? response : [];
-    } else if (activeTab === "community-requests") {
-      const results = await Promise.allSettled([
-        ngoDonationsService.getMarketplaceDonations(),
-        ngoNeedsService.getAllNeeds(),
-      ]);
-      const donationsRes = results[0].status === "fulfilled" ? results[0].value : [];
-      const needsRes = results[1].status === "fulfilled" ? results[1].value : [];
-      rawDonations = Array.isArray(donationsRes) ? donationsRes : [];
-      rawNeeds = Array.isArray(needsRes) ? needsRes : [];
-    } else if (activeTab === "my-requests") {
-      const results = await Promise.allSettled([
-        ngoDonationsService.getMyRequests(),
-        ngoDonationsService.getAllDonations(),
-        ngoNeedsService.getAllNeeds(),
-      ]);
-      const d1 = results[0].status === "fulfilled" ? results[0].value : [];
-      const d2 = results[1].status === "fulfilled" ? results[1].value : [];
-      const needsRes = results[2].status === "fulfilled" ? results[2].value : [];
+  currentFetchingTab = activeTab;
+  activeFetchPromise = (async () => {
+    try {
+      let rawDonations: any[] = [];
+      let rawNeeds: any[] = [];
 
-      const res1 = Array.isArray(d1) ? d1 : [];
-      const res2 = Array.isArray(d2) ? d2 : [];
-      const allDonations = [...res1, ...res2];
+      if (activeTab === "marketplace") {
+        const results = await Promise.allSettled([
+          ngoDonationsService.getMarketplaceDonations(),
+          ngoDonationsService.getMyRequests()
+        ]);
+        const dAll = results[0].status === "fulfilled" ? results[0].value : [];
+        const dMine = results[1].status === "fulfilled" ? results[1].value : [];
 
-      const seenIds = new Set();
-      rawDonations = allDonations.filter((d) => {
-        if (seenIds.has(d.id)) return false;
-        seenIds.add(d.id);
-        return true;
-      });
+        const allDonations = (Array.isArray(dAll) ? dAll : []).map((d: any) => ({ ...d, _source: "marketplace" }));
+        const mineDonations = (Array.isArray(dMine) ? dMine : []).map((d: any) => ({ ...d, _source: "mine" }));
 
-      rawNeeds = Array.isArray(needsRes) ? needsRes : [];
-    }
+        // Combine them avoiding duplicates
+        const seen = new Set();
+        rawDonations = [];
+        for (const item of [...allDonations, ...mineDonations]) {
+          if (!seen.has(item.id)) {
+            seen.add(item.id);
+            rawDonations.push(item);
+          }
+        }
+      } else if (activeTab === "community-requests") {
+        // Fetch all needs so that lists and tab counts are prefilled correctly
+        const response = await ngoNeedsService.getAllNeeds(false);
+        rawNeeds = Array.isArray(response) ? response : [];
+      } else if (activeTab === "my-requests") {
+        const results = await Promise.allSettled([
+          ngoDonationsService.getMyRequests(),
+          ngoNeedsService.getAllNeeds(false),
+        ]);
+        const d1 = results[0].status === "fulfilled" ? results[0].value : [];
+        const needsRes = results[1].status === "fulfilled" ? results[1].value : [];
+
+        rawDonations = (Array.isArray(d1) ? d1 : []).map((d: any) => ({ ...d, _source: "mine" }));
+        rawNeeds = Array.isArray(needsRes) ? needsRes : [];
+      }
 
     const mappedDonations: DonationRequest[] = rawDonations.map((d: any) => {
       const userId = String(user?.id);
       const ngoProfileId = String((user?.ngo_profile as any)?.id || "");
 
       const matchesNGO = (val: any) => {
+        if (!val || val === "undefined" || val === "null" || !user?.id) return false;
         const s = String(val);
         return s === userId || !!(ngoProfileId && s === ngoProfileId);
       };
 
+      const ngoName = user?.ngo_profile?.name || "";
+      const ngoUsername = user?.username || "";
+
+      // Items tagged _source=mine came from getMyRequests — they are always accepted by this NGO
+      const isAcceptedByMe = d._source === "mine";
+
       const isSupported =
+        isAcceptedByMe ||
+        d.ngo === ngoName ||
+        d.ngo === ngoUsername ||
+        matchesNGO(d.ngo) ||
         matchesNGO(d.accepted_ngo) ||
         matchesNGO(d.accepted_ngo_id) ||
         matchesNGO(d.accepted_by_id) ||
@@ -73,6 +94,7 @@ export const fetchDonations = async (user: any) => {
         (d.donor && matchesNGO(d.donor.id));
 
       const isClaimed =
+        !!d.ngo ||
         !!d.accepted_ngo ||
         !!d.accepted_ngo_id ||
         !!d.accepted_by ||
@@ -80,8 +102,8 @@ export const fetchDonations = async (user: any) => {
 
       return {
         id: d.id,
-        title: d.title || d.food_items || d.food_category,
-        source: d.donor_name || d.donor?.name || "Private Donor",
+        title: d.foodType || d.title || d.food_items || d.food_category,
+        source: d.donor_name || d.donor_hotel || d.donor?.name || d.donor || "Private Donor",
         sourceType: d.donor_role || "DONOR",
         isMine: isMine,
         isSupported: isSupported,
@@ -89,20 +111,21 @@ export const fetchDonations = async (user: any) => {
         isClaimed: isClaimed,
         distance: "Nearby",
         icon:
-          d.food_category === "Cooked Food" || d.food_items?.toLowerCase().includes("rice")
+          (d.category || d.food_category) === "Cooked Food" || (d.foodType || d.title || d.food_items || "")?.toLowerCase().includes("rice")
             ? "🥗"
             : "🥖",
-        time: d.created_at
-          ? new Date(d.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        time: d.createdAt || d.created_at
+          ? new Date(d.createdAt || d.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
           : "Recently",
         urgency: d.status === "PENDING" || d.urgency === "High" ? "High" : "Normal",
         rawStatus: d.status,
         status: d.status === "PENDING" && !isClaimed ? "Available" : isSupported ? d.status : "Claimed",
         progress: isClaimed ? 60 : d.status === "PENDING" ? 25 : 75,
-        description: d.description || d.food_items,
+        description: d.description || d.foodType || d.food_items,
         quantity: d.quantity || "N/A",
-        expiryTime: d.expiry_time ? new Date(d.expiry_time).toLocaleDateString() : "No Expiry",
-        pickupAddress: d.pickup_address,
+        category: d.category || d.food_category,
+        expiryTime: d.expiryTime || d.expiry_time || "No Expiry",
+        pickupAddress: d.pickupAddress || d.pickup_address,
         origin: "DONATION" as const,
         volunteer: d.accepted_volunteer_detail
           ? {
@@ -111,6 +134,8 @@ export const fetchDonations = async (user: any) => {
               rating: "4.8",
             }
           : undefined,
+        pickupOtp: d.pickup_otp || d.pickupOtp,
+        deliveryOtp: d.delivery_otp || d.deliveryOtp,
       };
     });
 
@@ -119,41 +144,51 @@ export const fetchDonations = async (user: any) => {
       const ngoProfileId = String((user?.ngo_profile as any)?.id || "");
 
       const matchesNGO = (val: any) => {
+        if (!val || val === "undefined" || val === "null" || !user?.id) return false;
         const s = String(val);
         return s === userId || !!(ngoProfileId && s === ngoProfileId);
       };
 
+      const rawSupporterIds = Array.isArray(n.supporterIds) ? n.supporterIds : (Array.isArray(n.supporter_ids) ? n.supporter_ids : []);
       const isSupported =
-        (Array.isArray(n.supporter_ids) &&
-          n.supporter_ids
-            .map(String)
-            .some((id: string) => id === userId || id === ngoProfileId)) ||
+        rawSupporterIds
+          .map(String)
+          .some((id: string) => id === userId || id === ngoProfileId) ||
         matchesNGO(n.accepted_by) ||
         matchesNGO(n.accepted_by_id) ||
         matchesNGO(n.accepted_ngo_id) ||
         (n.accepted_by && matchesNGO(n.accepted_by.id));
 
-      const isMine = Boolean(n.is_mine) || matchesNGO(n.ngo_id) || matchesNGO(n.ngo);
+      const isMine = Boolean(n.is_mine) || matchesNGO(n.ngo_id) || matchesNGO(n.ngo) || matchesNGO(n.user_id);
 
       return {
         id: n.id,
-        title: n.item_name || n.title,
-        source: n.ngo_name || n.ngo?.name || "Partner NGO",
+        title: n.title || n.itemName || n.item_name || n.food_category || n.category || "Community Need",
+        source: n.ngo_name || n.ngo?.name || n.ngo || "Partner NGO",
         sourceType: "NGO" as const,
         isMine: isMine,
         isSupported: isSupported,
         isOwn: isMine || isSupported,
         distance: "Community",
         icon: "📋",
-        time: n.created_at
-          ? new Date(n.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        time: n.createdAt || n.created_at
+          ? new Date(n.createdAt || n.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
           : "Recently",
         urgency: n.urgency || "Normal",
+        rawStatus: n.status,
         status: n.status || (isSupported ? "Fulfilling" : "Open"),
         progress: isSupported ? 40 : 10,
-        description: n.description,
-        quantity: n.quantity ? `${n.quantity} ${n.unit || ""}` : "N/A",
+        description: n.description || n.title,
+        quantity: n.quantity_required || (n.quantity ? `${n.quantity} ${n.unit || ""}` : "N/A"),
+        category: n.category || "General",
+        pickupAddress: n.distributionAddress || n.distribution_address || n.address || "Community Center",
         origin: "NEED" as const,
+        supporters: n.supporters || [],
+        supporters_details: n.supportersDetails || n.supporters_details || [],
+        supporter_ids: rawSupporterIds,
+        fulfilled_quantity: typeof n.fulfilledQuantity === "number" ? n.fulfilledQuantity : (typeof n.fulfilled_quantity === "number" ? n.fulfilled_quantity : 0),
+        quantity_num: typeof n.quantity === "number" ? n.quantity : (parseInt(n.quantity) || 0),
+        unit: n.unit || "",
       };
     });
 
@@ -161,25 +196,31 @@ export const fetchDonations = async (user: any) => {
       donations: [...mappedDonations, ...mappedNeeds],
     });
   } catch (error) {
+    console.error("Error fetching requests:", error);
     toast.error("Failed to load requests");
+  } finally {
+    activeFetchPromise = null;
+    currentFetchingTab = "";
   }
+  })();
+
+  return activeFetchPromise;
 };
 
 export const handleViewTracking = (donation: DonationRequest) => {
-  const state = requestsInputModel.useStore.getState().requestsState;
-  if (state.activeTab === "my-requests" || donation.status !== "Available") {
-    requestsInputModel.update({
-      selectedRequest: donation,
-      isDrawerOpen: true,
-      otpValue: "",
-      otpError: "",
-    });
-  }
+  requestsInputModel.update({
+    selectedRequest: donation,
+    isDrawerOpen: true,
+    otpValue: "",
+    otpError: "",
+  });
 };
 
 export const handleAcceptClick = (donation: DonationRequest, user: any) => {
   const phone = user?.ngo_profile?.contact_number || user?.profile?.phone || "";
-  const initialQty = donation.quantity?.split(" ")[0] || "";
+  const initialQty = donation.origin === "NEED"
+    ? Math.max(0, (donation.quantity_num || 0) - (donation.fulfilled_quantity || 0)).toString()
+    : (donation.quantity?.split(" ")[0] || "");
 
   requestsInputModel.update({
     acceptingDonation: donation,

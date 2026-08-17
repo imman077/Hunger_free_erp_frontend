@@ -77,13 +77,6 @@ export const DonationFields = () => {
 
   // Map config items to drop-down options, fallback to static defaults
   const activeCategories = rawCategories
-    .filter((c: any) => c.isActive !== false)
-    .sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0));
-  const foodCategories =
-    activeCategories.length > 0
-      ? activeCategories.map((c: any) => ({ value: c.name, label: c.name }))
-      : FOOD_CATEGORIES;
-
   const activeUnits = rawUnits
     .filter((c: any) => c.isActive !== false)
     .sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0));
@@ -103,10 +96,35 @@ export const DonationFields = () => {
   const activePrep = rawPrep
     .filter((c: any) => c.isActive !== false)
     .sort((a: any, b: any) => (a.sortOrder || 0) - (b.sortOrder || 0));
-  const preparationTypes =
+  let preparationTypes =
     activePrep.length > 0
       ? activePrep.map((c: any) => ({ value: c.name, label: c.description || c.name }))
       : PREPARATION_TYPES;
+
+  let foodCategoriesList =
+    activeCategories.length > 0
+      ? activeCategories.map((c: any) => ({ value: c.name, label: c.name }))
+      : FOOD_CATEGORIES;
+
+  if (
+    currentItem.foodCategory &&
+    !foodCategoriesList.some((c: any) => c.value === currentItem.foodCategory)
+  ) {
+    foodCategoriesList = [
+      ...foodCategoriesList,
+      { value: currentItem.foodCategory, label: currentItem.foodCategory },
+    ];
+  }
+
+  if (
+    currentItem.preparationType &&
+    !preparationTypes.some((p: any) => p.value === currentItem.preparationType)
+  ) {
+    preparationTypes = [
+      ...preparationTypes,
+      { value: currentItem.preparationType, label: currentItem.preparationType },
+    ];
+  }
 
   return (
     <>
@@ -345,8 +363,8 @@ export const DonationFields = () => {
           <FileUploadSlot
             label="Food Item Photo"
             value={currentItem.foodPhoto}
-            onChange={(file: File | null) =>
-              handleItemValueChange("foodPhoto", file)
+            onChange={(val: File | string | null) =>
+              handleItemValueChange("foodPhoto", val)
             }
             subtitle="High-quality image for better verification"
             icon="camera"
@@ -358,7 +376,7 @@ export const DonationFields = () => {
                 label="Food Category"
                 value={currentItem.foodCategory}
                 onChange={(val) => handleItemValueChange("foodCategory", val)}
-                options={foodCategories}
+                options={foodCategoriesList}
                 placeholder="Select Type"
                 required={items.length === 0}
                 align="left"
@@ -684,7 +702,7 @@ export const LogisticsFields = () => {
             value={logistics.contactPhone}
             onChange={(val) => handleLogisticsChange("contactPhone", val)}
             required
-            placeholder="+1 (000) 000-0000"
+            placeholder="+91 98765 43210"
             align="left"
           />
         </div>

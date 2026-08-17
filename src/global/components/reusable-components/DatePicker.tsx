@@ -21,7 +21,10 @@ export const ResuableDatePicker: React.FC<ResuableDatePickerProps> = ({
   // Helper to parse YYYY-MM-DD strings in local time to avoid UTC shifts
   const parseValue = (val: string | null) => {
     if (!val) return new Date();
-    const [year, month, day] = val.split("-").map(Number);
+    // If it's an ISO string, extract the date portion (YYYY-MM-DD)
+    const datePart = val.includes("T") ? val.split("T")[0] : val;
+    const [year, month, day] = datePart.split("-").map(Number);
+    if (isNaN(year) || isNaN(month) || isNaN(day)) return new Date();
     return new Date(year, month - 1, day);
   };
 
@@ -232,7 +235,7 @@ export const ResuableDatePicker: React.FC<ResuableDatePickerProps> = ({
           }}
         >
           <span className={`flex-1 ${alignClass}`}>
-            {value || "Select Date"}
+            {value ? (value.includes("T") ? value.split("T")[0] : value) : "Select Date"}
           </span>
           <span
             className={`transition-colors ${isOpen ? "text-[#22c55e]" : ""}`}

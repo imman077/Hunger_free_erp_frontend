@@ -214,7 +214,7 @@ const VolunteerSidebar: React.FC = () => {
                 onClick={() => setExpanded(!expanded)}
               >
                 <img
-                  src="/HungerFree.svg"
+                  src="/project_logo1.png"
                   className="h-[72px] w-auto object-contain mx-auto"
                   alt="HungerFree Logo"
                 />
@@ -251,7 +251,7 @@ const VolunteerSidebar: React.FC = () => {
           setMobileOpen(open);
           onOpenChange();
         }}
-        shouldCloseOnInteractOutside={() => false}
+        isDismissable={false}
         placement="left"
         size="xs"
         hideCloseButton
@@ -281,7 +281,7 @@ const VolunteerSidebar: React.FC = () => {
               >
                 <div className="flex-1 flex justify-center">
                   <img
-                    src="/HungerFree.svg"
+                    src="/project_logo1.png"
                     className="h-16 w-auto object-contain"
                     alt="HungerFree Logo"
                   />

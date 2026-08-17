@@ -67,7 +67,7 @@ const ResuableDrawer = ({
       backdrop="blur"
       hideCloseButton={true}
       classNames={{
-        base: `rounded-t-[1.75rem] overflow-hidden w-full ${sizeClasses[size as keyof typeof sizeClasses] || "sm:max-w-md"} shadow-2xl thin-scrollbar`,
+        base: `overflow-hidden w-full ${sizeClasses[size as keyof typeof sizeClasses] || "sm:max-w-md"} shadow-2xl thin-scrollbar`,
         backdrop: "bg-black/40 backdrop-blur-sm",
         header: `${hideHeaderBorder ? "border-none shadow-none" : "border-b border-[var(--border-color)]"} p-0`,
         body: "p-0 overflow-y-auto thin-scrollbar",
@@ -78,16 +78,16 @@ const ResuableDrawer = ({
       }}
     >
       <DrawerContent
-        className="thin-scrollbar overflow-hidden rounded-t-[1.75rem]"
+        className="thin-scrollbar overflow-hidden"
         style={{ backgroundColor: "var(--bg-primary)" }}
       >
         {() => (
           <>
             {headerVariant === "green" ? (
-              <div className="relative w-full bg-white">
+              <div className="relative w-full bg-white overflow-hidden">
                 {/* Layer 1: Underlay #B4E9C4 curved shape */}
                 <div
-                  className="absolute inset-x-0 top-0 h-[135px] bg-[#B4E9C4] z-0"
+                  className="absolute inset-x-0 top-0 h-[135px] bg-[#B4E9C4] z-0 overflow-hidden"
                   style={{
                     clipPath: "ellipse(140% 100% at 50% 0%)",
                   }}
@@ -95,7 +95,7 @@ const ResuableDrawer = ({
 
                 {/* Layer 2: Main Dark Green #056839 curved header container */}
                 <div
-                  className="relative z-10 w-full bg-[#056839] text-white pt-6 pb-11 px-6 shadow-md"
+                  className="relative z-10 w-full bg-[#056839] text-white pt-6 pb-11 px-6 shadow-md overflow-hidden"
                   style={{
                     clipPath: "ellipse(135% 90% at 50% 0%)",
                   }}

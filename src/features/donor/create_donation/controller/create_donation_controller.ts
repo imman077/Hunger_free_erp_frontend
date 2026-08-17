@@ -2,7 +2,6 @@ import type { FormEvent } from "react";
 import { toast } from "sonner";
 import { createDonationInputModel } from "../store/create_donation_store";
 import { createDonationApi } from "../api/create_donation/create_donation_api";
-import { deleteDonationApi } from "../api/delete_donation/delete_donation_api";
 import { useAuthStore } from "../../../../global/store/auth-store";
 import { clearDonationDraftApi } from "../api/clear_donation_draft/clear_donation_draft_api";
 import { getFoodCategoriesApi } from "../api/get_food_categories/get_food_categories_api";
@@ -10,6 +9,24 @@ import { getDonationUnitsApi } from "../api/get_donation_units/get_donation_unit
 import { getDietaryTypesApi } from "../api/get_dietary_types/get_dietary_types_api";
 import { getPreparationTypesApi } from "../api/get_preparation_types/get_preparation_types_api";
 import { navigate } from "../../../../core/navigation";
+
+// Format phone number to Indian standard (+91 XXXXX XXXXX)
+export const formatIndianPhoneNumber = (input: string) => {
+  const digits = input.replace(/\D/g, "");
+
+  let cleanDigits = digits;
+  if (digits.startsWith("91") && digits.length > 10) {
+    cleanDigits = digits.slice(2);
+  }
+
+  const max10 = cleanDigits.slice(0, 10);
+  if (!max10) return "";
+
+  if (max10.length <= 5) {
+    return `+91 ${max10}`;
+  }
+  return `+91 ${max10.slice(0, 5)} ${max10.slice(5)}`;
+};
 
 // Initialize controller state, fetch dynamic categories
 export const onInit = async () => {
@@ -50,7 +67,7 @@ export const handleDiscard = () => {
   navigate("/donor/donations");
 };
 
-// Handle value changes in the item form
+// Handle category change or item fields change
 export const handleItemValueChange = (name: string, value: any) => {
   const currentData = createDonationInputModel.useStore.getState().createDonationData;
   createDonationInputModel.update({
@@ -64,10 +81,12 @@ export const handleItemValueChange = (name: string, value: any) => {
 // Handle logistics input changes
 export const handleLogisticsChange = (name: string, value: string) => {
   const currentData = createDonationInputModel.useStore.getState().createDonationData;
+  const formattedVal = name === "contactPhone" ? formatIndianPhoneNumber(value) : value;
+
   createDonationInputModel.update({
     logistics: {
       ...currentData.logistics,
-      [name]: value,
+      [name]: formattedVal,
     },
   });
 };
@@ -202,7 +221,7 @@ export const handleDonationSubmit = async (
   e.preventDefault();
 
   const state = createDonationInputModel.useStore.getState().createDonationData;
-  const { items, currentItem, logistics, originalDonationId } = state;
+  const { items, currentItem, logistics } = state;
   const user = useAuthStore.getState().user;
   const userId = user?.id;
 
@@ -252,6 +271,7 @@ export const handleDonationSubmit = async (
             day: "numeric",
           }),
           pickupAddress: logistics.pickupAddress,
+          contactPhone: logistics.contactPhone || null,
           description: item.description || "Fresh food donation.",
           expiryTime: item.expiryDate && item.expiryTime ? `${item.expiryDate}T${item.expiryTime}` : null,
           image: imageUrl || (typeof item.foodPhoto === "string" ? item.foodPhoto : null),
@@ -260,15 +280,6 @@ export const handleDonationSubmit = async (
       };
 
       await createDonationApi(apiInput);
-    }
-
-    // 3. Delete original cancelled donation if redonated
-    if (originalDonationId) {
-      try {
-        await deleteDonationApi({ id: originalDonationId });
-      } catch (err) {
-        console.error("Failed to delete original donation:", err);
-      }
     }
 
     try {

@@ -23,6 +23,7 @@ export const GET_DONATION_BY_ID_QUERY = gql`
       date
       status
       pickupAddress
+      contactPhone
       deliveryAddress
       description
       expiryTime

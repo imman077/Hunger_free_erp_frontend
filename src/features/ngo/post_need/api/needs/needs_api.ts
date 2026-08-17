@@ -28,12 +28,9 @@ export const ngoNeedsService = {
     }
   },
 
-  /**
-   * Fetches all needs posted by the current NGO.
-   */
   getMyNeeds: async (): Promise<GetMyNeedsResponse> => {
     try {
-      const response = await axiosInstance.get("needs/");
+      const response = await axiosInstance.get("needs/my_needs/");
       return GetMyNeedsResponseSchema.parse(response.data);
     } catch (error) {
       console.error("Error fetching NGO needs:", error);
@@ -44,10 +41,14 @@ export const ngoNeedsService = {
   /**
    * Fetches all needs available in the marketplace (public).
    */
-  getAllNeeds: async (): Promise<GetAllNeedsResponse> => {
+  getAllNeeds: async (isMarketplace: boolean = true): Promise<GetAllNeedsResponse> => {
     try {
+      const params: any = {};
+      if (isMarketplace) {
+        params.marketplace = "true";
+      }
       const response = await axiosInstance.get("needs/", {
-        params: { marketplace: "true" },
+        params,
       });
       return GetAllNeedsResponseSchema.parse(response.data);
     } catch (error) {

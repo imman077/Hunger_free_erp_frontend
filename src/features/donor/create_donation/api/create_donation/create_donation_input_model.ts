@@ -11,6 +11,7 @@ export const CreateDonationApiInputSchema = z.object({
     donor: z.string().nullable().optional(),
     date: z.string(),
     pickupAddress: z.string(),
+    contactPhone: z.string().nullable().optional(),
     description: z.string(),
     expiryTime: z.string().nullable().optional(),
     image: z.string().nullable().optional(),

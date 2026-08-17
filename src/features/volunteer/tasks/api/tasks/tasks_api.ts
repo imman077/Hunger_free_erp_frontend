@@ -58,7 +58,7 @@ export const volunteerTasksService = {
   /**
    * Marks a donation as picked up via OTP verification.
    */
-  markAsPickedUp: async (donationId: number, otp: string): Promise<any> => {
+  markAsPickedUp: async (donationId: string | number, otp: string): Promise<any> => {
     try {
       const validatedInput = MarkAsPickedUpInputSchema.parse({ donationId, otp });
       const response = await axiosInstance.post(
@@ -75,7 +75,7 @@ export const volunteerTasksService = {
   /**
    * Marks a donation as delivered via OTP verification.
    */
-  markAsDelivered: async (donationId: number, otp: string): Promise<any> => {
+  markAsDelivered: async (donationId: string | number, otp: string): Promise<any> => {
     try {
       const validatedInput = MarkAsDeliveredInputSchema.parse({ donationId, otp });
       const response = await axiosInstance.post(

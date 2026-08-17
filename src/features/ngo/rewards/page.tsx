@@ -4,6 +4,8 @@ import PageHeader from "../../../global/components/reusable-components/PageHeade
 import { useNgoRewards } from "./controller/rewards_controller";
 import RewardsMarketplace from "./components/RewardsMarketplace";
 
+import { Loader } from "../../../global/components/reusable-components/Loader";
+
 const NGORewards = () => {
   const {
     data,
@@ -20,11 +22,7 @@ const NGORewards = () => {
   }, [currentPoints, data?.profile?.beneficiariesServed, data?.profile?.donationsAccepted]);
 
   if (isLoading) {
-    return (
-      <div className="w-full flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500" />
-      </div>
-    );
+    return <Loader text="Syncing Rewards..." minHeight="400px" />;
   }
 
   return (

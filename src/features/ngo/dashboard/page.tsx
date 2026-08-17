@@ -6,18 +6,13 @@ import {
   UpdateFeed,
 } from "./components/dashboard_component";
 
+import { Loader } from "../../../global/components/reusable-components/Loader";
+
 const NGODashboard = () => {
   const { stats, notifications, isLoading } = useNgoDashboard();
 
   if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] w-full gap-4">
-        <div className="w-12 h-12 border-4 border-hf-green border-t-transparent rounded-full animate-spin" />
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-hf-green">
-          Loading Dashboard...
-        </p>
-      </div>
-    );
+    return <Loader text="Syncing Dashboard..." minHeight="400px" />;
   }
 
   return (

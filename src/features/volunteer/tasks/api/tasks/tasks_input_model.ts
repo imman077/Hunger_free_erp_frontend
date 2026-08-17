@@ -1,14 +1,14 @@
 import { z } from "zod";
 
-export const AcceptPickupInputSchema = z.number();
+export const AcceptPickupInputSchema = z.union([z.string(), z.number()]);
 
 export const MarkAsPickedUpInputSchema = z.object({
-  donationId: z.number(),
+  donationId: z.union([z.string(), z.number()]),
   otp: z.string().min(4).max(6),
 });
 
 export const MarkAsDeliveredInputSchema = z.object({
-  donationId: z.number(),
+  donationId: z.union([z.string(), z.number()]),
   otp: z.string().min(4).max(6),
 });
 

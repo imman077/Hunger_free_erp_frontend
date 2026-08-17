@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, Package, ClipboardList, Check } from "lucide-react";
 import ResuableInput from "../../../global/components/reusable-components/Input";
 import ResuableButton from "../../../global/components/reusable-components/Button";
@@ -12,12 +12,15 @@ import {
   handleFormValueChange,
   handleSubmit,
   openSuggestModal,
+  prefillFormForEdit,
   onDestroy,
 } from "./controller/add_item_controller";
 import { SuggestCategoryModal } from "./components/add_item_component";
 
 const AddItem = () => {
   const navigate = useNavigate();
+  const { id } = useParams<{ id?: string }>();
+  const isEdit = !!id;
 
   const formData = addItemInputModel.useSelector((state) => state.addItemData.formData);
   const isSubmitting = addItemInputModel.useSelector((state) => state.addItemData.isSubmitting);
@@ -26,10 +29,13 @@ const AddItem = () => {
   const units = UNIT_OPTIONS;
 
   useEffect(() => {
+    if (isEdit && id) {
+      prefillFormForEdit(id);
+    }
     return () => {
       onDestroy();
     };
-  }, []);
+  }, [isEdit, id]);
 
   return (
     <div className="w-full space-y-6 sm:space-y-8 max-w-[1000px] mx-auto p-4 sm:p-6 lg:p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -63,7 +69,7 @@ const AddItem = () => {
               className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tighter uppercase leading-none"
               style={{ color: "var(--text-primary)" }}
             >
-              Add New <span className="text-hf-green">Item</span>
+              {isEdit ? "Edit" : "Add New"} <span className="text-hf-green">Item</span>
             </h1>
           </div>
         </div>
@@ -71,7 +77,7 @@ const AddItem = () => {
 
       {/* Main Intelligent Form */}
       <form
-        onSubmit={(e) => handleSubmit(e, navigate)}
+        onSubmit={(e) => handleSubmit(e, navigate, isEdit, id)}
         className="grid grid-cols-1 lg:grid-cols-12 gap-8"
       >
         {/* Left Column: Essential Data */}
@@ -234,7 +240,7 @@ const AddItem = () => {
                     <Check size={16} className="text-white" />
                   )}
                   <span className="text-[11px] font-black uppercase tracking-[0.15em] pt-0.5">
-                    {isSubmitting ? "Saving..." : "Add Item"}
+                    {isSubmitting ? "Saving..." : isEdit ? "Save Changes" : "Add Item"}
                   </span>
                 </ResuableButton>
               </div>

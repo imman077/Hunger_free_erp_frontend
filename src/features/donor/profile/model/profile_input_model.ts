@@ -2,7 +2,7 @@ import { z } from "zod";
 import { createSchemaBundle } from "../../../../core/utility";
 
 export const profileFormStateSchema = z.object({
-  activeTab: z.string().default("identity"),
+  activeTab: z.string().default("contact"),
   isRequestDrawerOpen: z.boolean().default(false),
   requestCategory: z.string().nullable().default(null),
   selectedFields: z.array(z.string()).default([]),

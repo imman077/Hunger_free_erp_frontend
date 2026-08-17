@@ -835,15 +835,15 @@ const ReusableTable: React.FC<ERPGridTableProps> = ({
                 <DropdownTrigger>
                   <Button
                     variant="flat"
-                    className="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl h-10 px-3.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-500 transition-all"
-                    endContent={<ChevronDown size={14} className="text-slate-400" />}
+                    className="border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-800 rounded-2xl h-[46px] px-4 shadow-sm hover:border-emerald-500/60 transition-all text-xs font-bold text-slate-700 dark:text-slate-200 min-w-[130px] justify-between"
+                    endContent={<ChevronDown size={12} className="text-slate-400 shrink-0 ml-1.5" />}
                   >
-                    <span>
-                      STATUS:{" "}
-                      <span className="text-emerald-600 dark:text-emerald-400 font-extrabold capitalize">
-                        {selectedStatus === "all" ? "All" : selectedStatus}
+                    <div className="flex flex-col text-left justify-center leading-tight">
+                      <span className="text-[8px] font-black uppercase tracking-wider text-slate-400 select-none">STATUS</span>
+                      <span className="text-[12px] font-bold text-slate-700 dark:text-slate-200 capitalize mt-0.5">
+                        {selectedStatus === "all" ? "All Statuses" : selectedStatus}
                       </span>
-                    </span>
+                    </div>
                   </Button>
                 </DropdownTrigger>
                 <DropdownMenu
@@ -879,19 +879,19 @@ const ReusableTable: React.FC<ERPGridTableProps> = ({
                 <DropdownTrigger>
                   <Button
                     variant="flat"
-                    className="border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl h-10 px-3.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:border-emerald-500 transition-all"
-                    endContent={<ChevronDown size={14} className="text-slate-400" />}
+                    className="border border-slate-200/90 dark:border-slate-700/80 bg-white dark:bg-slate-800 rounded-2xl h-[46px] px-4 shadow-sm hover:border-emerald-500/60 transition-all text-xs font-bold text-slate-700 dark:text-slate-200 min-w-[130px] justify-between"
+                    endContent={<ChevronDown size={12} className="text-slate-400 shrink-0 ml-1.5" />}
                   >
-                    <span>
-                      SORT BY:{" "}
-                      <span className="text-emerald-600 dark:text-emerald-400 font-extrabold capitalize">
+                    <div className="flex flex-col text-left justify-center leading-tight">
+                      <span className="text-[8px] font-black uppercase tracking-wider text-slate-400 select-none">SORT BY</span>
+                      <span className="text-[12px] font-bold text-slate-700 dark:text-slate-200 mt-0.5">
                         {selectedSort === "newest"
                           ? "Newest First"
                           : selectedSort === "oldest"
                           ? "Oldest First"
                           : selectedSort}
                       </span>
-                    </span>
+                    </div>
                   </Button>
                 </DropdownTrigger>
                 <DropdownMenu
@@ -1219,16 +1219,15 @@ const ReusableTable: React.FC<ERPGridTableProps> = ({
                 wrapper:
                   "p-0 no-scrollbar rounded-none border-none shadow-none bg-transparent",
                 th: [
-                  "bg-slate-50/80 dark:bg-slate-800/60",
+                  "bg-slate-100/90 dark:bg-slate-800/90",
                   "text-[11px]",
-                  "font-extrabold",
+                  "font-black",
                   "uppercase",
-                  "italic",
                   "tracking-wider",
-                  "text-slate-400 dark:text-slate-500",
+                  "text-slate-700 dark:text-slate-200",
                   "whitespace-nowrap",
-                  "py-3.5 px-4",
-                  "border-b border-slate-100 dark:border-slate-800",
+                  "py-4 px-4",
+                  "border-b-2 border-slate-200/80 dark:border-slate-700",
                 ].join(" "),
                 td: [
                   "py-3.5 px-4",

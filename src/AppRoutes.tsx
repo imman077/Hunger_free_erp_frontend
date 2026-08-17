@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
+import { Loader } from "./global/components/reusable-components/Loader";
 
 // Layout dynamic lazy imports
 const AdminLayout = lazy(() => import("./global/layouts/AdminLayout"));
@@ -25,6 +26,7 @@ const RewardsPage = lazy(() => import("./features/admin/rewards/page"));
 const CreateDonor = lazy(() => import("./features/admin/users/components/CreateDonorPage.tsx"));
 const CreateNgo = lazy(() => import("./features/admin/users/components/CreateNgoPage.tsx"));
 const CreateVolunteer = lazy(() => import("./features/admin/users/components/CreateVolunteerPage.tsx"));
+const CreateUserHub = lazy(() => import("./features/admin/users/components/CreateUserPage.tsx"));
 const ConfigurationPage = lazy(() => import("./features/admin/settings/components/ConfigurationPage"));
 const NGOEnquiryPage = lazy(() => import("./features/admin/enquiries/components/NGOEnquiryPage"));
 const VolunteerEnquiryPage = lazy(() => import("./features/admin/enquiries/components/VolunteerEnquiryPage"));
@@ -44,9 +46,10 @@ const DonorRewards = lazy(() => import("./features/donor/rewards/page"));
 const DonorBenefits = lazy(() => import("./features/donor/tiers/components/tierandbenefits"));
 const DonorLuckySpin = lazy(() => import("./features/donor/lucky_prize/page"));
 
-// NGO dynamic lazy imports
 const NGODashboard = lazy(() => import("./features/ngo/dashboard/page"));
 const NGODonationRequests = lazy(() => import("./features/ngo/requests/page"));
+const NGOMarketplace = lazy(() => import("./features/ngo/marketplace/page"));
+const NGOCommunityNeeds = lazy(() => import("./features/ngo/community_needs/page"));
 const NGOInventory = lazy(() => import("./features/ngo/my_inventory/page"));
 const NGOAddItem = lazy(() => import("./features/ngo/add_item/page"));
 const NGOProfile = lazy(() => import("./features/ngo/profile/page"));
@@ -68,12 +71,7 @@ const VolunteerLuckySpin = lazy(() => import("./features/volunteer/lucky_prize/p
 // Auth dynamic lazy import
 const AuthPage = lazy(() => import("./features/auth/page"));
 
-const PageLoader = () => (
-  <div className="flex flex-col items-center justify-center min-h-[60vh] w-full gap-4">
-    <div className="w-12 h-12 rounded-full border-4 border-green-500/20 border-t-green-500 animate-spin" />
-    <span className="text-[10px] font-black text-green-500 uppercase tracking-widest animate-pulse">Loading...</span>
-  </div>
-);
+const PageLoader = () => <Loader text="Loading..." minHeight="60vh" />;
 
 export const AppRoutes = () => {
   return (
@@ -92,6 +90,7 @@ export const AppRoutes = () => {
 
           {/* Users Section */}
           <Route path="users" element={<UsersPage />} />
+          <Route path="users/create" element={<CreateUserHub />} />
           <Route path="users/donors" element={<DonorPage />} />
           <Route path="users/donors/create" element={<CreateDonor />} />
           <Route path="users/ngos" element={<NGOsPage />} />
@@ -153,7 +152,8 @@ export const AppRoutes = () => {
           <Route path="dashboard" element={<DonorDashboard />} />
           <Route path="donations" element={<DonorMyDonations />} />
           <Route path="donations/create" element={<DonorCreateDonation />} />
-          <Route path="donations/marketplace" element={<DonorNGOPosts />} />
+          <Route path="ngo-posts" element={<DonorNGOPosts />} />
+          <Route path="donations/marketplace" element={<Navigate to="/donor/ngo-posts" replace />} />
           <Route path="rewards" element={<DonorRewards />} />
           <Route path="rewards/tiers-benefits" element={<DonorBenefits />} />
           <Route path="rewards/benefits" element={<Navigate to="/donor/rewards/tiers-benefits" replace />} />
@@ -166,9 +166,12 @@ export const AppRoutes = () => {
         <Route path="/ngo" element={<NGOLayout />}>
           <Route index element={<Navigate to="dashboard" />} />
           <Route path="dashboard" element={<NGODashboard />} />
+          <Route path="marketplace" element={<NGOMarketplace />} />
+          <Route path="community-needs" element={<NGOCommunityNeeds />} />
           <Route path="requests" element={<NGODonationRequests />} />
           <Route path="inventory" element={<NGOInventory />} />
           <Route path="inventory/add" element={<NGOAddItem />} />
+          <Route path="inventory/edit/:id" element={<NGOAddItem />} />
           <Route path="rewards" element={<NGORewards />} />
           <Route path="rewards/tiers-benefits" element={<NGOBenefits />} />
           <Route path="rewards/benefits" element={<Navigate to="/ngo/rewards/tiers-benefits" replace />} />

@@ -77,8 +77,12 @@ const ConfigurationPage: React.FC = () => {
     color: "slate",
   });
 
-  const currentSection = configSections.find((s) => s.key === activeSection)!;
-  const currentItems = config[activeSection] as ConfigItem[];
+  const currentSection =
+    configSections.find((s) => s.key === activeSection) || configSections[0];
+  const currentItems =
+    config && Array.isArray(config[activeSection])
+      ? (config[activeSection] as ConfigItem[])
+      : [];
 
   const handleAdd = () => {
     if (!newItem.name.trim()) return;

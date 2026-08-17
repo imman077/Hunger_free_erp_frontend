@@ -1,5 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect } from "react";
 import {
   MapPin,
   Search,
@@ -11,12 +10,13 @@ import {
   Loader2,
   Box,
   Heart,
-  ChevronLeft,
-  ChevronRight,
   ChevronDown,
   Check,
   TrendingUp,
   X,
+  Package,
+  Droplet,
+  CalendarDays,
 } from "lucide-react";
 import { Button } from "@heroui/react";
 import ReusableTable, {
@@ -78,9 +78,7 @@ export const NgoPostsControls = () => {
     setSearchValue(searchQuery);
   }, [searchQuery]);
 
-  const needs = getNeedsApiOutputModel.useSelector(
-    (state) => state.getNeedsApiData?.data?.needs || EMPTY_ARRAY
-  );
+
 
   const priorities = [
     { id: "ALL", label: "All Priorities" },
@@ -90,24 +88,9 @@ export const NgoPostsControls = () => {
   ];
 
   return (
-    <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6 mb-8 w-full">
-      {/* Left Column: Title & Subtitle */}
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0">
-          <Heart className="text-green-500" size={20} />
-        </div>
-        <div className="space-y-0.5 text-start">
-          <h2 className="text-xl font-bold tracking-tight text-slate-800">
-            NGO Needs Marketplace
-          </h2>
-          <p className="text-xs text-slate-500 font-medium">
-            Discover urgent food requirements posted by local NGOs and support them
-          </p>
-        </div>
-      </div>
-
+    <div className="flex flex-row flex-wrap items-center gap-4 mb-4 w-full justify-start">
       {/* Right Column: Search, Filter and View Switcher */}
-      <div className="flex flex-wrap lg:flex-nowrap items-center gap-3.5 w-full lg:w-auto justify-start lg:justify-end">
+      <div className="flex flex-wrap items-center gap-3.5 w-full lg:w-auto justify-start">
         {/* Search Bar */}
         <div className="relative w-full sm:w-[240px]">
           <input
@@ -247,235 +230,246 @@ export const NgoPostsControls = () => {
 
 export const NgoPostsGrid = ({ filteredNeeds }: { filteredNeeds: any[] }) => {
   const { user } = useAuthStore();
-  const sliderRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
 
-  const checkScroll = () => {
-    if (sliderRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = sliderRef.current;
-      setCanScrollLeft(scrollLeft > 10);
-      setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
-    }
+  const renderSupportersStack = (supporters: any[], need: any) => {
+    const list = supporters || [];
+    const count = list.length;
+    
+    const bgColors = [
+      "bg-emerald-100 text-emerald-700 border-emerald-50",
+      "bg-blue-100 text-blue-700 border-blue-50",
+      "bg-amber-100 text-amber-700 border-amber-50",
+      "bg-purple-100 text-purple-700 border-purple-50",
+    ];
+
+    return (
+      <div
+        onClick={(e) => {
+          e.stopPropagation();
+          ngoPostsInputModel.update({
+            selectedNeed: need,
+            isDrawerOpen: true,
+          });
+        }}
+        className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-900/20 shrink-0 select-none cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-all active:scale-[0.97]"
+      >
+        <div className="flex -space-x-2.5 overflow-hidden">
+          {count > 0 ? (
+            list.slice(0, 3).map((supporter, idx) => {
+              const name = supporter.username || supporter.email || "Donor";
+              const letter = name.charAt(0).toUpperCase();
+              const bgClass = bgColors[idx % bgColors.length];
+              return supporter.avatar ? (
+                <img
+                  key={supporter.id || idx}
+                  src={supporter.avatar}
+                  alt={name}
+                  className="w-7 h-7 rounded-full object-cover border-2 border-white dark:border-slate-900"
+                />
+              ) : (
+                <div
+                  key={supporter.id || idx}
+                  className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-white dark:border-slate-900 ${bgClass}`}
+                >
+                  {letter}
+                </div>
+              );
+            })
+          ) : (
+            <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 border-2 border-white dark:border-slate-900">
+              <Heart size={12} className="fill-slate-300 dark:fill-slate-700 stroke-none" />
+            </div>
+          )}
+          
+          {count > 3 && (
+            <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-800 border-2 border-white dark:border-slate-900 flex items-center justify-center text-[9px] font-black text-slate-700 dark:text-slate-200">
+              +{count - 3}
+            </div>
+          )}
+        </div>
+        <div className="flex flex-col text-start leading-none gap-0.5">
+          <span className="text-[11px] font-black text-slate-800 dark:text-slate-100">
+            {count} {count === 1 ? "Supporter" : "Supporters"}
+          </span>
+          <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">
+            So far
+          </span>
+        </div>
+      </div>
+    );
   };
 
-  useEffect(() => {
-    checkScroll();
-    window.addEventListener("resize", checkScroll);
-    return () => window.removeEventListener("resize", checkScroll);
-  }, [filteredNeeds]);
-
   return (
-    <div className="relative group">
-      <AnimatePresence>
-        {canScrollLeft && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{
-              opacity: 0.8,
-              scale: [1, 1.05, 1],
-              boxShadow: [
-                "0 0 0 0px rgba(34, 197, 94, 0)",
-                "0 0 0 8px rgba(34, 197, 94, 0.1)",
-                "0 0 0 0px rgba(34, 197, 94, 0)",
-              ],
-            }}
-            exit={{ opacity: 0, scale: 0.5 }}
-            transition={{
-              scale: { repeat: Infinity, duration: 2, ease: "easeInOut" },
-              opacity: { duration: 0.3 },
-            }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => {
-              if (sliderRef.current)
-                sliderRef.current.scrollBy({ left: -460, behavior: "smooth" });
-            }}
-            className="absolute -left-4 md:-left-6 top-1/2 -translate-y-1/2 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-2 border-emerald-50 flex items-center justify-center text-[#22c55e] z-20 hover:text-white hover:bg-[#22c55e] transition-all cursor-pointer group/arrow"
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full pb-10">
+      {filteredNeeds.map((need) => {
+        const isMine = user
+          ? need.ngo === user.id ||
+            need.ngo === String(user.id) ||
+            need.is_mine
+          : false;
+        return (
+          <div
+            key={need.id}
+            className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-[1.75rem] p-5 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col justify-between h-full group/card relative overflow-hidden text-start"
           >
-            <ChevronLeft
-              size={28}
-              className="transition-transform group-hover/arrow:-translate-x-0.5"
-              strokeWidth={3}
-            />
-          </motion.button>
-        )}
-      </AnimatePresence>
-
-      <div
-        ref={sliderRef}
-        onScroll={checkScroll}
-        className="ngo-needs-slider flex overflow-x-auto no-scrollbar gap-8 pb-10"
-      >
-        {filteredNeeds.map((need) => {
-          const isMine = user
-            ? need.ngo === user.id ||
-              need.ngo === String(user.id) ||
-              need.is_mine
-            : false;
-          return (
-            <div
-              key={need.id}
-              className="flex-shrink-0 w-full sm:w-[420px] group relative flex flex-col bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500"
-            >
-              <div className="relative h-48 overflow-hidden bg-[var(--bg-secondary)]">
-                <img
-                  src={need.image || getCategoryImage(need.category)}
-                  alt={need.item_name}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            {/* Top Header Row */}
+            <div className="flex items-center justify-between gap-2 mb-4">
+              <div
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+                  need.urgency === "HIGH" || need.urgency === "URGENT" || need.urgency === "High" || need.urgency === "Urgent"
+                    ? "bg-red-50 text-red-600 border-red-200/80 dark:bg-red-950/30 dark:border-red-800/50"
+                    : "bg-amber-50 text-amber-600 border-amber-200/80 dark:bg-amber-950/30 dark:border-amber-800/50"
+                }`}
+              >
+                <div
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    need.urgency === "HIGH" || need.urgency === "URGENT" || need.urgency === "High" || need.urgency === "Urgent"
+                      ? "bg-red-500 animate-pulse"
+                      : "bg-amber-500"
+                  }`}
                 />
+                <span>{need.urgency ? `${need.urgency.toUpperCase()} PRIORITY` : "MEDIUM PRIORITY"}</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-200/80">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span>{need.status?.toUpperCase() || "OPEN"}</span>
+              </div>
+            </div>
 
-                <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-2">
-                  <span
-                    className={`px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.2em] shadow-xl backdrop-blur-md border ${
-                      need.urgency === "URGENT" || need.urgency === "Urgent"
-                        ? "bg-red-500 text-white border-red-400/50 animate-pulse"
-                        : need.urgency === "HIGH" || need.urgency === "High"
-                          ? "bg-amber-500 text-white border-amber-400/50"
-                          : "bg-emerald-500 text-white border-emerald-400/50"
-                    }`}
-                  >
-                    {need.urgency}
-                  </span>
+            {/* Cover Image */}
+            <div className="relative aspect-[16/6.5] rounded-[1.25rem] overflow-hidden mb-4 shadow-sm bg-slate-100 dark:bg-slate-800">
+              <img
+                src={need.image || getCategoryImage(need.category)}
+                alt={need.item_name}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+            </div>
 
-                  {need.status === "Fulfilling" && (
-                    <span className="px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.2em] shadow-xl backdrop-blur-md border bg-blue-500 text-white border-blue-400/50">
-                      In Progress
-                    </span>
-                  )}
+            {/* Title */}
+            <div className="mb-4">
+              <h3 className="text-2xl font-black text-[var(--text-primary)] tracking-tight leading-snug mb-1">
+                {need.item_name || "Community Need"}
+              </h3>
+              <div className="flex items-center gap-1.5">
+                <Package size={15} className="text-[#22c55e]" />
+                <span className="text-sm font-black text-[#22c55e]">
+                  {need.quantity} {need.unit}
+                </span>
+                <span className="text-xs font-semibold text-slate-400">required</span>
+              </div>
+            </div>
+
+            {/* Detail: Requested By & Category */}
+            <div className="bg-slate-50/90 dark:bg-slate-800/40 rounded-2xl p-3.5 border border-slate-100 dark:border-slate-800/60 grid grid-cols-2 gap-3 divide-x divide-slate-200/60 mb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-emerald-100/70 text-[#22c55e] flex items-center justify-center shrink-0">
+                  <Building2 size={16} />
                 </div>
-
-                <div className="absolute bottom-4 left-4 z-20">
-                  <div className="flex items-center gap-2 px-3 py-1 bg-black/40 backdrop-blur-md rounded-lg border border-white/20">
-                    <MapPin size={10} className="text-white" />
-                    <span className="text-[9px] font-black text-white uppercase tracking-widest">
-                      {need.distribution_address || "Service Zone"}
-                    </span>
-                  </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 leading-none mb-1">
+                    ORGANIZATION
+                  </span>
+                  <span className="text-xs font-black text-[var(--text-primary)] truncate">
+                    {need.ngo_name || "Authorized NGO"}
+                  </span>
                 </div>
               </div>
-
-              <div className="p-6 flex-grow flex flex-col gap-5 text-start">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest leading-none bg-emerald-500/5 px-2 py-1 rounded">
-                      {need.category}
-                    </span>
-                  </div>
-                  <h3 className="text-xl font-black tracking-tight leading-tight group-hover:text-emerald-500 transition-colors">
-                    {need.item_name}
-                  </h3>
+              <div className="flex items-center gap-3 pl-3">
+                <div className="w-9 h-9 rounded-xl bg-emerald-100/70 text-[#22c55e] flex items-center justify-center shrink-0">
+                  <LayoutGrid size={16} />
                 </div>
-
-                <div className="p-4 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-color)] space-y-3">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-[var(--text-muted)] uppercase tracking-wider text-[9px]">
-                      Organization
-                    </span>
-                    <span className="font-black text-emerald-500">
-                      {need.ngo_name || "Validated NGO"}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-[var(--text-muted)] uppercase tracking-wider text-[9px]">
-                      Requirement
-                    </span>
-                    <span className="font-black">
-                      {need.fulfilled_quantity && need.fulfilled_quantity > 0 ? (
-                        <span className="flex flex-col items-end">
-                          <span className="text-emerald-500">
-                            {need.quantity - need.fulfilled_quantity}{" "}
-                            {need.unit} left
-                          </span>
-                          <span className="text-[9px] text-[var(--text-muted)] font-normal uppercase">
-                            of {need.quantity} {need.unit}
-                          </span>
-                        </span>
-                      ) : (
-                        <span>
-                          {need.quantity} {need.unit}
-                        </span>
-                      )}
-                    </span>
-                  </div>
-                </div>
-
-                <p className="text-[11px] leading-relaxed text-[var(--text-muted)] line-clamp-2 italic">
-                  "
-                  {need.description ||
-                    "Help our organization gather resources for local communities in need."}
-                  "
-                </p>
-
-                <div className="pt-2 flex items-center gap-2">
-                  <Button
-                    className={`flex-1 font-black text-[10px] uppercase tracking-widest px-6 h-12 rounded-2xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 ${
-                      user && user.profile.role === "NGO" && need.ngo === user.id
-                        ? "bg-blue-500 hover:bg-blue-600 shadow-blue-500/20"
-                        : "bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20"
-                    } text-white`}
-                    onPress={() => handleApplyToHelp(need, user)}
-                  >
-                    {isMine ? (
-                      <>
-                        <Clock size={14} />
-                        Track Progress
-                      </>
-                    ) : (
-                      <>Support Need</>
-                    )}
-                  </Button>
-                  <Button
-                    isIconOnly
-                    className="bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-muted)] hover:text-emerald-500 h-12 w-12 rounded-2xl transition-all"
-                    onPress={() =>
-                      ngoPostsInputModel.update({
-                        selectedNeed: need,
-                        isDrawerOpen: true,
-                      })
-                    }
-                  >
-                    <Eye size={18} />
-                  </Button>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 leading-none mb-1">
+                    CATEGORY
+                  </span>
+                  <span className="text-xs font-black text-[var(--text-primary)] truncate">
+                    {need.category || "Cooked Food"}
+                  </span>
                 </div>
               </div>
             </div>
-          );
-        })}
-      </div>
 
-      <AnimatePresence>
-        {canScrollRight && (
-          <motion.button
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{
-              opacity: 0.8,
-              scale: [1, 1.05, 1],
-              boxShadow: [
-                "0 0 0 0px rgba(34, 197, 94, 0)",
-                "0 0 0 8px rgba(34, 197, 94, 0.1)",
-                "0 0 0 0px rgba(34, 197, 94, 0)",
-              ],
-            }}
-            exit={{ opacity: 0, scale: 0.5 }}
-            transition={{
-              scale: { repeat: Infinity, duration: 2, ease: "easeInOut" },
-              opacity: { duration: 0.3 },
-            }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => {
-              if (sliderRef.current)
-                sliderRef.current.scrollBy({ left: 460, behavior: "smooth" });
-            }}
-            className="absolute -right-4 md:-right-6 top-1/2 -translate-y-1/2 w-12 h-12 md:w-14 md:h-14 rounded-full bg-white shadow-[0_8px_30px_rgb(0,0,0,0.12)] border-2 border-emerald-50 flex items-center justify-center text-[#22c55e] z-20 hover:text-white hover:bg-[#22c55e] transition-all cursor-pointer group/arrow"
-          >
-            <ChevronRight
-              size={28}
-              className="transition-transform group-hover/arrow:translate-x-0.5"
-              strokeWidth={3}
-            />
-          </motion.button>
-        )}
-      </AnimatePresence>
+            {/* Detail: Progress & Location / Date */}
+            <div className="bg-slate-50/90 dark:bg-slate-800/40 rounded-2xl p-3.5 border border-slate-100 dark:border-slate-800/60 grid grid-cols-12 gap-3 divide-x divide-slate-200/60 items-center mb-5">
+              <div className="col-span-7 flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-emerald-100/70 text-[#22c55e] flex items-center justify-center shrink-0">
+                  <Box size={16} />
+                </div>
+                <div className="flex flex-col min-w-0 w-full">
+                  <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-wider text-slate-400 leading-none mb-1">
+                    <span>PROGRESS</span>
+                    <span className="text-[#22c55e] font-black">
+                      {Math.round(((need.fulfilled_quantity || 0) / need.quantity) * 100)}%
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate">
+                    {need.fulfilled_quantity || 0} / {need.quantity} {need.unit}
+                  </span>
+                  <div className="w-full h-1.5 bg-slate-200/80 rounded-full overflow-hidden mt-1.5">
+                    <div
+                      className="h-full bg-[#22c55e] rounded-full transition-all duration-500"
+                      style={{
+                        width: `${Math.min(
+                          100,
+                          Math.round(((need.fulfilled_quantity || 0) / need.quantity) * 100)
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="col-span-5 flex items-center gap-3 pl-3">
+                <div className="w-9 h-9 rounded-xl bg-amber-100/70 text-amber-600 flex items-center justify-center shrink-0">
+                  <CalendarDays size={16} />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 leading-none mb-1">
+                    POSTED ON
+                  </span>
+                  <span className="text-xs font-black text-[var(--text-primary)] leading-tight">
+                    {need.created_at
+                      ? new Date(Number(need.created_at)).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })
+                      : "Aug 9, 2026"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Description */}
+            <p className="text-[11px] leading-relaxed text-[var(--text-muted)] line-clamp-2 italic mb-4">
+              "{need.description || "Help our organization gather resources for local communities in need."}"
+            </p>
+
+            {/* Action Bar */}
+            <div className="pt-2 flex items-center justify-between gap-3 w-full mt-auto">
+              <Button
+                className={`flex-grow font-black text-xs uppercase tracking-widest h-12 rounded-2xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 ${
+                  isMine
+                    ? "bg-blue-500 hover:bg-blue-600 shadow-blue-500/20"
+                    : "bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20"
+                } text-white`}
+                onPress={() => handleApplyToHelp(need, user)}
+              >
+                {isMine ? (
+                  <>
+                    <Clock size={14} />
+                    Track Progress
+                  </>
+                ) : (
+                  <>Support Need</>
+                )}
+              </Button>
+
+              {renderSupportersStack(need.supporters, need)}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 };
@@ -489,6 +483,7 @@ export const NgoPostsTable = ({ filteredNeeds }: { filteredNeeds: any[] }) => {
         enableSearch={false}
         enableFilters={false}
         showColumnSettings={false}
+        topContent={null}
         onRowClick={(need: any) =>
           ngoPostsInputModel.update({ selectedNeed: need, isDrawerOpen: true })
         }
@@ -624,118 +619,80 @@ export const NgoPostsModals = () => {
       <ResuableDrawer
         isOpen={isDrawerOpen}
         onClose={() => ngoPostsInputModel.update({ isDrawerOpen: false })}
-        title="Need Details"
+        title="Supporters Details"
       >
         {selectedNeed && (
-          <div className="space-y-8 p-6 text-start bg-white">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                  <Box size={24} />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-black uppercase tracking-tighter">
-                    {selectedNeed.item_name}
-                  </h2>
-                  <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">
-                    {selectedNeed.category}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-color)]">
-                <span className="text-[9px] font-black text-[var(--text-muted)] uppercase tracking-widest block mb-1">
-                  Amount Needed
-                </span>
-                <span className="text-lg font-black">
-                  {selectedNeed.quantity} {selectedNeed.unit}
-                </span>
-              </div>
-              <div className="p-4 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-color)]">
-                <span className="text-[9px] font-black text-[var(--text-muted)] uppercase tracking-widest block mb-1">
-                  Urgency Level
-                </span>
-                <span
-                  className={`text-lg font-black ${
-                    selectedNeed.urgency === "Urgent"
-                      ? "text-red-500"
-                      : "text-emerald-500"
-                  }`}
-                >
-                  {selectedNeed.urgency}
-                </span>
-              </div>
+          <div className="space-y-6 p-6 text-start bg-[var(--bg-primary)] text-[var(--text-primary)]">
+            <div className="space-y-1">
+              <h2 className="text-xl font-black uppercase tracking-tighter">
+                {selectedNeed.item_name}
+              </h2>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                Resource Requirement Supporters
+              </p>
             </div>
 
             <div className="space-y-4">
               <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--text-primary)] border-b border-[var(--border-color)] pb-2 flex items-center gap-2">
-                <Building2 size={12} /> Organization
+                <Heart
+                  size={12}
+                  fill="currentColor"
+                  className="text-red-500"
+                />{" "}
+                Active Supporters ({selectedNeed.supporters?.length || 0})
               </h4>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-[11px] font-bold text-[var(--text-muted)]">
-                    Organization
-                  </span>
-                  <span className="text-[11px] font-black">
-                    {selectedNeed.ngo_name}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-[11px] font-bold text-[var(--text-muted)]">
-                    Help Location
-                  </span>
-                  <span className="text-[11px] font-black">
-                    {selectedNeed.distribution_address ||
-                      "Sector 4, Central Region"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--text-primary)] border-b border-[var(--border-color)] pb-2">
-                Description
-              </h4>
-              <p className="text-xs leading-relaxed text-[var(--text-muted)] font-medium bg-[var(--bg-secondary)] p-4 rounded-2xl border border-[var(--border-color)] italic">
-                "
-                {selectedNeed.description ||
-                  "The organization is seeking urgent food supplies to support local families in the designated region. Your contribution directly impacts the well-being of our beneficiaries."}
-                "
-              </p>
-            </div>
-
-            {selectedNeed.supporters_details &&
-              selectedNeed.supporters_details.length > 0 && (
-                <div className="space-y-4">
-                  <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--text-primary)] border-b border-[var(--border-color)] pb-2 flex items-center gap-2">
-                    <Heart
-                      size={12}
-                      fill="currentColor"
-                      className="text-red-500"
-                    />{" "}
-                    Supporters ({selectedNeed.supporters_details.length})
-                  </h4>
-                  <div className="space-y-3">
-                    {selectedNeed.supporters_details.map(
-                      (supporter: any, idx: number) => (
+              
+              {selectedNeed.supporters && selectedNeed.supporters.length > 0 ? (
+                <div className="space-y-3">
+                  {selectedNeed.supporters.map(
+                    (supporter: any, idx: number) => {
+                      const contribution = (selectedNeed.supporters_details || []).find(
+                        (sd: any) =>
+                          sd.id === supporter.id ||
+                          sd.username === supporter.id ||
+                          sd.username === supporter.username ||
+                          sd.name === supporter.username
+                      );
+                      const role = supporter.role || "DONOR";
+                      const quantity = contribution?.quantity || "Supported";
+                      return (
                         <div
                           key={supporter.id || idx}
-                          className="flex justify-between items-center bg-[var(--bg-secondary)] p-4 rounded-2xl border border-[var(--border-color)]"
+                          className="flex justify-between items-center bg-[var(--bg-secondary)] p-4 rounded-2xl border border-[var(--border-color)] text-start"
                         >
-                          <span className="text-[11px] font-bold text-[var(--text-muted)]">
-                            {supporter.name}
-                          </span>
-                          <span className="text-[11px] font-black text-emerald-500">
-                            {supporter.quantity}
-                          </span>
+                          <div className="flex flex-col text-start gap-1 min-w-0">
+                            <span className="text-xs font-black text-[var(--text-primary)] truncate">
+                              {supporter.donorProfile?.businessName || supporter.username || supporter.email}
+                            </span>
+                            <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">
+                              Role: <span className="text-[#22c55e]">{role}</span>
+                            </span>
+                          </div>
+                          <div className="flex flex-col text-end gap-1 shrink-0 pl-3">
+                            <span className="text-[11px] font-black text-[#22c55e]">
+                              {quantity}
+                            </span>
+                            <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest leading-none">
+                              Contributed
+                            </span>
+                          </div>
                         </div>
-                      )
-                    )}
+                      );
+                    }
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-16 px-4 text-center border border-dashed border-[var(--border-color)] rounded-3xl">
+                  <div className="w-12 h-12 rounded-full bg-slate-50 dark:bg-slate-900/60 border border-[var(--border-color)] flex items-center justify-center mb-3">
+                    <Heart size={20} className="text-slate-300 dark:text-slate-700" />
                   </div>
+                  <p className="text-xs font-black text-[var(--text-primary)]">No Supporters Yet</p>
+                  <p className="text-[10px] text-slate-400 mt-1 max-w-[220px] leading-relaxed">
+                    Be the first to support this need by clicking "Support Need"!
+                  </p>
                 </div>
               )}
+            </div>
           </div>
         )}
       </ResuableDrawer>

@@ -1,30 +1,31 @@
+import { addToast } from "@heroui/react";
 import {
   MapPin,
   Clock,
   ShieldCheck,
-  CheckCircle2,
   Package,
   User,
   Truck,
   Building2,
   Star,
   Phone,
+  Check,
+  Box,
+  X,
+  HeartHandshake,
+  CheckCircle2,
   AlertTriangle,
   Loader2,
-  Check,
-  Navigation,
-  Box,
-  ChevronUp,
-  ChevronDown,
+  Info,
+  Tag,
 } from "lucide-react";
 import ResuableDrawer from "../../../../global/components/reusable-components/Drawer";
 import ResuableModal from "../../../../global/components/reusable-components/Modal";
-import ResuableButton from "../../../../global/components/reusable-components/Button";
 import { requestsInputModel } from "../store/requests_store";
 import {
   closeDrawer,
-  handleVerifyOTP,
   handleConfirmAccept,
+  handleAcceptClick,
   handleMouseEnterSuccess,
   handleMouseLeaveSuccess,
   setRequestsStateValue,
@@ -37,9 +38,6 @@ interface RequestsComponentProps {
 export const LiveTraceDrawer = ({ user }: RequestsComponentProps) => {
   const isOpen = requestsInputModel.useSelector((state) => state.requestsState.isDrawerOpen);
   const selectedRequest = requestsInputModel.useSelector((state) => state.requestsState.selectedRequest);
-  const otpValue = requestsInputModel.useSelector((state) => state.requestsState.otpValue);
-  const isVerifying = requestsInputModel.useSelector((state) => state.requestsState.isVerifying);
-  const otpError = requestsInputModel.useSelector((state) => state.requestsState.otpError);
 
   if (!selectedRequest) return null;
 
@@ -109,66 +107,40 @@ export const LiveTraceDrawer = ({ user }: RequestsComponentProps) => {
         {/* Secure Delivery Verification Terminal (NGO Side) */}
         {selectedRequest.rawStatus === "PICKED_UP" && (
           <div
-            className="p-5 rounded-sm border-2 border-hf-green space-y-4 relative overflow-hidden group animate-in slide-in-from-top-10 duration-1000"
+            className="p-3.5 rounded-sm border-2 border-hf-green relative overflow-hidden group animate-in slide-in-from-top-10 duration-1000 flex flex-col sm:flex-row items-center justify-between gap-4"
             style={{
               backgroundColor: "rgba(34, 197, 94, 0.03)",
             }}
           >
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-sm bg-hf-green/10 border border-hf-green/20 flex items-center justify-center text-hf-green shadow-[0_0_20px_rgba(34,197,94,0.1)]">
-                <ShieldCheck size={24} className="animate-pulse" />
+              <div className="w-10 h-10 rounded-sm bg-hf-green/10 border border-hf-green/20 flex items-center justify-center text-hf-green shrink-0">
+                <ShieldCheck size={20} className="animate-pulse" />
               </div>
-              <div>
+              <div className="text-start">
                 <h4 className="text-[11px] font-[1000] uppercase tracking-widest text-hf-green">
                   Handover Protocol
                 </h4>
-                <p className="text-[9px] font-black text-hf-green/60 uppercase tracking-widest">
-                  AGENT IS AT DESTINATION | ENTER CODE
+                <p className="text-[9px] font-black text-hf-green/60 uppercase tracking-widest leading-none mt-0.5">
+                  SHARE CODE WITH AGENT
                 </p>
               </div>
             </div>
 
-            <div className="space-y-4 relative z-10">
-              <div className="flex gap-3">
-                <input
-                  type="text"
-                  maxLength={4}
-                  placeholder="----"
-                  value={otpValue}
-                  onChange={(e) => setRequestsStateValue("otpValue", e.target.value.replace(/\D/g, ""))}
-                  className={`flex-1 h-16 bg-white border-2 text-center text-3xl font-black tracking-[0.5em] rounded-sm focus:outline-none transition-all ${
-                    otpError ? "border-red-500 text-red-600 shadow-[0_0_15px_rgba(239,68,68,0.1)]" : "border-hf-green/30 text-hf-green focus:border-hf-green"
-                  }`}
-                />
-                <ResuableButton
-                  variant="primary"
-                  onClick={() => handleVerifyOTP(user)}
-                  disabled={otpValue.length < 4 || isVerifying}
-                  className="h-16 w-16 !rounded-sm bg-hf-green hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 active:scale-90"
-                >
-                  {isVerifying ? (
-                    <Loader2 size={24} className="animate-spin" />
-                  ) : (
-                    <CheckCircle2 size={24} />
-                  )}
-                </ResuableButton>
+            {/* Delivery OTP code display boxes */}
+            {selectedRequest?.deliveryOtp && (
+              <div className="flex items-center gap-1.5 shrink-0 z-10">
+                {selectedRequest.deliveryOtp.split("").map((digit: string, i: number) => (
+                  <div
+                    key={i}
+                    className="w-8 h-10 bg-white border border-hf-green/30 rounded-sm flex items-center justify-center text-lg font-black text-hf-green font-mono shadow-sm"
+                  >
+                    {digit}
+                  </div>
+                ))}
               </div>
-
-              {otpError && (
-                <div className="flex items-center justify-center gap-2 text-red-600 animate-bounce">
-                  <AlertTriangle size={12} />
-                  <p className="text-[10px] font-[1000] uppercase tracking-widest">
-                    {otpError}
-                  </p>
-                </div>
-              )}
-
-              <p className="text-[9px] font-black text-center opacity-40 uppercase tracking-[0.2em] leading-relaxed">
-                Verify the handover by entering the 4-digit code <br /> from the delivery agent.
-              </p>
-            </div>
+            )}
             
-            <div className="absolute inset-0 pointer-events-none border border-hf-green/10 opacity-50" />
+            <div className="absolute inset-0 pointer-events-none border border-hf-green/10 opacity-30" />
           </div>
         )}
 
@@ -423,7 +395,7 @@ export const LiveTraceDrawer = ({ user }: RequestsComponentProps) => {
                 }}
               >
                 <span className="text-lg font-black text-hf-green uppercase">
-                  {selectedRequest.volunteer.name.charAt(0)}
+                  {selectedRequest.volunteer?.name?.charAt(0) || "A"}
                 </span>
                 <div className="absolute -top-1 -right-1 flex items-center justify-center">
                   <div className="w-2 h-2 rounded-full bg-hf-green border border-[var(--bg-primary)] shadow-sm" />
@@ -436,7 +408,7 @@ export const LiveTraceDrawer = ({ user }: RequestsComponentProps) => {
                     className="text-[13px] font-black uppercase tracking-tight leading-tight truncate"
                     style={{ color: "var(--text-primary)" }}
                   >
-                    {selectedRequest.volunteer.name}
+                    {selectedRequest.volunteer?.name || "Assigned Agent"}
                   </p>
 
                   <div className="flex items-center gap-2">
@@ -449,7 +421,7 @@ export const LiveTraceDrawer = ({ user }: RequestsComponentProps) => {
                     >
                       <Star className="fill-yellow-400 text-yellow-400" size={8} />
                       <span className="text-[9px] font-black text-yellow-600 tabular-nums">
-                        {selectedRequest.volunteer.rating}
+                        {selectedRequest.volunteer?.rating || "4.8"}
                       </span>
                     </div>
                     <span className="text-[8px] font-black uppercase tracking-[0.1em] text-hf-green/60 px-2 border-l border-[var(--border-color)] truncate">
@@ -458,7 +430,7 @@ export const LiveTraceDrawer = ({ user }: RequestsComponentProps) => {
                   </div>
                 </div>
 
-                {selectedRequest.volunteer.phone && (
+                {selectedRequest.volunteer?.phone && (
                   <div className="flex items-center gap-1.5 pt-1 border-t border-[var(--border-color)] border-dotted">
                     <Phone size={9} className="text-hf-green opacity-60 shrink-0" />
                     <p
@@ -471,7 +443,7 @@ export const LiveTraceDrawer = ({ user }: RequestsComponentProps) => {
                 )}
               </div>
 
-              {selectedRequest.volunteer.phone && (
+              {selectedRequest.volunteer?.phone && (
                 <a
                   href={`tel:${selectedRequest.volunteer.phone.replace(/\s+/g, "")}`}
                   className="w-10 h-10 rounded-sm bg-hf-green flex items-center justify-center shadow-lg shadow-hf-green/10 hover:bg-emerald-600 transition-all duration-300 group shrink-0"
@@ -480,6 +452,25 @@ export const LiveTraceDrawer = ({ user }: RequestsComponentProps) => {
                 </a>
               )}
             </div>
+          </div>
+        )}
+
+        {/* Accept/Support Action inside Drawer for Available/Open requests */}
+        {(selectedRequest.status === "Available" || selectedRequest.status === "Open") && (
+          <div className="pt-4 border-t border-[var(--border-color)]">
+            <button
+              type="button"
+              onClick={() => {
+                closeDrawer();
+                handleAcceptClick(selectedRequest, user);
+              }}
+              className="w-full py-3.5 px-6 bg-[#22c55e] hover:bg-green-600 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all cursor-pointer active:scale-95"
+            >
+              <CheckCircle2 size={18} />
+              <span>
+                {selectedRequest.origin === "NEED" ? "Support Community Need" : "Accept Food Donation"}
+              </span>
+            </button>
           </div>
         )}
       </div>
@@ -497,79 +488,71 @@ export const AcceptDonationModal = ({ user }: RequestsComponentProps) => {
   const isTimerPaused = requestsInputModel.useSelector((state) => state.requestsState.isTimerPaused);
   const remainingTime = requestsInputModel.useSelector((state) => state.requestsState.remainingTime);
 
+  const getCategoryThumbnail = (title?: string) => {
+    const t = (title || "").toLowerCase();
+    if (t.includes("cooked") || t.includes("rice") || t.includes("meal") || t.includes("biryani")) 
+      return "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80";
+    if (t.includes("packaged") || t.includes("ration") || t.includes("grocery") || t.includes("wheat") || t.includes("atta")) 
+      return "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&w=600&q=80";
+    if (t.includes("water") || t.includes("beverage")) 
+      return "https://images.unsplash.com/photo-1548839140-29a749e1bc4e?auto=format&fit=crop&w=600&q=80";
+    if (t.includes("bread") || t.includes("bakery")) 
+      return "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80";
+    return "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=600&q=80";
+  };
+
+  const handleClose = () => {
+    setRequestsStateValue("isAcceptModalOpen", false);
+  };
+
   return (
     <ResuableModal
       isOpen={isOpen}
       onOpenChange={(open) => setRequestsStateValue("isAcceptModalOpen", open)}
-      title="Confirm Acceptance"
-      footer={
-        !isAcceptSuccess && (
-          <div className="flex items-center justify-end gap-3">
-            <ResuableButton
-              variant="ghost"
-              size="sm"
-              disabled={isAccepting}
-              onClick={() => setRequestsStateValue("isAcceptModalOpen", false)}
-            >
-              Cancel
-            </ResuableButton>
-            <ResuableButton
-              variant="primary"
-              size="md"
-              disabled={isAccepting}
-              onClick={() => handleConfirmAccept(user)}
-              className="bg-[#22c55e] hover:bg-green-600 shadow-lg shadow-green-500/20 px-5 py-1.5 !rounded-lg"
-            >
-              {isAccepting ? (
-                <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-wider">
-                  <Loader2 size={13} className="animate-spin" />
-                  <span>Accepting...</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-wider">
-                  <CheckCircle2 size={13} />
-                  <span>Confirm Acceptance</span>
-                </div>
-              )}
-            </ResuableButton>
-          </div>
-        )
-      }
+      scrollBehavior="inside"
+      classNames={{
+        header: "!hidden",
+        body: "!p-6",
+        base: "max-w-[580px] !my-10 sm:!my-16"
+      }}
     >
-      <div className="py-4">
+      <div>
+        {/* Success View */}
         {isAcceptSuccess ? (
           <div
-            className="relative flex flex-col items-center justify-center py-12 overflow-hidden animate-in fade-in zoom-in duration-500 cursor-default"
+            className="relative flex flex-col items-center justify-center py-10 overflow-hidden animate-in fade-in zoom-in duration-500 cursor-default"
             onMouseEnter={handleMouseEnterSuccess}
             onMouseLeave={handleMouseLeaveSuccess}
           >
-            <div className="relative mb-8">
+            {/* Close Button top-right */}
+            <button
+              onClick={handleClose}
+              className="absolute top-0 right-0 p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-full transition-all cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="relative mb-6">
               <div className="w-16 h-16 bg-[#22c55e] rounded-full flex items-center justify-center relative z-10 shadow-lg shadow-green-500/20">
                 <Check className="text-white" size={32} strokeWidth={3} />
               </div>
             </div>
 
-            <div className="text-center space-y-3 z-10">
-              <h3 className="text-[9px] font-black uppercase tracking-[0.4em] text-[#22c55e] leading-none mb-1">
+            <div className="text-center space-y-3 z-10 w-full">
+              <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-[#22c55e] leading-none mb-1">
                 Success
               </h3>
               <h2
-                className="text-xl font-black tracking-tight leading-none uppercase"
-                style={{ color: "var(--text-primary)" }}
+                className="text-xl font-black tracking-tight leading-none uppercase text-slate-800 dark:text-slate-100"
               >
                 Donation Accepted!
               </h2>
               <p
-                className="text-[12px] font-bold max-w-[320px] leading-relaxed mx-auto"
-                style={{ color: "var(--text-secondary)" }}
+                className="text-[12px] font-bold max-w-[320px] leading-relaxed mx-auto text-slate-500 dark:text-slate-400"
               >
                 Resource{" "}
                 <span
-                  className="font-black px-1.5 py-0.5 rounded-sm"
-                  style={{
-                    backgroundColor: "var(--bg-secondary)",
-                    color: "var(--text-primary)",
-                  }}
+                  className="font-black px-1.5 py-0.5 rounded-sm bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100"
                 >
                   #{acceptingDonation?.id}
                 </span>{" "}
@@ -579,8 +562,7 @@ export const AcceptDonationModal = ({ user }: RequestsComponentProps) => {
             </div>
 
             <div
-              className="absolute bottom-0 left-0 right-0 h-1"
-              style={{ backgroundColor: "var(--bg-secondary)" }}
+              className="absolute bottom-0 left-0 right-0 h-1 bg-slate-100 dark:bg-slate-800 mt-6 w-full"
             >
               <div
                 className={`h-full bg-[#22c55e] ${isTimerPaused ? "animate-none" : "animate-[progress-shrink_2.5s_linear_forwards]"}`}
@@ -592,8 +574,7 @@ export const AcceptDonationModal = ({ user }: RequestsComponentProps) => {
             </div>
 
             <p
-              className="absolute bottom-2 text-[9px] font-bold uppercase tracking-widest mt-4"
-              style={{ color: "var(--text-muted)" }}
+              className="text-[9px] font-bold uppercase tracking-widest mt-6 text-slate-400"
             >
               {isTimerPaused ? "Timer Paused" : "Closing automatically..."}
             </p>
@@ -606,202 +587,295 @@ export const AcceptDonationModal = ({ user }: RequestsComponentProps) => {
             `}</style>
           </div>
         ) : (
-          <div className="space-y-2">
-            <div
-              className="p-2.5 border rounded-2xl flex items-start gap-2.5"
-              style={{
-                backgroundColor: "var(--bg-secondary)",
-                borderColor: "var(--border-color)",
-              }}
-            >
-              <div
-                className="w-9 h-9 rounded-xl shadow-sm border flex items-center justify-center text-lg shrink-0"
-                style={{
-                  backgroundColor: "var(--bg-primary)",
-                  borderColor: "var(--border-color)",
-                }}
-              >
-                {acceptingDonation?.icon}
+          /* Input / Accept View */
+          <div className="flex flex-col">
+            {/* Header Block */}
+            <div className="flex items-start justify-between mb-5">
+              <div className="flex gap-4 items-center">
+                <div className="w-12 h-12 rounded-[16px] bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100/60 dark:border-emerald-900/40 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0 shadow-sm">
+                  <ShieldCheck size={24} className="stroke-[2.2]" />
+                </div>
+                <div className="flex flex-col text-start">
+                  <h2 className="text-xl font-[1000] text-slate-800 dark:text-slate-100 tracking-tight leading-snug">
+                    Confirm Acceptance
+                  </h2>
+                  <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 mt-0.5 leading-none">
+                    Review the donation details before accepting.
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <h4
-                  className="text-[13px] font-black uppercase tracking-tight leading-tight mb-0.5 truncate"
-                  style={{ color: "var(--text-primary)" }}
-                >
-                  {acceptingDonation?.title}
+              <button
+                onClick={handleClose}
+                className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all cursor-pointer border border-transparent shrink-0"
+              >
+                <X size={16} className="stroke-[2.5]" />
+              </button>
+            </div>
+
+            {/* Food Item Details Card */}
+            <div className="w-full bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-[20px] p-4 flex items-center gap-4 shadow-sm mb-4 text-start">
+              <img
+                src={getCategoryThumbnail(acceptingDonation?.title)}
+                alt={acceptingDonation?.title}
+                className="w-16 h-16 rounded-xl object-cover bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-200/50 dark:border-slate-800/80"
+              />
+              <div className="min-w-0 flex-1">
+                <h4 className="text-lg font-[1000] text-slate-800 dark:text-slate-100 leading-snug truncate">
+                  {acceptingDonation?.title || "Surplus Food Item"}
                 </h4>
-                <p
-                  className="text-[9px] font-black flex items-center gap-1"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  <Building2 size={10} className="opacity-50" />
-                  {acceptingDonation?.source}
+                <p className="flex items-center gap-1.5 text-xs font-black text-slate-400 dark:text-slate-500 mt-1.5">
+                  <Building2 size={13} className="text-emerald-500 shrink-0" />
+                  <span className="truncate">{acceptingDonation?.source || "Private Donor"}</span>
+                </p>
+                <div className="flex flex-wrap items-center gap-2 mt-2">
+                  <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-100/50 dark:border-emerald-900/30">
+                    <AlertTriangle size={10} className="shrink-0" />
+                    {acceptingDonation?.category || "Dry Ration"}
+                  </span>
+                  <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider bg-purple-50 text-purple-600 dark:bg-purple-950/20 dark:text-purple-400 px-2.5 py-0.5 rounded-full border border-purple-100/50 dark:border-purple-900/30">
+                    <Tag size={10} className="shrink-0" />
+                    {acceptingDonation?.dietaryType || "Veg"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* 3-Column Info Cards */}
+            <div className="grid grid-cols-3 gap-2.5 mb-4 text-start">
+              {/* Urgency */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 rounded-[20px] p-3 flex items-center gap-2.5 shadow-sm">
+                <div className="w-8 h-8 rounded-full bg-red-50 dark:bg-red-950/20 flex items-center justify-center text-red-500 shrink-0">
+                  <AlertTriangle size={15} className="stroke-[2.2]" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 leading-none mb-1">
+                    URGENCY
+                  </span>
+                  <span className={`text-[10px] font-black uppercase tracking-tight truncate ${acceptingDonation?.urgency?.toLowerCase().includes("high") || acceptingDonation?.urgency?.toLowerCase().includes("urgent") ? "text-red-500" : "text-amber-500"}`}>
+                    {acceptingDonation?.urgency || "NORMAL"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Quantity */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 rounded-[20px] p-3 flex items-center gap-2.5 shadow-sm">
+                <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-950/20 flex items-center justify-center text-blue-500 shrink-0">
+                  <Box size={15} className="stroke-[2.2]" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 leading-none mb-1">
+                    QUANTITY
+                  </span>
+                  <span className="text-[10px] font-black uppercase tracking-tight text-slate-700 dark:text-slate-200 truncate">
+                    {(() => {
+                      if (acceptingDonation?.origin === "NEED") {
+                        const remaining = Math.max(0, (acceptingDonation.quantity_num || 0) - (acceptingDonation.fulfilled_quantity || 0));
+                        return `${remaining} ${(acceptingDonation.unit || "Units").toUpperCase()}`;
+                      }
+                      const qtyStr = acceptingDonation?.quantity || "";
+                      const unitStr = acceptingDonation?.unit || "";
+                      if (unitStr && qtyStr.toLowerCase().endsWith(unitStr.toLowerCase())) {
+                        return qtyStr.toUpperCase();
+                      }
+                      return `${qtyStr} ${unitStr}`.trim().toUpperCase() || "10 BAGS";
+                    })()}
+                  </span>
+                </div>
+              </div>
+
+              {/* Expiry */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800 rounded-[20px] p-3 flex items-center gap-2.5 shadow-sm">
+                <div className="w-8 h-8 rounded-full bg-purple-50 dark:bg-purple-950/20 flex items-center justify-center text-purple-500 shrink-0">
+                  <Clock size={15} className="stroke-[2.2]" />
+                </div>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-[8px] font-black uppercase tracking-widest text-slate-400 leading-none mb-1">
+                    EXPIRY
+                  </span>
+                  <span className="text-[10px] font-black uppercase tracking-tight text-slate-700 dark:text-slate-200 truncate">
+                    {acceptingDonation?.expiryTime || "NO EXPIRY"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* If NGO Resource Need, show inputs */}
+            {acceptingDonation?.origin === "NEED" && (
+              <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 mb-4 text-start">
+                <p className="text-[10px] font-[1000] uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                  Fulfillment Details
+                </p>
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Enter Quantity to Accept Column */}
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider flex items-center gap-1">
+                      Enter Quantity to Accept
+                      <span title="Enter the amount you wish to contribute" className="inline-flex cursor-pointer">
+                        <Info size={11} className="text-slate-400" />
+                      </span>
+                    </label>
+                    <div className="flex items-center gap-2">
+                      {/* Counter Decrement Button */}
+                      <button
+                        type="button"
+                        onClick={() => setRequestsStateValue("supportQty", Math.max(1, (parseInt(supportQty) || 0) - 1).toString())}
+                        className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 flex items-center justify-center font-black hover:bg-slate-100 transition-colors shadow-sm shrink-0"
+                      >
+                        —
+                      </button>
+                      
+                      {/* Numeric Input container */}
+                      <div className="flex-1 relative flex items-center border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 bg-white dark:bg-slate-900 h-9">
+                        <Box size={13} className="text-slate-400 mr-2 shrink-0" />
+                        <input
+                          type="number"
+                          value={supportQty}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value) || 0;
+                            const maxVal = Math.max(0, (acceptingDonation?.quantity_num || 0) - (acceptingDonation?.fulfilled_quantity || 0));
+                            if (val > maxVal) {
+                              addToast({
+                                title: "Quantity Exceeded",
+                                description: `Cannot exceed the maximum remaining quantity of ${maxVal} ${acceptingDonation?.unit || "Units"}!`,
+                                color: "danger",
+                                classNames: {
+                                  base: "bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 border-l-4 border-l-red-500 dark:border-l-red-500 rounded-xl shadow-md p-4 flex items-start gap-3",
+                                  title: "font-black text-slate-800 dark:text-slate-100 text-xs leading-none",
+                                  description: "text-[10px] text-slate-500 dark:text-slate-400 mt-1.5 font-bold leading-relaxed",
+                                  closeButton: "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 rounded-lg p-1",
+                                },
+                                icon: (
+                                  <div className="w-7 h-7 rounded-full bg-red-50 dark:bg-red-950/20 flex items-center justify-center text-red-500 shrink-0 shadow-sm border border-red-100/50">
+                                    <AlertTriangle size={13} className="stroke-[2.5]" />
+                                  </div>
+                                ),
+                              });
+                              setRequestsStateValue("supportQty", maxVal.toString());
+                            } else {
+                              setRequestsStateValue("supportQty", val.toString());
+                            }
+                          }}
+                          className="w-full bg-transparent border-none text-[12px] font-black text-slate-800 dark:text-slate-100 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          placeholder="0"
+                        />
+                        <span className="ml-auto text-[8px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 px-1.5 py-0.5 rounded shrink-0">
+                          {acceptingDonation?.unit || "BAGS"}
+                        </span>
+                      </div>
+
+                      {/* Counter Increment Button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const maxVal = Math.max(0, (acceptingDonation?.quantity_num || 0) - (acceptingDonation?.fulfilled_quantity || 0));
+                          const nextVal = (parseInt(supportQty) || 0) + 1;
+                          if (nextVal > maxVal) {
+                            addToast({
+                              title: "Quantity Exceeded",
+                              description: `Cannot exceed the maximum remaining quantity of ${maxVal} ${acceptingDonation?.unit || "Units"}!`,
+                              color: "danger",
+                              classNames: {
+                                base: "bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 border-l-4 border-l-red-500 dark:border-l-red-500 rounded-xl shadow-md p-4 flex items-start gap-3",
+                                title: "font-black text-slate-800 dark:text-slate-100 text-xs leading-none",
+                                description: "text-[10px] text-slate-500 dark:text-slate-400 mt-1.5 font-bold leading-relaxed",
+                                closeButton: "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 rounded-lg p-1",
+                              },
+                              icon: (
+                                <div className="w-7 h-7 rounded-full bg-red-50 dark:bg-red-950/20 flex items-center justify-center text-red-500 shrink-0 shadow-sm border border-red-100/50">
+                                  <AlertTriangle size={13} className="stroke-[2.5]" />
+                                </div>
+                              ),
+                            });
+                            setRequestsStateValue("supportQty", maxVal.toString());
+                          } else {
+                            setRequestsStateValue("supportQty", nextVal.toString());
+                          }
+                        }}
+                        className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 flex items-center justify-center font-black hover:bg-slate-100 transition-colors shadow-sm shrink-0"
+                      >
+                        +
+                      </button>
+                    </div>
+                    <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 mt-1 pl-1">
+                      Max available: <span className="font-extrabold text-slate-500 dark:text-slate-400">
+                        {(() => {
+                          const remaining = Math.max(0, (acceptingDonation?.quantity_num || 0) - (acceptingDonation?.fulfilled_quantity || 0));
+                          return `${remaining} ${acceptingDonation?.unit || "Units"}`;
+                        })()}
+                      </span>
+                    </p>
+                  </div>
+
+                  {/* Direct Contact Column */}
+                  <div className="space-y-1.5">
+                    <label className="text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider">
+                      Direct Contact
+                    </label>
+                    <div className="relative flex items-center border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 bg-white dark:bg-slate-900 h-9">
+                      <Phone size={13} className="text-slate-400 mr-2 shrink-0" />
+                      <input
+                        type="text"
+                        value={supportPhone}
+                        onChange={(e) => setRequestsStateValue("supportPhone", e.target.value)}
+                        disabled={Boolean(user?.ngoProfile?.phone || user?.phone)}
+                        className={`w-full bg-transparent border-none text-[12px] font-black text-slate-700 dark:text-slate-200 focus:outline-none ${(user?.ngoProfile?.phone || user?.phone) ? "cursor-not-allowed text-slate-500" : ""}`}
+                        placeholder="+91 98765 43210"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Bottom Difference Note */}
+            <div className="w-full bg-[#f4fbf7] dark:bg-emerald-950/5 border border-dashed border-emerald-200/80 dark:border-emerald-800/40 rounded-[20px] p-3.5 flex items-center gap-3.5 mb-5 text-start">
+              <div className="w-10 h-10 rounded-full border border-dashed border-[#22c55e] dark:border-emerald-700 flex items-center justify-center text-[#22c55e] dark:text-emerald-400 shrink-0 bg-emerald-50/30 dark:bg-emerald-950/30">
+                <HeartHandshake size={18} className="stroke-[2.2]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-[1000] text-emerald-800 dark:text-emerald-400 leading-tight">
+                  Your acceptance helps reduce food waste and feeds those in need.
+                </p>
+                <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mt-0.5">
+                  Thank you for making a difference! 💚
                 </p>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <div
-                className="flex items-start gap-2.5 p-2.5 rounded-xl border"
-                style={{
-                  backgroundColor: "rgba(34, 197, 94, 0.08)",
-                  borderColor: "rgba(34, 197, 94, 0.2)",
-                }}
+            {/* Divider */}
+            <div className="h-px bg-slate-100 dark:bg-slate-800/80 w-full mb-4" />
+
+            {/* Footer Row */}
+            <div className="flex items-center justify-end gap-3">
+              <button
+                disabled={isAccepting}
+                onClick={handleClose}
+                className="px-6 py-3 border border-slate-200 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/60 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-black uppercase tracking-wider transition-all cursor-pointer active:scale-95 disabled:opacity-50"
               >
-                <div
-                  className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 border shadow-sm"
-                  style={{
-                    backgroundColor: "var(--bg-primary)",
-                    borderColor: "rgba(34, 197, 94, 0.2)",
-                  }}
-                >
-                  <Navigation size={12} className="text-[#22c55e]" />
-                </div>
-                <div className="space-y-0.5">
-                  <p
-                    className="text-[9px] font-black uppercase tracking-[0.1em]"
-                    style={{ color: "var(--color-emerald-dark)" }}
-                  >
-                    Acceptance Policy
-                  </p>
-                  <p
-                    className="text-[9px] font-bold leading-relaxed opacity-80"
-                    style={{ color: "var(--color-emerald-dark)" }}
-                  >
-                    By confirming, you agree to receive and distribute this
-                    food donation to your registered beneficiaries.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                <div
-                  className="p-2.5 border rounded-xl space-y-1 shadow-sm"
-                  style={{
-                    backgroundColor: "var(--bg-primary)",
-                    borderColor: "var(--border-color)",
-                  }}
-                >
-                  <p
-                    className="text-[8px] font-black uppercase tracking-[0.1em]"
-                    style={{ color: "var(--text-muted)" }}
-                  >
-                    Urgency
-                  </p>
-                  <div className="flex items-center gap-1.5 pt-1 border-t border-[var(--border-color)]">
-                    <AlertTriangle
-                      size={10}
-                      className={acceptingDonation?.urgency === "High" ? "text-red-500" : "text-amber-500"}
-                    />
-                    <p
-                      className={`text-[12px] font-black uppercase tracking-tight ${acceptingDonation?.urgency === "High" ? "text-red-500" : "text-amber-600"}`}
-                    >
-                      {acceptingDonation?.urgency}
-                    </p>
-                  </div>
-                </div>
-                <div
-                  className="p-2.5 border rounded-xl space-y-1 shadow-sm"
-                  style={{
-                    backgroundColor: "var(--bg-primary)",
-                    borderColor: "var(--border-color)",
-                  }}
-                >
-                  <p
-                    className="text-[8px] font-black uppercase tracking-[0.1em]"
-                    style={{ color: "var(--text-muted)" }}
-                  >
-                    Quantity
-                  </p>
-                  <div className="pt-1 border-t border-[var(--border-color)] flex items-center gap-1">
-                    <Box size={10} style={{ color: "var(--text-muted)" }} />
-                    <p
-                      className="text-[12px] font-black uppercase tracking-tight"
-                      style={{ color: "var(--text-primary)" }}
-                    >
-                      {acceptingDonation?.quantity || "Units"}
-                    </p>
-                  </div>
-                </div>
-                <div
-                  className="p-2.5 border rounded-xl space-y-1 shadow-sm"
-                  style={{
-                    backgroundColor: "var(--bg-primary)",
-                    borderColor: "var(--border-color)",
-                  }}
-                >
-                  <p
-                    className="text-[8px] font-black uppercase tracking-[0.1em]"
-                    style={{ color: "var(--text-muted)" }}
-                  >
-                    Expiry
-                  </p>
-                  <div className="pt-1 border-t border-[var(--border-color)] flex items-center gap-1">
-                    <Clock size={10} style={{ color: "var(--text-muted)" }} />
-                    <p
-                      className="text-[12px] font-black uppercase tracking-tight"
-                      style={{ color: "var(--text-primary)" }}
-                    >
-                      {acceptingDonation?.expiryTime || "Soon"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {acceptingDonation?.origin === "NEED" && (
-                <div className="space-y-3 pt-2 border-t border-[var(--border-color)]">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600">
-                    Fulfillment Details
-                  </p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
-                      <label className="text-[8px] font-bold uppercase text-[var(--text-muted)] tracking-wider">
-                        Amount to Donate
-                      </label>
-                      <div className="relative group">
-                        <Box size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] group-focus-within:text-emerald-500 transition-colors" />
-                        <input
-                          type="number"
-                          value={supportQty}
-                          onChange={(e) => setRequestsStateValue("supportQty", e.target.value)}
-                          className="w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl py-2 pl-9 pr-10 text-[12px] font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500/40 transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          placeholder="0"
-                        />
-                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-0.5">
-                          <button
-                            onClick={() => setRequestsStateValue("supportQty", ((parseInt(supportQty) || 0) + 1).toString())}
-                            className="p-0.5 hover:bg-emerald-50 rounded text-[var(--text-muted)] hover:text-emerald-600 transition-colors"
-                          >
-                            <ChevronUp size={10} />
-                          </button>
-                          <button
-                            onClick={() => setRequestsStateValue("supportQty", Math.max(0, (parseInt(supportQty) || 0) - 1).toString())}
-                            className="p-0.5 hover:bg-emerald-50 rounded text-[var(--text-muted)] hover:text-emerald-600 transition-colors"
-                          >
-                            <ChevronDown size={10} />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[8px] font-bold uppercase text-[var(--text-muted)] tracking-wider">
-                        Direct Contact
-                      </label>
-                      <div className="relative group">
-                        <Phone size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] group-focus-within:text-emerald-500 transition-colors" />
-                        <input
-                          type="text"
-                          value={supportPhone}
-                          onChange={(e) => setRequestsStateValue("supportPhone", e.target.value)}
-                          disabled={Boolean(user?.ngo_profile?.contact_number)}
-                          className={`w-full bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl py-2 pl-9 pr-4 text-[12px] font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500/20 focus:border-emerald-500/40 transition-all ${user?.ngo_profile?.contact_number ? "opacity-70 cursor-not-allowed grayscale-[0.5]" : ""}`}
-                          placeholder="+1..."
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+                Cancel
+              </button>
+              <button
+                disabled={isAccepting}
+                onClick={() => handleConfirmAccept(user)}
+                className="px-6 py-3 bg-[#22c55e] hover:bg-green-600 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+              >
+                {isAccepting ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    <span>Accepting...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 size={14} className="stroke-[2.5]" />
+                    <span>Confirm Acceptance</span>
+                  </>
+                )}
+              </button>
+            </div>
+            
+            {/* Secure Note */}
+            <div className="flex items-center justify-center gap-1.5 text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-4">
+              <span>🔒 Secure & Confidential • Valid for this session only</span>
             </div>
           </div>
         )}

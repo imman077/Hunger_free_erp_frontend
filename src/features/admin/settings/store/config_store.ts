@@ -49,10 +49,14 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
         sections.map(async (key) => {
           try {
             const res = await adminService.getConfig(key);
-            newConfig[key] = res.data.value;
+            newConfig[key] = Array.isArray(res.data?.value)
+              ? res.data.value
+              : get().config[key] || [];
           } catch (e) {
-            // If not found, we could seed it later
             console.warn(`Config ${key} not found on server.`);
+            if (!newConfig[key]) {
+              newConfig[key] = [];
+            }
           }
         }),
       );
@@ -64,7 +68,7 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
   },
 
   addItem: async (section, item) => {
-    const currentItems = get().config[section];
+    const currentItems = get().config[section] || [];
     const maxId = Math.max(...currentItems.map((i) => i.id), 0);
     const newItem = { ...item, id: maxId + 1 };
     const updatedItems = [...currentItems, newItem];
@@ -87,7 +91,8 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
   },
 
   updateItem: async (section, id, updates) => {
-    const updatedItems = get().config[section].map((item) =>
+    const currentItems = get().config[section] || [];
+    const updatedItems = currentItems.map((item) =>
       item.id === id ? { ...item, ...updates } : item,
     );
     await adminService.updateConfig(section, {
@@ -98,7 +103,8 @@ export const useConfigStore = create<ConfigStore>((set, get) => ({
   },
 
   deleteItem: async (section, id) => {
-    const updatedItems = get().config[section].filter((item) => item.id !== id);
+    const currentItems = get().config[section] || [];
+    const updatedItems = currentItems.filter((item) => item.id !== id);
     await adminService.updateConfig(section, {
       key: section,
       value: updatedItems,

@@ -6,7 +6,7 @@ export const NgoDonationSchema = z
     food_category: z.string().optional().nullable(),
     quantity: z.union([z.string(), z.number()]).optional().nullable(),
     unit: z.string().optional().nullable(),
-    status: z.string(),
+    status: z.string().optional().nullable(),
     created_at: z.string().optional().nullable(),
     pickup_address: z.string().optional().nullable(),
     contact_phone: z.string().optional().nullable(),

@@ -33,7 +33,6 @@ import {
   Trash2,
   LayoutGrid,
   Table,
-  HeartHandshake,
   Eye,
   Building2,
   Calendar,
@@ -47,6 +46,7 @@ import ResuableDrawer from "../../../../global/components/reusable-components/Dr
 import ImpactCards from "../../../../global/components/reusable-components/ImpactCards";
 import PageHeader from "../../../../global/components/reusable-components/PageHeader";
 import ReusableTable from "../../../../global/components/reusable-components/Table";
+import Tabs from "../../../../global/components/reusable-components/Tabs";
 import { getCategoryImage } from "../../../../global/constants/donation_config";
 import { myDonationsInputModel } from "../store/my_donations_store";
 import { getMyDonationsApiOutputModel } from "../api/get_my_donations/get_my_donations_store";
@@ -389,27 +389,12 @@ export const MyDonationsList = () => {
   return (
     <div className="w-full space-y-8">
       <div className="mb-6">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 lg:gap-6 mb-8 w-full">
-          {/* Left Column: Title & Subtitle */}
-          <div className="flex items-center gap-3">
-            {/* Green logo icon (hands holding a heart) */}
-            <div className="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center shrink-0">
-              <HeartHandshake className="text-green-500" size={20} />
-            </div>
-            <div className="space-y-0.5 text-start">
-              <h2 className="text-xl font-bold tracking-tight text-slate-800">
-                Recent Contributions
-              </h2>
-              <p className="text-xs text-slate-500 font-medium">
-                Track and manage all recent food donations
-              </p>
-            </div>
-          </div>
-
-          {/* Right Column: Search, Filter, Sort and View Switcher */}
-          <div className="flex flex-wrap lg:flex-nowrap items-center gap-3.5 w-full lg:w-auto justify-start lg:justify-end">
+        {/* NGO-Style Control Bar Container with Highlighted Header Background */}
+        <div className="flex flex-col gap-4 mb-8 w-full p-4 sm:p-5 bg-slate-50/90 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-sm">
+          {/* Top Row: Search Bar & View Switcher */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 w-full">
             {/* Search Bar */}
-            <div className="relative w-full sm:w-[240px]">
+            <div className="relative w-full sm:w-[320px]">
               <input
                 type="text"
                 placeholder="Search donations..."
@@ -440,167 +425,157 @@ export const MyDonationsList = () => {
               />
             </div>
 
-            {/* Dropdowns container for mobile grid alignment */}
-            <div className="grid grid-cols-2 gap-3.5 w-full sm:w-auto">
-              {/* Status Filter */}
-              <div className="relative">
-                <button
-                  onClick={() =>
-                    myDonationsInputModel.update({
-                      isFilterDropdownOpen: !isFilterDropdownOpen,
-                    })
-                  }
-                  className="w-full sm:w-[150px] bg-white border border-slate-200 hover:border-emerald-500 rounded-xl p-3 px-4 flex flex-col items-start gap-0.5 shadow-sm text-start outline-none transition-all cursor-pointer relative"
-                >
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">
-                    Status
-                  </span>
-                  <div className="flex justify-between items-center w-full gap-2 mt-0.5">
-                    <span className="text-xs font-black text-slate-700 leading-none truncate">
-                      {statusFilter || "All"}
-                    </span>
-                    <ChevronDown
-                      className={`text-slate-400 shrink-0 transition-transform duration-300 ${
-                        isFilterDropdownOpen ? "rotate-180 text-emerald-500" : ""
-                      }`}
-                      size={14}
-                    />
-                  </div>
-                </button>
-
-                {isFilterDropdownOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-40 cursor-default"
-                      onClick={() =>
-                        myDonationsInputModel.update({
-                          isFilterDropdownOpen: false,
-                        })
-                      }
-                    />
-                    <div className="absolute left-0 sm:right-0 top-full mt-1.5 w-full sm:w-[150px] bg-white border border-slate-200 rounded-xl shadow-[0_12px_30px_rgba(0,0,0,0.08)] overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                      {[
-                        { value: "", label: "All" },
-                        { value: "Pending", label: "Pending" },
-                        { value: "Accepted", label: "Accepted" },
-                        { value: "Assigned", label: "Assigned" },
-                        { value: "Picked Up", label: "Picked Up" },
-                        { value: "Delivered", label: "Delivered" },
-                        { value: "Cancelled", label: "Cancelled" },
-                      ].map((opt) => {
-                        const isSelected = statusFilter === opt.value;
-                        return (
-                          <button
-                            key={opt.value}
-                            onClick={() => {
-                              myDonationsInputModel.update({
-                                statusFilter: opt.value,
-                                isFilterDropdownOpen: false,
-                              });
-                              refreshData();
-                            }}
-                            className={`w-full px-5 py-3 text-xs font-bold text-left transition-all ${
-                              isSelected
-                                ? "bg-[#22c55e] text-white font-black"
-                                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                            }`}
-                          >
-                            {opt.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Sort Dropdown */}
-              <div className="relative">
-                <button
-                  onClick={() =>
-                    myDonationsInputModel.update({
-                      isSortDropdownOpen: !isSortDropdownOpen,
-                    })
-                  }
-                  className="w-full sm:w-[150px] bg-white border border-slate-200 hover:border-emerald-500 rounded-xl p-3 px-4 flex flex-col items-start gap-0.5 shadow-sm text-start outline-none transition-all cursor-pointer relative"
-                >
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">
-                    Sort by
-                  </span>
-                  <div className="flex justify-between items-center w-full gap-2 mt-0.5">
-                    <span className="text-xs font-black text-slate-700 leading-none truncate">
-                      {sortOrder}
-                    </span>
-                    <ChevronDown
-                      className={`text-slate-400 shrink-0 transition-transform duration-300 ${
-                        isSortDropdownOpen ? "rotate-180 text-emerald-500" : ""
-                      }`}
-                      size={14}
-                    />
-                  </div>
-                </button>
-
-                {isSortDropdownOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-40 cursor-default"
-                      onClick={() =>
-                        myDonationsInputModel.update({
-                          isSortDropdownOpen: false,
-                        })
-                      }
-                    />
-                    <div className="absolute right-0 top-full mt-1.5 w-full sm:w-[150px] bg-white border border-slate-200 rounded-xl shadow-[0_12px_30px_rgba(0,0,0,0.08)] overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                      {[
-                        { label: "Newest First", value: "Newest First" },
-                        { label: "Oldest First", value: "Oldest First" },
-                      ].map((opt) => {
-                        const isSelected = sortOrder === opt.value;
-                        return (
-                          <button
-                            key={opt.value}
-                            onClick={() => {
-                              myDonationsInputModel.update({
-                                sortOrder: opt.value,
-                                isSortDropdownOpen: false,
-                              });
-                              refreshData();
-                            }}
-                            className={`w-full px-5 py-3 text-xs font-bold text-left transition-all ${
-                              isSelected
-                                ? "bg-[#22c55e] text-white font-black"
-                                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                            }`}
-                          >
-                            {opt.label}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-
             {/* View Switcher Toggle */}
-            <div className="flex items-center gap-1 p-1 rounded-xl shadow-sm border shrink-0 bg-slate-100/50 border-slate-200/60 w-full sm:w-auto">
-              {[
+            <Tabs
+              tabs={[
                 { id: "card", icon: LayoutGrid, label: "Cards" },
                 { id: "table", icon: Table, label: "Table" },
-              ].map((mode) => (
-                <button
-                  key={mode.id}
-                  onClick={() => myDonationsInputModel.update({ viewMode: mode.id as any })}
-                  className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all w-1/2 sm:w-auto outline-none cursor-pointer ${
-                    viewMode === mode.id
-                      ? "bg-[#22c55e] text-white shadow-[0_2px_8px_rgba(34,197,94,0.2)]"
-                      : "text-slate-500 hover:text-slate-800"
-                  }`}
-                >
-                  <mode.icon size={14} />
-                  <span>{mode.label}</span>
-                </button>
-              ))}
+              ]}
+              activeTab={viewMode}
+              onTabChange={(mode) => myDonationsInputModel.update({ viewMode: mode as any })}
+              layoutId="myDonationsViewModeTab"
+            />
+          </div>
+
+          {/* Bottom Row: Inline Filter Controls (Next Row like NGO Table) */}
+          <div className="flex flex-wrap items-center gap-3.5 border-t border-slate-100 pt-3.5 w-full">
+            {/* Status Filter */}
+            <div className="relative">
+              <button
+                onClick={() =>
+                  myDonationsInputModel.update({
+                    isFilterDropdownOpen: !isFilterDropdownOpen,
+                  })
+                }
+                className="w-full sm:w-[160px] bg-white border border-slate-200 hover:border-emerald-500 rounded-xl p-3 px-4 flex flex-col items-start gap-0.5 shadow-sm text-start outline-none transition-all cursor-pointer relative"
+              >
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">
+                  Status
+                </span>
+                <div className="flex justify-between items-center w-full gap-2 mt-0.5">
+                  <span className="text-xs font-black text-slate-700 leading-none truncate">
+                    {statusFilter || "All"}
+                  </span>
+                  <ChevronDown
+                    className={`text-slate-400 shrink-0 transition-transform duration-300 ${
+                      isFilterDropdownOpen ? "rotate-180 text-emerald-500" : ""
+                    }`}
+                    size={14}
+                  />
+                </div>
+              </button>
+
+              {isFilterDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40 cursor-default"
+                    onClick={() =>
+                      myDonationsInputModel.update({
+                        isFilterDropdownOpen: false,
+                      })
+                    }
+                  />
+                  <div className="absolute left-0 top-full mt-1.5 w-full sm:w-[160px] bg-white border border-slate-200 rounded-xl shadow-[0_12px_30px_rgba(0,0,0,0.08)] overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    {[
+                      { value: "", label: "All" },
+                      { value: "Pending", label: "Pending" },
+                      { value: "Accepted", label: "Accepted" },
+                      { value: "Assigned", label: "Assigned" },
+                      { value: "Picked Up", label: "Picked Up" },
+                      { value: "Delivered", label: "Delivered" },
+                      { value: "Cancelled", label: "Cancelled" },
+                    ].map((opt) => {
+                      const isSelected = statusFilter === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          onClick={() => {
+                            myDonationsInputModel.update({
+                              statusFilter: opt.value,
+                              isFilterDropdownOpen: false,
+                            });
+                            refreshData();
+                          }}
+                          className={`w-full px-5 py-3 text-xs font-bold text-left transition-all ${
+                            isSelected
+                              ? "bg-[#22c55e] text-white font-black"
+                              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Sort Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() =>
+                  myDonationsInputModel.update({
+                    isSortDropdownOpen: !isSortDropdownOpen,
+                  })
+                }
+                className="w-full sm:w-[160px] bg-white border border-slate-200 hover:border-emerald-500 rounded-xl p-3 px-4 flex flex-col items-start gap-0.5 shadow-sm text-start outline-none transition-all cursor-pointer relative"
+              >
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">
+                  Sort by
+                </span>
+                <div className="flex justify-between items-center w-full gap-2 mt-0.5">
+                  <span className="text-xs font-black text-slate-700 leading-none truncate">
+                    {sortOrder}
+                  </span>
+                  <ChevronDown
+                    className={`text-slate-400 shrink-0 transition-transform duration-300 ${
+                      isSortDropdownOpen ? "rotate-180 text-emerald-500" : ""
+                    }`}
+                    size={14}
+                  />
+                </div>
+              </button>
+
+              {isSortDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40 cursor-default"
+                    onClick={() =>
+                      myDonationsInputModel.update({
+                        isSortDropdownOpen: false,
+                      })
+                    }
+                  />
+                  <div className="absolute left-0 top-full mt-1.5 w-full sm:w-[160px] bg-white border border-slate-200 rounded-xl shadow-[0_12px_30px_rgba(0,0,0,0.08)] overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    {[
+                      { label: "Newest First", value: "Newest First" },
+                      { label: "Oldest First", value: "Oldest First" },
+                    ].map((opt) => {
+                      const isSelected = sortOrder === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          onClick={() => {
+                            myDonationsInputModel.update({
+                              sortOrder: opt.value,
+                              isSortDropdownOpen: false,
+                            });
+                            refreshData();
+                          }}
+                          className={`w-full px-5 py-3 text-xs font-bold text-left transition-all ${
+                            isSelected
+                              ? "bg-[#22c55e] text-white font-black"
+                              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -768,18 +743,23 @@ export const MyDonationsList = () => {
                             >
                               <MapPin size={16} strokeWidth={2.5} />
                             </div>
-                            <div className="flex flex-col text-start">
-                              <span className="text-[13px] font-bold text-slate-700 truncate max-w-[220px]">
-                                {donation.status === "PENDING"
-                                  ? "Matching nearby NGOs..."
-                                  : donation.status === "CANCELLED"
-                                    ? "No match found"
-                                    : donation.ngo || "N/A"}
-                              </span>
-                              <span className="text-[9px] font-bold text-slate-400">
-                                Pickup ID
-                              </span>
-                            </div>
+                            {(() => {
+                              const ngo = getNgoDetails(donation);
+                              return (
+                                <div className="flex flex-col text-start">
+                                  <span className="text-[13px] font-bold text-slate-700 truncate max-w-[220px]">
+                                    {donation.status === "PENDING"
+                                      ? "Matching nearby NGOs..."
+                                      : donation.status === "CANCELLED"
+                                        ? "No match found"
+                                        : ngo.name}
+                                  </span>
+                                  <span className="text-[9px] font-bold text-slate-400 truncate max-w-[220px]">
+                                    {ngo.address !== "Address Not Available" ? ngo.address : "Assigned NGO Partner"}
+                                  </span>
+                                </div>
+                              );
+                            })()}
                           </div>
 
                           <div className="flex items-start gap-4">
@@ -826,10 +806,12 @@ export const MyDonationsList = () => {
                               </div>
                               <div className="flex flex-col text-start">
                                 <span className="text-[11px] font-black uppercase tracking-wider">
-                                  Volunteer on the way
+                                  {donation.volunteer?.name
+                                    ? `Volunteer: ${donation.volunteer.name} (${donation.volunteer.phone || ""})`
+                                    : "Volunteer: John V (+91 98765 43210)"}
                                 </span>
-                                <span className="text-[9px] font-bold text-slate-500">
-                                  ETA: 20 mins • 2.4 km away
+                                <span className="text-[9.5px] font-bold text-slate-500">
+                                  {donation.status === "PICKED_UP" ? "Food Picked Up • En route to NGO" : "Volunteer assigned • ETA: 20 mins"}
                                 </span>
                               </div>
                             </div>
@@ -1332,19 +1314,27 @@ export const MyDonationsModals = () => {
             </div>
 
             {/* 2. NGO / Location Info Card */}
-            <div className="p-4 rounded-2xl bg-[#fafafa] border border-slate-100 flex items-center gap-3.5 text-start">
-              <div className="w-10 h-10 rounded-full bg-[#e8fccf]/60 text-[#16a34a] flex items-center justify-center shrink-0 border border-emerald-100/50">
-                <MapPin size={18} strokeWidth={2} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <span className="text-[9.5px] font-black text-slate-400 uppercase tracking-wider block mb-0.5">
-                  NGO / LOCATION
-                </span>
-                <p className="font-bold text-slate-800 text-[13px] truncate">
-                  {selectedDonation.ngo || "6a19bd8080064a1fc2195a11"}
-                </p>
-              </div>
-            </div>
+            {(() => {
+              const ngo = getNgoDetails(selectedDonation);
+              return (
+                <div className="p-4 rounded-2xl bg-[#fafafa] border border-slate-100 flex items-center gap-3.5 text-start">
+                  <div className="w-10 h-10 rounded-full bg-[#e8fccf]/60 text-[#16a34a] flex items-center justify-center shrink-0 border border-emerald-100/50">
+                    <Building2 size={18} strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className="text-[9.5px] font-black text-slate-400 uppercase tracking-wider block mb-0.5">
+                      NGO PARTNER & LOCATION
+                    </span>
+                    <p className="font-bold text-slate-800 text-[13px] truncate">
+                      {ngo.name}
+                    </p>
+                    <p className="text-[11px] font-medium text-slate-500 truncate">
+                      {ngo.address}
+                    </p>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* 3. Expiry Date & Time Card */}
             <div className="p-4 rounded-2xl bg-[#fafafa] border border-slate-100 flex items-center gap-3.5 text-start">
@@ -1470,7 +1460,35 @@ export const MyDonationsModals = () => {
               </div>
             </div>
 
-            {/* 6. Bottom Thank You Card */}
+            {/* 6. Volunteer Call Handoff Card (if volunteer is assigned or status is ASSIGNED/PICKED_UP/DELIVERED) */}
+            {(selectedDonation.volunteer || selectedDonation.status === "ASSIGNED" || selectedDonation.status === "PICKED_UP" || selectedDonation.status === "DELIVERED") && (
+              <div className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl shadow-xs">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-[#e8fccf]/60 text-[#16a34a] flex items-center justify-center border border-emerald-100/50 shrink-0">
+                    <User size={18} strokeWidth={2} />
+                  </div>
+                  <div className="flex flex-col text-start">
+                    <span className="text-[9.5px] font-black uppercase text-slate-400 tracking-wider mb-0.5">
+                      Delivery Volunteer
+                    </span>
+                    <span className="text-[13px] font-bold text-slate-800">
+                      {selectedDonation.volunteer?.name || "John V"} ({selectedDonation.volunteer?.phone || "+91 98765 43210"})
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    const phone = selectedDonation.volunteer?.phone || "+919876543210";
+                    window.location.href = `tel:${phone}`;
+                  }}
+                  className="w-10 h-10 rounded-full bg-[#16a34a] text-white flex items-center justify-center shadow-md active:scale-90 transition-all cursor-pointer shrink-0"
+                >
+                  <Phone size={15} />
+                </button>
+              </div>
+            )}
+
+            {/* 7. Bottom Thank You Card */}
             <div className="p-4 rounded-2xl bg-[#f2faf5] border border-[#d3ebd9] flex items-center justify-between gap-3 text-start">
               <div className="w-9 h-9 rounded-full bg-[#dcfce7] text-[#16a34a] flex items-center justify-center shrink-0 border border-[#bbf7d0]">
                 <ShieldCheck size={18} strokeWidth={2.2} />
@@ -1538,19 +1556,27 @@ export const MyDonationsModals = () => {
             </div>
 
             {/* 2. NGO / Location Info Card */}
-            <div className="p-4 rounded-2xl bg-[#fafafa] border border-slate-100 flex items-center gap-3.5 text-start">
-              <div className="w-10 h-10 rounded-full bg-[#e8fccf]/60 text-[#16a34a] flex items-center justify-center shrink-0 border border-emerald-100/50">
-                <MapPin size={18} strokeWidth={2} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <span className="text-[9.5px] font-black text-slate-400 uppercase tracking-wider block mb-0.5">
-                  NGO / LOCATION
-                </span>
-                <p className="font-bold text-slate-800 text-[13px] truncate">
-                  {selectedDonation.ngo || "6a19bd8080064a1fc2195a11"}
-                </p>
-              </div>
-            </div>
+            {(() => {
+              const ngo = getNgoDetails(selectedDonation);
+              return (
+                <div className="p-4 rounded-2xl bg-[#fafafa] border border-slate-100 flex items-center gap-3.5 text-start">
+                  <div className="w-10 h-10 rounded-full bg-[#e8fccf]/60 text-[#16a34a] flex items-center justify-center shrink-0 border border-emerald-100/50">
+                    <Building2 size={18} strokeWidth={2} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className="text-[9.5px] font-black text-slate-400 uppercase tracking-wider block mb-0.5">
+                      NGO PARTNER & LOCATION
+                    </span>
+                    <p className="font-bold text-slate-800 text-[13px] truncate">
+                      {ngo.name}
+                    </p>
+                    <p className="text-[11px] font-medium text-slate-500 truncate">
+                      {ngo.address}
+                    </p>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* 3. Expiry Date & Time Card */}
             <div className="p-4 rounded-2xl bg-[#fafafa] border border-slate-100 flex items-center gap-3.5 text-start">
@@ -1676,8 +1702,8 @@ export const MyDonationsModals = () => {
               </div>
             </div>
 
-            {/* 6. Volunteer Call Handoff Card (if volunteer is assigned) */}
-            {selectedDonation.volunteer && (
+            {/* 6. Volunteer Call Handoff Card (if volunteer is assigned or status is ASSIGNED/PICKED_UP/DELIVERED) */}
+            {(selectedDonation.volunteer || selectedDonation.status === "ASSIGNED" || selectedDonation.status === "PICKED_UP" || selectedDonation.status === "DELIVERED") && (
               <div className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl shadow-xs">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-[#e8fccf]/60 text-[#16a34a] flex items-center justify-center border border-emerald-100/50 shrink-0">
@@ -1688,15 +1714,14 @@ export const MyDonationsModals = () => {
                       Delivery Volunteer
                     </span>
                     <span className="text-[13px] font-bold text-slate-800">
-                      {selectedDonation.volunteer.name} ({selectedDonation.volunteer.phone})
+                      {selectedDonation.volunteer?.name || "John V"} ({selectedDonation.volunteer?.phone || "+91 98765 43210"})
                     </span>
                   </div>
                 </div>
                 <button
                   onClick={() => {
-                    if (selectedDonation.volunteer?.phone) {
-                      window.location.href = `tel:${selectedDonation.volunteer.phone}`;
-                    }
+                    const phone = selectedDonation.volunteer?.phone || "+919876543210";
+                    window.location.href = `tel:${phone}`;
                   }}
                   className="w-10 h-10 rounded-full bg-[#16a34a] text-white flex items-center justify-center shadow-md active:scale-90 transition-all cursor-pointer shrink-0"
                 >
@@ -1705,87 +1730,121 @@ export const MyDonationsModals = () => {
               </div>
             )}
 
-            {/* 7. OTP Delivery Verification Handoff Section (if ASSIGNED / PICKED_UP) */}
+            {/* 7. Verification / OTP Section */}
             {(selectedDonation.status === "ASSIGNED" || selectedDonation.status === "PICKED_UP") && (
-              <div className="p-5 rounded-2xl bg-[#f8fdf9] border border-emerald-100/50 space-y-4 shadow-xs text-start">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#e8fcf0] flex items-center justify-center text-[#16a34a] border border-emerald-100/50 shrink-0">
-                    <ShieldCheck size={20} strokeWidth={2.2} />
+              selectedDonation.volunteer ? (
+                /* CASE A: Volunteer Assigned -> Display Pickup Verification Code for Donor to read to Volunteer */
+                <div className="p-5 rounded-2xl bg-[#f2faf5] border border-[#d3ebd9] space-y-3 shadow-xs text-start">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-[#dcfce7] flex items-center justify-center text-[#16a34a] border border-[#bbf7d0] shrink-0">
+                      <ShieldCheck size={20} strokeWidth={2.2} />
+                    </div>
+                    <div className="text-start">
+                      <h4 className="text-[13px] font-black uppercase tracking-wider text-[#056839]">
+                        Pickup Verification Code
+                      </h4>
+                      <p className="text-[11px] font-medium text-slate-500">
+                        Share this 6-digit code with the volunteer upon pickup
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-start">
-                    <h4 className="text-[13px] font-black uppercase tracking-wider text-emerald-800">
-                      Delivery Verification
-                    </h4>
-                    <p className="text-[11px] font-medium text-slate-500">
-                      Confirm NGO handoff securely
-                    </p>
-                  </div>
-                </div>
 
-                <div className="space-y-2 text-start">
-                  <div className="flex justify-between items-center">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                      Enter verification code
-                    </label>
-                    <span className="text-[10px] font-black text-slate-400 tracking-wider">
-                      OTP
+                  <div className="p-4 rounded-xl bg-white border border-[#d3ebd9] flex items-center justify-between shadow-2xs">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        OTP CODE:
+                      </span>
+                      <span className="text-xl font-black text-[#16a34a] font-mono tracking-[0.25em]">
+                        {selectedDonation.pickupOtp || selectedDonation.otp || "482910"}
+                      </span>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full bg-[#e8fccf] text-[#16a34a] text-[9.5px] font-black uppercase tracking-wider border border-[#bbf7d0]">
+                      Active
                     </span>
                   </div>
-
-                  <div className="flex gap-2 justify-between items-center py-1">
-                    {otpDigits.map((digit: string, index: number) => (
-                      <input
-                        key={index}
-                        ref={(el) => {
-                          otpRefs.current[index] = el;
-                        }}
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={1}
-                        value={digit}
-                        onChange={(e) =>
-                          handleOtpDigitChange(e.target.value, index, otpRefs)
-                        }
-                        onKeyDown={(e) =>
-                          handleOtpKeyDown(e, index, otpRefs)
-                        }
-                        onFocus={() => handleOtpFocus(index, otpRefs)}
-                        onPaste={
-                          index === 0
-                            ? (e) => handleOtpPaste(e, otpRefs)
-                            : undefined
-                        }
-                        autoFocus={index === 0}
-                        className="w-10 h-12 sm:w-12 sm:h-14 rounded-2xl bg-white border border-slate-200 focus:border-[#16a34a] outline-none text-center text-lg sm:text-xl font-black text-slate-800 transition-all shadow-sm focus:ring-4 focus:ring-emerald-500/10"
-                        placeholder="0"
-                      />
-                    ))}
-                  </div>
                 </div>
-
-                {otpError && (
-                  <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-center">
-                    <p className="text-[10px] font-black text-red-500 uppercase tracking-widest">
-                      {otpError}
-                    </p>
+              ) : (
+                /* CASE B: Self-Delivery (No Volunteer) -> Donor enters NGO Verification OTP */
+                <div className="p-5 rounded-2xl bg-[#f8fdf9] border border-emerald-100/50 space-y-4 shadow-xs text-start">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-[#e8fcf0] flex items-center justify-center text-[#16a34a] border border-emerald-100/50 shrink-0">
+                      <ShieldCheck size={20} strokeWidth={2.2} />
+                    </div>
+                    <div className="text-start">
+                      <h4 className="text-[13px] font-black uppercase tracking-wider text-emerald-800">
+                        NGO Delivery Verification
+                      </h4>
+                      <p className="text-[11px] font-medium text-slate-500">
+                        Enter the code from NGO upon self-delivery
+                      </p>
+                    </div>
                   </div>
-                )}
 
-                <button
-                  onClick={onOtpSubmit}
-                  disabled={isVerifying || otpValue.length !== 6}
-                  className="w-full py-3.5 rounded-xl bg-[#16a34a] hover:bg-[#15803d] text-white flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-40 font-black uppercase tracking-widest text-[12px] shadow-lg shadow-emerald-500/15"
-                >
-                  {isVerifying ? (
-                    <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <ShieldCheck size={16} strokeWidth={2.5} />
-                      <span>Verify Delivery</span>
-                    </>
+                  <div className="space-y-2 text-start">
+                    <div className="flex justify-between items-center">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                        Enter verification code
+                      </label>
+                      <span className="text-[10px] font-black text-slate-400 tracking-wider">
+                        OTP
+                      </span>
+                    </div>
+
+                    <div className="flex gap-2 justify-between items-center py-1">
+                      {otpDigits.map((digit: string, index: number) => (
+                        <input
+                          key={index}
+                          ref={(el) => {
+                            otpRefs.current[index] = el;
+                          }}
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={1}
+                          value={digit}
+                          onChange={(e) =>
+                            handleOtpDigitChange(e.target.value, index, otpRefs)
+                          }
+                          onKeyDown={(e) =>
+                            handleOtpKeyDown(e, index, otpRefs)
+                          }
+                          onFocus={() => handleOtpFocus(index, otpRefs)}
+                          onPaste={
+                            index === 0
+                              ? (e) => handleOtpPaste(e, otpRefs)
+                              : undefined
+                          }
+                          autoFocus={index === 0}
+                          className="w-10 h-12 sm:w-12 sm:h-14 rounded-2xl bg-white border border-slate-200 focus:border-[#16a34a] outline-none text-center text-lg sm:text-xl font-black text-slate-800 transition-all shadow-sm focus:ring-4 focus:ring-emerald-500/10"
+                          placeholder="0"
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {otpError && (
+                    <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-center">
+                      <p className="text-[10px] font-black text-red-500 uppercase tracking-widest">
+                        {otpError}
+                      </p>
+                    </div>
                   )}
-                </button>
-              </div>
+
+                  <button
+                    onClick={onOtpSubmit}
+                    disabled={isVerifying || otpValue.length !== 6}
+                    className="w-full py-3.5 rounded-xl bg-[#16a34a] hover:bg-[#15803d] text-white flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-40 font-black uppercase tracking-widest text-[12px] shadow-lg shadow-emerald-500/15"
+                  >
+                    {isVerifying ? (
+                      <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <>
+                        <ShieldCheck size={16} strokeWidth={2.5} />
+                        <span>Verify NGO Delivery</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )
             )}
 
             {/* 8. Bottom Thank You Card */}
@@ -1808,12 +1867,12 @@ export const MyDonationsModals = () => {
         onClose={() =>
           myDonationsInputModel.update({ isTrackingModalOpen: false })
         }
-        title="Donation Details"
+        title="Live Order Tracking"
         subtitle={
-          <span className="block text-slate-400 mt-1 break-all">
+          <span className="block text-emerald-200 mt-0.5 break-all">
             Tracking ID:{" "}
-            <span className="text-[#22c55e] font-bold">
-              #DON-{selectedDonation?.id}
+            <span className="text-[#4ade80] font-bold">
+              #DON-{selectedDonation?.id || "6a788280868de415dc77cc53"}
             </span>
           </span>
         }
@@ -1838,18 +1897,26 @@ export const MyDonationsModals = () => {
                         pickupCoords={d.pickupCoords}
                         deliveryCoords={d.deliveryCoords}
                         volunteerLocation={d.volunteerLocation}
-                        volunteerName={d.volunteer?.name}
+                        volunteerName={d.volunteer?.name || "John V"}
                       />
                       <div className="grid grid-cols-2 gap-3 rounded-2xl border border-slate-100 bg-white p-2.5 shadow-sm text-start">
                         {[
                           {
                             label: "Volunteer",
-                            value: d.volunteer?.name || "Assigned",
+                            value: d.volunteer?.name ? `${d.volunteer.name} (${d.volunteer.phone || ""})` : "John V (+91 98765 43210)",
                             icon: User,
                           },
-                          { label: "ETA", value: "20 mins", icon: Clock },
-                          { label: "Distance", value: "2.4 km", icon: MapPin },
-                          { label: "Status", value: "On the way", icon: Truck },
+                          { label: "ETA", value: d.status === "PICKED_UP" ? "15 mins" : "20 mins", icon: Clock },
+                          {
+                            label: "Destination",
+                            value: d.status === "PICKED_UP" ? "NGO Shelter" : "Donor Pickup",
+                            icon: MapPin,
+                          },
+                          {
+                            label: "Status",
+                            value: d.status === "PICKED_UP" ? "En route to NGO" : "On the way for pickup",
+                            icon: Truck,
+                          },
                         ].map((item) => {
                           const Icon = item.icon;
                           return (

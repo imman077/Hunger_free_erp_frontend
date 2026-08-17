@@ -9,8 +9,15 @@ export const fetchInventory = async () => {
     const data = await ngoInventoryService.getInventory();
     const mapped = (Array.isArray(data) ? data : []).map((item: any) => ({
       ...item,
+      item_name: item.item_name || item.itemName || item.name || item.title || "Inventory Item",
       status: item.status || "Stored",
       urgency: item.urgency || "Normal",
+      condition: item.condition || item.itemCondition || "Excellent",
+      location: item.location || item.storageLocation || "Main Storage",
+      expiry_date: item.expiry_date || (item.expiryDate ? new Date(item.expiryDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : null),
+      added_on: item.createdAt || item.created_at
+        ? new Date(item.createdAt || item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' • ' + new Date(item.createdAt || item.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+        : "Apr 12, 2025 • 02:32 PM",
     }));
     myInventoryInputModel.update({ items: mapped });
   } catch (error) {
@@ -71,6 +78,20 @@ export const setIsEditing = (isEditing: boolean) => {
 
 export const setIsDrawerOpen = (isDrawerOpen: boolean) => {
   myInventoryInputModel.update({ isDrawerOpen });
+};
+
+export const handleDeleteItem = async (itemId: string | number, itemName: string) => {
+  if (window.confirm(`Are you sure you want to delete ${itemName}?`)) {
+    try {
+      await ngoInventoryService.deleteItem(itemId);
+      toast.success("Item Deleted", {
+        description: `${itemName} has been removed from inventory.`,
+      });
+      await fetchInventory();
+    } catch (error) {
+      toast.error("Failed to delete item");
+    }
+  }
 };
 
 export const onDestroy = () => {

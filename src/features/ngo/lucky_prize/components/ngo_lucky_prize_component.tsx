@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { useNgoRewards } from "../../rewards/controller/rewards_controller";
 import { LuckyPrizeBody } from "../../../../global/components/reusable-components/LuckyPrizeBody";
 import type { Prize } from "../../../../global/components/reusable-components/LuckyPrizeBody";
+import { Loader } from "../../../../global/components/reusable-components/Loader";
 
 export const LuckyPrizeBodyField = React.memo(() => {
   const { prizes: storePrizes, isLoading } = useNgoRewards();
@@ -46,14 +47,7 @@ export const LuckyPrizeBodyField = React.memo(() => {
   }, [wonPrize]);
 
   if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] w-full gap-4">
-        <div className="w-12 h-12 rounded-full border-4 border-green-500/20 border-t-green-500 animate-spin" />
-        <span className="text-[10px] font-black text-green-500 uppercase tracking-widest animate-pulse">
-          Loading...
-        </span>
-      </div>
-    );
+    return <Loader text="Loading Grant Pool..." minHeight="60vh" />;
   }
 
   return (

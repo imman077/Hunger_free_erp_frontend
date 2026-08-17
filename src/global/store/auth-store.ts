@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 
 interface UserProfile {
   role: "ADMIN" | "DONOR" | "NGO" | "VOLUNTEER";
@@ -37,6 +37,7 @@ interface AuthState {
 
   // Actions
   login: (user: User, accessToken: string, refreshToken: string) => void;
+  updateUser: (userData: Partial<User>) => void;
   logout: () => void;
   setAccessToken: (token: string) => void;
 }
@@ -58,6 +59,12 @@ export const useAuthStore = create<AuthState>()(
         });
       },
 
+      updateUser: (userData) => {
+        set((state) => ({
+          user: state.user ? { ...state.user, ...userData } : (userData as User),
+        }));
+      },
+
       logout: () => {
         set({
           user: null,
@@ -65,13 +72,15 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: null,
           isAuthenticated: false,
         });
-        localStorage.removeItem("auth-storage"); // Clear persistence
+        sessionStorage.removeItem("auth-storage"); // Clear session storage
+        localStorage.removeItem("auth-storage"); // Clean legacy localStorage
       },
 
       setAccessToken: (accessToken) => set({ accessToken }),
     }),
     {
-      name: "auth-storage", // Key in localStorage
+      name: "auth-storage", // Key in sessionStorage
+      storage: createJSONStorage(() => sessionStorage),
     }
   )
 );

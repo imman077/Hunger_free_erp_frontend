@@ -1,360 +1,299 @@
-
-import { Package, MapPin, ClipboardList, Calendar, ArrowLeft, Loader2 } from "lucide-react";
-import ResuableDrawer from "../../../../global/components/reusable-components/Drawer";
-import ResuableInput from "../../../../global/components/reusable-components/Input";
-import ResuableDropdown from "../../../../global/components/reusable-components/Dropdown";
-import ResuableButton from "../../../../global/components/reusable-components/Button";
-import { myInventoryInputModel } from "../store/my_inventory_store";
 import {
-  setIsDrawerOpen,
-  setIsEditing,
-  setEditFormDataValue,
-  handleUpdateStock,
-} from "../controller/my_inventory_controller";
+  Package, MapPin, ClipboardList, Calendar,
+  Building2, Tag, ShieldCheck, Clock, Utensils, FileText, Leaf, Circle
+} from "lucide-react";
+import ResuableDrawer from "../../../../global/components/reusable-components/Drawer";
+import { myInventoryInputModel } from "../store/my_inventory_store";
+import { setIsDrawerOpen } from "../controller/my_inventory_controller";
 
 export const StockUpdateDrawer = () => {
   const isOpen = myInventoryInputModel.useSelector((state) => state.myInventoryState.isDrawerOpen);
-  const isUpdating = myInventoryInputModel.useSelector((state) => state.myInventoryState.isUpdating);
-  const isEditing = myInventoryInputModel.useSelector((state) => state.myInventoryState.isEditing);
   const selectedRecord = myInventoryInputModel.useSelector((state) => state.myInventoryState.selectedRecord);
-  const editFormData = myInventoryInputModel.useSelector((state) => state.myInventoryState.editFormData);
+
+  const getInventoryItemImage = (itemName: string) => {
+    const t = (itemName || "").toLowerCase();
+    
+    if (t.includes("bread")) {
+      return "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80";
+    }
+    if (t.includes("water") || t.includes("mineral")) {
+      return "https://images.unsplash.com/photo-1523362628745-0c100150b504?auto=format&fit=crop&w=600&q=80";
+    }
+    if (t.includes("bean") || t.includes("canned")) {
+      return "https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80";
+    }
+    if (t.includes("milk") || t.includes("powder") || t.includes("tin")) {
+      return "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?auto=format&fit=crop&w=600&q=80";
+    }
+    if (t.includes("flour") || t.includes("wheat")) {
+      return "https://images.unsplash.com/photo-1574325131876-a79999999999?auto=format&fit=crop&w=600&q=80";
+    }
+    if (t.includes("rice")) {
+      return "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=600&q=80";
+    }
+    if (t.includes("oil")) {
+      return "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=600&q=80";
+    }
+    return "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80";
+  };
+
+  const getRelativeDaysText = (dateStr?: string | null) => {
+    if (!dateStr) return "";
+    try {
+      const expiry = new Date(dateStr);
+      if (isNaN(expiry.getTime())) return "";
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      expiry.setHours(0, 0, 0, 0);
+      const diffTime = expiry.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      if (diffDays < 0) return "(Expired)";
+      if (diffDays === 0) return "(Today)";
+      if (diffDays === 1) return "(in 1 day)";
+      return `(in ${diffDays} days)`;
+    } catch (e) {
+      return "";
+    }
+  };
+
+  const formatExpiryDate = (dateStr?: string | null) => {
+    if (!dateStr) return "No Expiry";
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    } catch (e) {
+      return dateStr;
+    }
+  };
 
   return (
     <ResuableDrawer
       isOpen={isOpen}
-      onClose={() => !isUpdating && setIsDrawerOpen(false)}
+      onClose={() => setIsDrawerOpen(false)}
       title="Item Details"
+      subtitle="View complete information about this item"
+      headerVariant="green"
+      headerIcon={<FileText size={20} className="text-white" />}
     >
       {selectedRecord && (
-        <div className="space-y-8 p-3 sm:p-4 lg:p-5">
-          {/* Branded Item Hero */}
-          <div
-            className="p-5 rounded-sm flex items-center gap-5 relative overflow-hidden border"
-            style={{
-              backgroundColor: "var(--bg-secondary)",
-              borderColor: "var(--border-color)",
-            }}
-          >
-            <div className="absolute -top-6 -right-6 p-4 opacity-[0.03]">
-              <Package size={120} className="text-hf-green" />
+        <div className="space-y-6 p-4 sm:p-5 lg:p-6 bg-slate-50/50 dark:bg-slate-900/50 min-h-screen">
+          {/* Hero Section: Image + Title */}
+          <div className="flex items-start gap-5">
+            {/* Left Cover Image */}
+            <div className="w-[120px] h-[120px] rounded-2xl overflow-hidden bg-slate-50 dark:bg-slate-800 flex items-center justify-center shrink-0 border border-slate-100 dark:border-slate-800 shadow-sm">
+              <img
+                src={getInventoryItemImage(selectedRecord.item_name)}
+                alt={selectedRecord.item_name}
+                className="w-full h-full object-cover"
+              />
             </div>
-            <div className="w-14 h-14 bg-hf-green rounded-sm border border-hf-green/40 flex items-center justify-center text-2xl font-black text-white relative z-10 uppercase shrink-0">
-              {selectedRecord.item_name.substring(0, 1)}
-            </div>
-            <div className="flex-1 min-w-0 space-y-2 relative z-10">
-              <h4
-                className="text-[17px] font-black uppercase tracking-tight leading-none"
-                style={{ color: "var(--text-primary)" }}
-              >
-                {selectedRecord.item_name}
-              </h4>
-              <div className="flex flex-wrap items-center gap-2">
-                <div
-                  className="flex items-center gap-1.5 px-2 py-1 rounded-sm border"
-                  style={{
-                    backgroundColor: "var(--bg-primary)",
-                    borderColor: "var(--border-color)",
-                  }}
-                >
-                  <MapPin size={10} className="text-hf-green" />
-                  <span className="text-[9px] font-black uppercase tracking-widest text-[var(--text-secondary)]">
-                    {selectedRecord.location}
-                  </span>
+
+            {/* Right Text details */}
+            <div className="flex-1 min-w-0 flex flex-col justify-between py-1 text-start">
+              <div>
+                <h3 className="text-xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight leading-snug">
+                  {selectedRecord.item_name}
+                </h3>
+                <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 font-semibold mt-1.5">
+                  <MapPin size={14} className="text-[#22c55e]" />
+                  <span>{selectedRecord.location}</span>
                 </div>
-                <div
-                  className="px-2 py-1 rounded-sm border"
-                  style={{
-                    backgroundColor: "var(--bg-primary)",
-                    borderColor: "var(--border-color)",
-                  }}
-                >
-                  <span className="text-[9px] font-black uppercase tracking-widest text-[#22c55e]">
-                    {selectedRecord.category}
-                  </span>
+              </div>
+
+              {/* Shield & Quantity Sub-Badges */}
+              <div className="flex items-center gap-2 mt-3 flex-wrap">
+                <span className="bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-100/50 dark:border-emerald-900/30 px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                  {selectedRecord.condition?.toUpperCase().includes("FRESH") ? (
+                    <Leaf size={12} className="text-emerald-500" />
+                  ) : (
+                    <ShieldCheck size={12} className="text-emerald-500" />
+                  )}
+                  {selectedRecord.condition?.toUpperCase()}
+                </span>
+                <span className="bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400 border border-blue-100/50 dark:border-blue-900/30 px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                  <Package size={12} className="text-blue-500" />
+                  {selectedRecord.quantity} {selectedRecord.unit.toUpperCase()}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Metrics Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Quantity Card */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 flex items-center gap-3.5 shadow-sm text-start">
+              <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/20 flex items-center justify-center text-purple-600 dark:text-purple-400 shrink-0">
+                <Package size={18} className="stroke-[2.2]" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[9px] font-black tracking-wider text-slate-400 uppercase leading-none mb-1">
+                  QUANTITY
+                </p>
+                <p className="text-xl font-extrabold text-slate-800 dark:text-slate-100 leading-none">
+                  {selectedRecord.quantity}
+                </p>
+                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-1 leading-none">
+                  {selectedRecord.unit}
+                </p>
+              </div>
+            </div>
+
+            {/* Condition Card */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 flex items-center gap-3.5 shadow-sm text-start">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+                <ShieldCheck size={18} className="stroke-[2.2]" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[9px] font-black tracking-wider text-slate-400 uppercase leading-none mb-1">
+                  ITEM CONDITION
+                </p>
+                <div className="flex items-center gap-1.5 mt-1.5 leading-none">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <p className="text-sm font-extrabold text-slate-800 dark:text-slate-100 leading-none">
+                    {selectedRecord.condition}
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {!isEditing ? (
-            /* Detail View: Information Rich Summary */
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <div className="grid grid-cols-2 gap-3">
-                <div
-                  className="p-4 rounded-sm space-y-1.5 border"
-                  style={{
-                    backgroundColor: "var(--bg-secondary)",
-                    borderColor: "var(--border-color)",
-                  }}
-                >
-                  <span
-                    className="text-[8px] font-black uppercase tracking-[0.2em] block"
-                    style={{ color: "var(--text-muted)" }}
-                  >
-                    Quantity
-                  </span>
-                  <p
-                    className="text-xl font-black tracking-tighter"
-                    style={{ color: "var(--text-primary)" }}
-                  >
-                    {selectedRecord.quantity}{" "}
-                    <span className="text-[10px] font-black uppercase opacity-40 ml-1">
-                      {selectedRecord.unit}
-                    </span>
-                  </p>
-                </div>
-                <div
-                  className="p-4 rounded-sm space-y-1.5 border"
-                  style={{
-                    backgroundColor: "var(--bg-secondary)",
-                    borderColor: "var(--border-color)",
-                  }}
-                >
-                  <span
-                    className="text-[8px] font-black uppercase tracking-[0.2em] block"
-                    style={{ color: "var(--text-muted)" }}
-                  >
-                    Item Condition
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`w-2 h-2 rounded-full ${
-                        selectedRecord.condition === "Excellent"
-                          ? "bg-emerald-500"
-                          : selectedRecord.condition === "Good"
-                            ? "bg-blue-500"
-                            : "bg-red-500"
-                      }`}
-                    />
-                    <p
-                      className="text-[14px] font-black uppercase tracking-tight"
-                      style={{ color: "var(--text-primary)" }}
-                    >
-                      {selectedRecord.condition}
-                    </p>
-                  </div>
-                </div>
-              </div>
+          {/* MORE INFORMATION Header */}
+          <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400 text-start pt-2">
+            <ClipboardList size={14} className="text-emerald-700 dark:text-emerald-400 stroke-[2.5]" />
+            <span>MORE INFORMATION</span>
+          </div>
 
-              <div className="space-y-4">
-                <div
-                  className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] px-1"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  <ClipboardList size={12} className="text-hf-green" />
-                  More Information
-                </div>
-                <div
-                  className="border rounded-sm divide-y overflow-hidden"
-                  style={{
-                    backgroundColor: "var(--bg-primary)",
-                    borderColor: "var(--border-color)",
-                  }}
-                >
-                  <div
-                    className="p-4 flex items-center justify-between"
-                    style={{ borderColor: "var(--border-color)" }}
-                  >
-                    <span
-                      className="text-[10px] font-bold uppercase tracking-widest"
-                      style={{ color: "var(--text-muted)" }}
-                    >
-                      Expiry Date
-                    </span>
-                    <span
-                      className="text-[12px] font-black flex items-center gap-2 tabular-nums"
-                      style={{ color: "var(--text-primary)" }}
-                    >
-                      <Calendar size={14} className="text-[#22c55e]" />
-                      {selectedRecord.expiry_date || "N/A"}
-                    </span>
-                  </div>
-                  <div
-                    className="p-4 flex items-center justify-between border-t"
-                    style={{ borderColor: "var(--border-color)" }}
-                  >
-                    <span
-                      className="text-[10px] font-bold uppercase tracking-widest"
-                      style={{ color: "var(--text-muted)" }}
-                    >
-                      Current Status
-                    </span>
-                    <div
-                      className="flex items-center gap-2 px-3 py-1.5 rounded-sm border"
-                      style={{
-                        backgroundColor: "var(--bg-secondary)",
-                        borderColor: "var(--border-color)",
-                      }}
-                    >
-                      <div
-                        className={`w-2 h-2 rounded-full ${
-                          selectedRecord.status === "Delivered"
-                            ? "bg-emerald-500"
-                            : selectedRecord.status === "In Transit"
-                              ? "bg-blue-500"
-                              : "bg-slate-400"
-                        }`}
-                      />
-                      <span
-                        className="text-[11px] font-black uppercase tracking-tight"
-                        style={{ color: "var(--text-primary)" }}
-                      >
-                        {selectedRecord.status}
-                      </span>
-                    </div>
-                  </div>
-                  <div
-                    className="p-4 space-y-2 border-t"
-                    style={{ borderColor: "var(--border-color)" }}
-                  >
-                    <span
-                      className="text-[10px] font-bold uppercase tracking-widest"
-                      style={{ color: "var(--text-muted)" }}
-                    >
-                      Notes
-                    </span>
-                    <div
-                      className="p-3 rounded-sm border border-dashed min-h-[60px] flex items-center"
-                      style={{
-                        backgroundColor: "var(--bg-secondary)",
-                        borderColor: "var(--border-color)",
-                      }}
-                    >
-                      <p
-                        className="text-[12px] font-medium italic leading-relaxed"
-                        style={{
-                          color: selectedRecord.notes
-                            ? "var(--text-primary)"
-                            : "var(--text-muted)",
-                        }}
-                      >
-                        {selectedRecord.notes
-                          ? `"${selectedRecord.notes}"`
-                          : "No extra parameters specified."}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+          {/* Details List */}
+          <div className="border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+            {/* Category */}
+            <div className="p-4 flex items-center justify-between text-start text-xs font-bold text-slate-700 dark:text-slate-300">
+              <div className="flex items-center gap-2.5">
+                <Tag size={15} className="text-orange-500 shrink-0" />
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                  CATEGORY
+                </span>
               </div>
+              <span className="text-xs font-extrabold text-orange-600 dark:text-orange-400 flex items-center gap-1.5">
+                <Utensils size={13} />
+                {selectedRecord.category}
+              </span>
+            </div>
 
-              <div className="pt-4 space-y-3">
-                <ResuableButton
-                  variant="primary"
-                  className="w-full py-4 rounded-sm bg-hf-green hover:bg-hf-green/90"
-                  onClick={() => setIsEditing(true)}
-                >
-                  <span className="text-[11px] font-black uppercase tracking-widest">
-                    Edit Item Details
+            {/* Total Quantity */}
+            <div className="p-4 flex items-center justify-between text-start text-xs font-bold text-slate-700 dark:text-slate-300">
+              <div className="flex items-center gap-2.5">
+                <Package size={15} className="text-blue-500 shrink-0" />
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                  TOTAL QUANTITY
+                </span>
+              </div>
+              <span className="text-xs font-extrabold text-slate-800 dark:text-slate-100">
+                {selectedRecord.quantity} {selectedRecord.unit}
+              </span>
+            </div>
+
+            {/* Item Condition */}
+            <div className="p-4 flex items-center justify-between text-start text-xs font-bold text-slate-700 dark:text-slate-300">
+              <div className="flex items-center gap-2.5">
+                <ShieldCheck size={15} className="text-emerald-500 shrink-0" />
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                  ITEM CONDITION
+                </span>
+              </div>
+              <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400">
+                {selectedRecord.condition}
+              </span>
+            </div>
+
+            {/* Expiry Date */}
+            <div className="p-4 flex items-center justify-between text-start text-xs font-bold text-slate-700 dark:text-slate-300">
+              <div className="flex items-center gap-2.5">
+                <Calendar size={15} className="text-orange-500 shrink-0" />
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                  EXPIRY DATE
+                </span>
+              </div>
+              <div className="flex flex-col items-end">
+                <span className="text-xs font-extrabold text-slate-800 dark:text-slate-100">
+                  {formatExpiryDate(selectedRecord.expiry_date)}
+                </span>
+                {selectedRecord.expiry_date && (
+                  <span className="text-[9px] font-black text-slate-400 dark:text-slate-500 leading-none mt-0.5">
+                    {getRelativeDaysText(selectedRecord.expiry_date)}
                   </span>
-                </ResuableButton>
-                <button
-                  onClick={() => setIsDrawerOpen(false)}
-                  className="w-full py-3 text-[11px] font-black uppercase tracking-widest transition-colors"
-                  style={{ color: "var(--text-muted)" }}
-                >
-                  Close
-                </button>
+                )}
               </div>
             </div>
-          ) : (
-            /* Edit View: Adjustment Controls */
-            <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
-              <div className="flex items-center justify-between px-1">
-                <h5
-                  className="text-[10px] font-black uppercase tracking-[0.3em]"
-                  style={{ color: "var(--color-emerald)" }}
-                >
-                  Edit Details
-                </h5>
-                <button
-                  onClick={() => setIsEditing(false)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-sm border bg-hf-green/5 border-hf-green/20 text-hf-green hover:bg-hf-green/10 transition-all active:scale-95 shrink-0"
-                >
-                  <ArrowLeft size={10} strokeWidth={4} />
-                  <span className="text-[9px] font-black uppercase tracking-widest pt-0.5">
-                    Back
-                  </span>
-                </button>
+
+            {/* Storage Location */}
+            <div className="p-4 flex items-center justify-between text-start text-xs font-bold text-slate-700 dark:text-slate-300">
+              <div className="flex items-center gap-2.5">
+                <Building2 size={15} className="text-emerald-500 shrink-0" />
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                  STORAGE LOCATION
+                </span>
               </div>
-
-              <div
-                className="grid grid-cols-1 gap-6 p-6 rounded-sm border"
-                style={{
-                  backgroundColor: "var(--bg-secondary)",
-                  borderColor: "var(--border-color)",
-                }}
-              >
-                <ResuableInput
-                  label="Adjust Quantity"
-                  value={editFormData.quantity}
-                  onChange={(val) => setEditFormDataValue("quantity", val)}
-                  placeholder={`e.g. ${selectedRecord.quantity}`}
-                  required
-                  endContent={
-                    <span
-                      className="text-[10px] font-black uppercase tracking-widest pr-2"
-                      style={{ color: "var(--text-muted)" }}
-                    >
-                      {selectedRecord.unit}
-                    </span>
-                  }
-                />
-
-                <ResuableDropdown
-                  label="Update Status"
-                  options={[
-                    { value: "Dispatched", label: "Dispatched" },
-                    { value: "In Transit", label: "In Transit" },
-                    { value: "Delivered", label: "Delivered" },
-                  ]}
-                  value={editFormData.status}
-                  onChange={(val) => setEditFormDataValue("status", val)}
-                />
-
-                <div
-                  className="p-4 rounded-2xl border flex items-start gap-4"
-                  style={{
-                    backgroundColor: "rgba(59, 130, 246, 0.12)",
-                    borderColor: "rgba(59, 130, 246, 0.3)",
-                  }}
-                >
-                  <p
-                    className="text-[11px] font-bold leading-relaxed"
-                    style={{ color: "#60a5fa" }}
-                  >
-                    Saving these changes will update the inventory records and
-                    notify the distribution center.
-                  </p>
-                </div>
-              </div>
-
-              <div className="pt-4 space-y-3">
-                <ResuableButton
-                  variant="primary"
-                  className="w-full py-4 rounded-sm bg-hf-green hover:bg-hf-green/90"
-                  disabled={isUpdating}
-                  onClick={handleUpdateStock}
-                >
-                  {isUpdating ? (
-                    <div className="flex items-center gap-3">
-                      <Loader2 size={16} className="animate-spin" />
-                      Saving...
-                    </div>
-                  ) : (
-                    "Save Changes"
-                  )}
-                </ResuableButton>
-                <ResuableButton
-                  variant="ghost"
-                  className="w-full py-4 rounded-sm"
-                  disabled={isUpdating}
-                  onClick={() => setIsEditing(false)}
-                >
-                  Discard Changes
-                </ResuableButton>
-              </div>
+              <span className="text-xs font-extrabold text-slate-800 dark:text-slate-100">
+                {selectedRecord.location}
+              </span>
             </div>
-          )}
+
+            {/* Current Status */}
+            <div className="p-4 flex items-center justify-between text-start text-xs font-bold text-slate-700 dark:text-slate-300">
+              <div className="flex items-center gap-2.5">
+                <Circle size={15} className="text-purple-500 shrink-0" />
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                  CURRENT STATUS
+                </span>
+              </div>
+              <span className="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-100/50 text-[10px] font-black text-emerald-600 flex items-center gap-1.5 uppercase leading-none">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                {selectedRecord.status || "STORED"}
+              </span>
+            </div>
+
+            {/* Added On */}
+            <div className="p-4 flex items-center justify-between text-start text-xs font-bold text-slate-700 dark:text-slate-300">
+              <div className="flex items-center gap-2.5">
+                <Clock size={15} className="text-blue-500 shrink-0" />
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                  ADDED ON
+                </span>
+              </div>
+              <span className="text-xs font-extrabold text-slate-800 dark:text-slate-100">
+                {selectedRecord.added_on || "N/A"}
+              </span>
+            </div>
+
+            {/* Notes */}
+            <div className="p-4 flex items-start justify-between text-start text-xs font-bold text-slate-700 dark:text-slate-300">
+              <div className="flex items-center gap-2.5 shrink-0 pt-0.5">
+                <FileText size={15} className="text-slate-400 shrink-0" />
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                  NOTES
+                </span>
+              </div>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 max-w-[200px] text-right italic leading-relaxed break-words pl-4">
+                {selectedRecord.notes ? `"${selectedRecord.notes}"` : "No extra parameters specified."}
+              </span>
+            </div>
+          </div>
+
+          {/* Close Action Button */}
+          <div className="pt-4">
+            <button
+              type="button"
+              onClick={() => setIsDrawerOpen(false)}
+              className="w-full py-4 bg-[#10b981] hover:bg-[#059669] text-white rounded-2xl text-sm font-black uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer active:scale-95 flex items-center justify-center"
+            >
+              CLOSE
+            </button>
+          </div>
         </div>
       )}
     </ResuableDrawer>

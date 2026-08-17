@@ -2,10 +2,12 @@ import { z } from "zod";
 
 export const InventoryItemSchema = z
   .object({
-    id: z.number(),
-    item_name: z.string(),
-    quantity: z.number(),
-    unit: z.string(),
+    id: z.union([z.number(), z.string()]),
+    item_name: z.string().optional().nullable(),
+    name: z.string().optional().nullable(),
+    title: z.string().optional().nullable(),
+    quantity: z.union([z.number(), z.string()]).optional().nullable(),
+    unit: z.string().optional().nullable(),
     category: z.string().optional().nullable(),
     expiry_date: z.string().optional().nullable(),
   })

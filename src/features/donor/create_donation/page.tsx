@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Heart, CheckCircle, Trash2 } from "lucide-react";
-import ResuableButton from "../../../global/components/reusable-components/Button";
 import { toast } from "sonner";
 import PageHeader from "../../../global/components/reusable-components/PageHeader";
 
@@ -14,6 +13,7 @@ import {
   onDestroy,
   handleDonationSubmit,
   handleDiscard,
+  formatIndianPhoneNumber,
 } from "./controller/create_donation_controller";
 import {
   DonationFields,
@@ -33,40 +33,153 @@ export default function CreateDonationPage() {
     (state) => state.createDonationData.loading
   );
 
+  const getSessionUserPhone = (): string => {
+    const user: any = useAuthStore.getState().user;
+    if (user?.profile?.phone) return user.profile.phone;
+    if (user?.phone) return user.phone;
+    if (user?.ngo_profile?.contact_number) return user.ngo_profile.contact_number;
+
+    try {
+      const keys = ["user", "user_data", "profile", "auth", "session_user", "donor", "user_phone"];
+      for (const k of keys) {
+        const item = sessionStorage.getItem(k) || localStorage.getItem(k);
+        if (item) {
+          try {
+            const parsed = JSON.parse(item);
+            if (parsed.phone) return parsed.phone;
+            if (parsed.profile?.phone) return parsed.profile.phone;
+            if (parsed.contact_number) return parsed.contact_number;
+            if (parsed.contactPhone) return parsed.contactPhone;
+          } catch {
+            if (/^\+?\d[\d\s-]{8,}$/.test(item)) return item;
+          }
+        }
+      }
+
+      const authStoreRaw = sessionStorage.getItem("auth-storage") || localStorage.getItem("auth-storage");
+      if (authStoreRaw) {
+        const parsed = JSON.parse(authStoreRaw);
+        const u = parsed?.state?.user;
+        if (u?.profile?.phone) return u.profile.phone;
+        if (u?.phone) return u.phone;
+      }
+    } catch (e) {
+      console.error("Error reading session storage for phone:", e);
+    }
+    return "";
+  };
+
+  const getSessionUserAddress = (): string => {
+    const user: any = useAuthStore.getState().user;
+    if (user?.profile?.address) return user.profile.address;
+    if (user?.address) return user.address;
+
+    try {
+      const keys = ["user", "user_data", "profile", "auth", "session_user", "donor", "user_address"];
+      for (const k of keys) {
+        const item = sessionStorage.getItem(k) || localStorage.getItem(k);
+        if (item) {
+          try {
+            const parsed = JSON.parse(item);
+            if (parsed.address) return parsed.address;
+            if (parsed.profile?.address) return parsed.profile.address;
+            if (parsed.pickupAddress) return parsed.pickupAddress;
+          } catch {
+            if (item.length > 5 && !item.startsWith("{")) return item;
+          }
+        }
+      }
+
+      const authStoreRaw = sessionStorage.getItem("auth-storage") || localStorage.getItem("auth-storage");
+      if (authStoreRaw) {
+        const parsed = JSON.parse(authStoreRaw);
+        const u = parsed?.state?.user;
+        if (u?.profile?.address) return u.profile.address;
+        if (u?.address) return u.address;
+      }
+    } catch (e) {
+      console.error("Error reading session storage for address:", e);
+    }
+    return "";
+  };
+
   const prefillForm = (data: any) => {
+    if (!data) return;
+
     const originalDonationId = data.id ? String(data.id) : null;
 
     let qty = "";
     let unt = "kg";
     if (data.quantity) {
-      const parts = String(data.quantity).split(" ");
+      const parts = String(data.quantity).trim().split(" ");
       qty = parts[0] || "";
       unt = parts.length > 1 ? parts.slice(1).join(" ") : "kg";
     }
 
+    // Process expiry date and time
+    let expDate = data.expiryDate || "";
+    let expTime = "";
+
+    if (data.expiryTime) {
+      const str = String(data.expiryTime).trim();
+      if (str.includes("T")) {
+        const parts = str.split("T");
+        if (!expDate) expDate = parts[0];
+        expTime = parts[1] ? parts[1].substring(0, 5) : "";
+      } else if (str.includes("-") && str.length >= 10) {
+        const parts = str.split(" ");
+        if (!expDate) expDate = parts[0];
+        if (parts[1]) expTime = parts[1].substring(0, 5);
+      } else {
+        expTime = str.substring(0, 5);
+      }
+    }
+
+    // Default to today's date if empty or past date (for redonating old donations)
+    const todayStr = new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
+    if (!expDate || expDate < todayStr) {
+      expDate = todayStr;
+    }
+    if (!expTime) {
+      expTime = "18:00";
+    }
+
+    // Resolve contact phone and pickup address from donation data or session/auth storage
+    const phoneRaw =
+      data.contactPhone ||
+      data.pickupPhone ||
+      data.phone ||
+      data.donorPhone ||
+      getSessionUserPhone() ||
+      "";
+    const contactPhone = formatIndianPhoneNumber(phoneRaw);
+
+    const pickupAddress =
+      data.pickupAddress ||
+      getSessionUserAddress() ||
+      "";
+
+    const itemObj = {
+      id: Date.now(),
+      foodCategory: data.category || data.foodCategory || "",
+      dietaryType: data.dietaryType || "Veg",
+      preparationType: data.preparationType || data.preparation || "Restaurant",
+      quantity: qty,
+      unit: unt,
+      description: data.foodType || data.description || "",
+      expiryDate: expDate,
+      expiryTime: expTime,
+      foodPhoto: data.image || data.foodPhoto || null,
+      otherCategory: data.otherCategory || "",
+    };
+
     createDonationInputModel.update({
       originalDonationId,
-      items: [
-        {
-          id: Date.now(),
-          foodCategory: data.category || "",
-          dietaryType: data.dietaryType || "Veg",
-          preparationType: data.preparationType || "Restaurant",
-          quantity: qty,
-          unit: unt,
-          description: data.foodType || data.description || "",
-          expiryDate: data.expiryTime ? data.expiryTime.split("T")[0] : "",
-          expiryTime:
-            data.expiryTime && data.expiryTime.includes("T")
-              ? data.expiryTime.split("T")[1]
-              : "",
-          foodPhoto: data.image || null,
-          otherCategory: "",
-        },
-      ],
+      items: [itemObj],
+      currentItem: itemObj,
       logistics: {
-        pickupAddress: data.pickupAddress || "",
-        contactPhone: "",
+        pickupAddress: pickupAddress,
+        contactPhone: contactPhone,
       },
     });
   };

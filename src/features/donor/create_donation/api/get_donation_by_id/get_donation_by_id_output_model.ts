@@ -16,6 +16,7 @@ export const getDonationByIdOutputSchema = z.object({
       date: z.string().optional().nullable(),
       status: z.string().optional().nullable(),
       pickupAddress: z.string().optional().nullable(),
+      contactPhone: z.string().optional().nullable(),
       deliveryAddress: z.string().optional().nullable(),
       description: z.string().optional().nullable(),
       expiryTime: z.string().optional().nullable(),

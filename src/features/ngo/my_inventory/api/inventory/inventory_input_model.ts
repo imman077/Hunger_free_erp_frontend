@@ -1,4 +1,5 @@
 import { z } from "zod";
+// Updated schema to support string ObjectIDs for MongoDB compatibility
 
 export const AddItemInputSchema = z
   .object({
@@ -11,7 +12,7 @@ export const AddItemInputSchema = z
   .passthrough();
 
 export const UpdateItemInputSchema = z.object({
-  itemId: z.number(),
+  itemId: z.union([z.string(), z.number()]),
   itemData: z
     .object({
       item_name: z.string().optional(),
@@ -23,7 +24,7 @@ export const UpdateItemInputSchema = z.object({
     .passthrough(),
 });
 
-export const DeleteItemInputSchema = z.number();
+export const DeleteItemInputSchema = z.union([z.string(), z.number()]);
 
 export type AddItemInput = z.infer<typeof AddItemInputSchema>;
 export type UpdateItemInput = z.infer<typeof UpdateItemInputSchema>;

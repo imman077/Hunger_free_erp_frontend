@@ -28,6 +28,7 @@ const GET_NEEDS_QUERY = gql`
         username
         email
         phone
+        role
         donorProfile {
           businessName
         }

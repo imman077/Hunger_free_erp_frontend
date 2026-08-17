@@ -2,11 +2,23 @@ import "./App.css";
 import { ThemeProvider } from "./global/contexts/ThemeContext";
 import { Toaster } from "sonner";
 import { AppRoutes } from "./AppRoutes";
+import { useNavigate } from "react-router-dom";
+import { setGlobalNavigator } from "./core/navigation";
+import { useEffect } from "react";
+
+function GlobalNavigationListener() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    setGlobalNavigator(navigate);
+  }, [navigate]);
+  return null;
+}
 
 function App() {
   console.log("App: rendering component");
   return (
     <ThemeProvider>
+      <GlobalNavigationListener />
       <Toaster
         position="top-right"
         richColors
