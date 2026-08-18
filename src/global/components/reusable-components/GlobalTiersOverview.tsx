@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { useQuery, gql } from "@apollo/client";
 import {
   Sparkles,
   Shield,
@@ -17,6 +18,21 @@ import {
   Lock,
 } from "lucide-react";
 import PageHeader from "./PageHeader";
+
+const GET_POINTS_TIERS = gql`
+  query PointsTiers($role: String) {
+    pointsTiers(role: $role) {
+      id
+      name
+      role
+      minPoints
+      maxPoints
+      color
+      benefits
+      isActive
+    }
+  }
+`;
 
 interface GlobalTiersOverviewProps {
   role: "donor" | "ngo" | "volunteer";
@@ -47,21 +63,21 @@ const donorTiers: Tier[] = [
 ];
 
 const ngoTiers: Tier[] = [
-  { name: "Beginner", points: "0 - 1,000", minPoints: 0, maxPoints: 1000, bonus: 0, color: "from-slate-400 to-slate-500", icon: "Sparkles", perks: ["Apply for basic grants", "See your stats easily", "Chat with our team", "Track how much you help"] },
-  { name: "Partner", points: "1,001 - 5,000", minPoints: 1001, maxPoints: 5000, bonus: 5, color: "from-emerald-500 to-emerald-600", icon: "Building2", perks: ["Verified 'Partner' badge", "Get 5% extra grant money", "We're here for you 24/7", "Your requests handled first"] },
-  { name: "Elite", points: "5,001 - 15,000", minPoints: 5001, maxPoints: 15000, bonus: 15, color: "from-blue-500 to-blue-600", icon: "Shield", perks: ["Elite member status", "Get 15% extra grant money", "Show up on the app home", "Money for health camps"] },
-  { name: "Master", points: "15,001 - 35,000", minPoints: 15001, maxPoints: 35000, bonus: 30, color: "from-purple-500 to-purple-600", icon: "Zap", perks: ["Official 'Master' license", "Get 30% extra grant money", "Apply for Mega Grants", "Your own support person"] },
-  { name: "Legend", points: "35,001 - 75,000", minPoints: 35001, maxPoints: 75000, bonus: 50, color: "from-amber-500 to-amber-600", icon: "Award", perks: ["'Legend' member status", "Get 50% extra grant money", "Special tech grants", "Go to national summits"] },
-  { name: "Titan", points: "75,001+", minPoints: 75001, maxPoints: null, bonus: 75, color: "from-red-500 to-red-600", icon: "Trophy", perks: ["Carbon Titan reward", "Get 75% extra grant money", "Join the Global Council", "Partner with big brands", "Special lifetime trophy"] },
+  { name: "Beginner", points: "0 - 1,000", minPoints: 0, maxPoints: 1000, bonus: 0, color: "from-slate-400 to-slate-500", icon: "Sparkles", image: "/ngo_tiers/starter.png", perks: ["Apply for basic grants", "See your stats easily", "Chat with our team", "Track how much you help"] },
+  { name: "Partner", points: "1,001 - 5,000", minPoints: 1001, maxPoints: 5000, bonus: 5, color: "from-emerald-500 to-emerald-600", icon: "Building2", image: "/ngo_tiers/bronze.png", perks: ["Verified 'Partner' badge", "Get 5% extra grant money", "We're here for you 24/7", "Your requests handled first"] },
+  { name: "Elite", points: "5,001 - 15,000", minPoints: 5001, maxPoints: 15000, bonus: 15, color: "from-blue-500 to-blue-600", icon: "Shield", image: "/ngo_tiers/silver.png", perks: ["Elite member status", "Get 15% extra grant money", "Show up on the app home", "Money for health camps"] },
+  { name: "Master", points: "15,001 - 35,000", minPoints: 15001, maxPoints: 35000, bonus: 30, color: "from-purple-500 to-purple-600", icon: "Zap", image: "/ngo_tiers/gold.png", perks: ["Official 'Master' license", "Get 30% extra grant money", "Apply for Mega Grants", "Your own support person"] },
+  { name: "Legend", points: "35,001 - 75,000", minPoints: 35001, maxPoints: 75000, bonus: 50, color: "from-amber-500 to-amber-600", icon: "Award", image: "/ngo_tiers/platinum.png", perks: ["'Legend' member status", "Get 50% extra grant money", "Special tech grants", "Go to national summits"] },
+  { name: "Titan", points: "75,001+", minPoints: 75001, maxPoints: null, bonus: 75, color: "from-red-500 to-red-600", icon: "Trophy", image: "/ngo_tiers/diamond.png", perks: ["Carbon Titan reward", "Get 75% extra grant money", "Join the Global Council", "Partner with big brands", "Special lifetime trophy"] },
 ];
 
 const volunteerTiers: Tier[] = [
-  { name: "Beginner", points: "0 - 500", minPoints: 0, maxPoints: 500, bonus: 0, color: "from-slate-400 to-slate-500", icon: "Sparkles", perks: ["Earn points for every task", "Digital ID card", "Community forum access", "Standard support"] },
-  { name: "Bronze", points: "501 - 1,500", minPoints: 501, maxPoints: 1500, bonus: 5, color: "from-emerald-400 to-emerald-500", icon: "Target", perks: ["Verified Bronze badge", "5% extra points on tasks", "Early access to new tasks", "Community member status"] },
-  { name: "Silver", points: "1,501 - 3,500", minPoints: 1501, maxPoints: 3500, bonus: 10, color: "from-slate-400 to-slate-500", icon: "Shield", perks: ["Verified Silver badge", "10% extra points on tasks", "Priority task assignments", "Monthly lucky draw entry"] },
-  { name: "Gold", points: "3,501 - 7,500", minPoints: 3501, maxPoints: 7500, bonus: 15, color: "from-yellow-400 to-yellow-500", icon: "Zap", perks: ["Verified Gold badge", "15% extra points on tasks", "Unlock premium rewards shop", "Direct support chat access"] },
-  { name: "Platinum", points: "7,501 - 15,000", minPoints: 7501, maxPoints: 15000, bonus: 20, color: "from-teal-400 to-teal-500", icon: "Flame", perks: ["Verified Platinum badge", "20% extra points on tasks", "Exclusive volunteer gear", "Featured volunteer spotlight"] },
-  { name: "Diamond", points: "15,001 - 30,000", minPoints: 15001, maxPoints: 30000, bonus: 30, color: "from-blue-400 to-blue-500", icon: "Rocket", perks: ["Verified Diamond badge", "30% extra points on tasks", "Join the planning committee", "Custom milestone rewards"] },
+  { name: "Beginner", points: "0 - 500", minPoints: 0, maxPoints: 500, bonus: 0, color: "from-slate-400 to-slate-500", icon: "Sparkles", image: "/volunteer_tiers/starter.png", perks: ["Earn points for every task", "Digital ID card", "Community forum access", "Standard support"] },
+  { name: "Bronze", points: "501 - 1,500", minPoints: 501, maxPoints: 1500, bonus: 5, color: "from-emerald-400 to-emerald-500", icon: "Target", image: "/volunteer_tiers/bronze.png", perks: ["Verified Bronze badge", "5% extra points on tasks", "Early access to new tasks", "Community member status"] },
+  { name: "Silver", points: "1,501 - 3,500", minPoints: 1501, maxPoints: 3500, bonus: 10, color: "from-slate-400 to-slate-500", icon: "Shield", image: "/volunteer_tiers/silver.png", perks: ["Verified Silver badge", "10% extra points on tasks", "Priority task assignments", "Monthly lucky draw entry"] },
+  { name: "Gold", points: "3,501 - 7,500", minPoints: 3501, maxPoints: 7500, bonus: 15, color: "from-yellow-400 to-yellow-500", icon: "Zap", image: "/volunteer_tiers/gold.png", perks: ["Verified Gold badge", "15% extra points on tasks", "Unlock premium rewards shop", "Direct support chat access"] },
+  { name: "Platinum", points: "7,501 - 15,000", minPoints: 7501, maxPoints: 15000, bonus: 20, color: "from-teal-400 to-teal-500", icon: "Flame", image: "/volunteer_tiers/platinum.png", perks: ["Verified Platinum badge", "20% extra points on tasks", "Exclusive volunteer gear", "Featured volunteer spotlight"] },
+  { name: "Diamond", points: "15,001 - 30,000", minPoints: 15001, maxPoints: 30000, bonus: 30, color: "from-blue-400 to-blue-500", icon: "Rocket", image: "/volunteer_tiers/diamond.png", perks: ["Verified Diamond badge", "30% extra points on tasks", "Join the planning committee", "Custom milestone rewards"] },
   { name: "Legend", points: "30,001+", minPoints: 30001, maxPoints: null, bonus: 50, color: "from-amber-400 to-amber-500", icon: "Trophy", perks: ["Verified Legend badge", "50% extra points on tasks", "National summit invitations", "Lifetime achievement reward", "Global all-access pass"] },
 ];
 
@@ -89,14 +105,62 @@ export const GlobalTiersOverview: React.FC<GlobalTiersOverviewProps> = ({
   role,
   totalPoints,
 }) => {
+  const { data: apiData } = useQuery(GET_POINTS_TIERS, {
+    variables: { role: role.toUpperCase() },
+    fetchPolicy: "cache-and-network",
+  });
 
-  const pointsTiers = useMemo(() => {
-    if (role === "ngo") return ngoTiers;
-    if (role === "volunteer") return volunteerTiers;
-    return donorTiers;
-  }, [role]);
+  const apiTiers = apiData?.pointsTiers || [];
+
+  const pointsTiers = useMemo<Tier[]>(() => {
+    if (!apiTiers || apiTiers.length === 0) {
+      if (role === "ngo") return ngoTiers;
+      if (role === "volunteer") return volunteerTiers;
+      return donorTiers;
+    }
+
+    const backendRole = role.toUpperCase();
+    const filteredApiTiers = apiTiers.filter(
+      (t: any) => t.role === backendRole && t.isActive !== false
+    );
+
+    const sortedApiTiers = [...filteredApiTiers].sort(
+      (a: any, b: any) => a.minPoints - b.minPoints
+    );
+
+    const staticList = role === "ngo" ? ngoTiers : role === "volunteer" ? volunteerTiers : donorTiers;
+
+    return sortedApiTiers.map((apiTier: any) => {
+      const matchingStatic = staticList.find(
+        (st) => st.name.toLowerCase() === apiTier.name.toLowerCase()
+      );
+
+      return {
+        name: apiTier.name,
+        minPoints: apiTier.minPoints,
+        maxPoints: apiTier.maxPoints,
+        points: apiTier.maxPoints === null || apiTier.maxPoints === undefined
+          ? `${apiTier.minPoints.toLocaleString()}+`
+          : `${apiTier.minPoints.toLocaleString()} - ${apiTier.maxPoints.toLocaleString()}`,
+        bonus: matchingStatic?.bonus ?? 0,
+        color: matchingStatic?.color || "from-slate-400 to-slate-500",
+        icon: matchingStatic?.icon || "Sparkles",
+        image: matchingStatic?.image,
+        textColor: matchingStatic?.textColor || apiTier.color || "#00ab55",
+        perks: apiTier.benefits && apiTier.benefits.length > 0 ? apiTier.benefits : (matchingStatic?.perks || []),
+      };
+    });
+  }, [role, apiTiers]);
 
   const userStats = useMemo(() => {
+    if (!pointsTiers || pointsTiers.length === 0) {
+      return {
+        currentTier: "Beginner",
+        nextTier: "Max Tier",
+        pointsToNextTier: 0,
+        currentIndex: 0,
+      };
+    }
     const currentTierObj = [...pointsTiers].reverse().find(t => totalPoints >= t.minPoints) || pointsTiers[0];
     const currentIndex = pointsTiers.findIndex(t => t.name === currentTierObj.name);
     const nextTierObj = pointsTiers[currentIndex + 1] || null;
@@ -114,9 +178,15 @@ export const GlobalTiersOverview: React.FC<GlobalTiersOverviewProps> = ({
     };
   }, [pointsTiers, totalPoints]);
 
-  const [previewTier, setPreviewTier] = useState<string>(
-    pointsTiers[pointsTiers.length - 1]?.name || "Legend"
-  );
+  const [activeTab, setActiveTab] = useState<"progression" | "perks">("progression");
+
+  const [previewTier, setPreviewTier] = useState<string>("Beginner");
+
+  useEffect(() => {
+    if (pointsTiers && pointsTiers.length > 0) {
+      setPreviewTier(userStats.currentTier);
+    }
+  }, [pointsTiers, userStats.currentTier]);
 
   const previewTierObj = useMemo(() => {
     return pointsTiers.find((t) => t.name === previewTier) || pointsTiers[0];
@@ -172,258 +242,289 @@ export const GlobalTiersOverview: React.FC<GlobalTiersOverviewProps> = ({
         </div>
       </div>
 
-      {/* Progression Section */}
-      <section
-        className="border p-8 md:p-10 rounded-sm"
-        style={{
-          backgroundColor: "var(--bg-primary)",
-          borderColor: "var(--border-color)",
-        }}
+      {/* Segmented Tab Switcher */}
+      <div
+        className="flex items-center gap-2 p-1.5 border rounded-xl w-fit"
+        style={{ backgroundColor: "var(--bg-secondary)", borderColor: "var(--border-color)" }}
       >
-        <div className="flex items-center gap-4 mb-16">
-          <div className="w-12 h-12 bg-[#e6f7ed] rounded-xl flex items-center justify-center shrink-0">
-            <svg className="w-6 h-6 text-[#00ab55]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 15a3 3 0 100-6 3 3 0 000 6z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19.65 10c.02.66-.08 1.3-.27 1.9a7 7 0 11-14.76 0A6.87 6.87 0 014.35 10 7 7 0 0112 3a7 7 0 017.65 7z" />
-              <path strokeLinecap="round" strokeLinejoin="round" d="M8.21 13.89L7 21l5-1.5 5 1.5-1.21-7.11" />
-            </svg>
+        <button
+          onClick={() => setActiveTab("progression")}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+            activeTab === "progression"
+              ? "bg-[#00ab55] text-white shadow-md"
+              : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+          }`}
+        >
+          <TrendingUp size={16} />
+          Progression Roadmap
+        </button>
+        <button
+          onClick={() => setActiveTab("perks")}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+            activeTab === "perks"
+              ? "bg-[#00ab55] text-white shadow-md"
+              : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+          }`}
+        >
+          <Award size={16} />
+          All Tier Perks & Cards
+        </button>
+      </div>
+
+      {activeTab === "progression" ? (
+        /* Progression Section */
+        <section
+          className="border p-8 md:p-10 rounded-sm"
+          style={{
+            backgroundColor: "var(--bg-primary)",
+            borderColor: "var(--border-color)",
+          }}
+        >
+          <div className="flex items-center gap-4 mb-16">
+            <div className="w-12 h-12 bg-[#e6f7ed] rounded-xl flex items-center justify-center shrink-0">
+              <svg className="w-6 h-6 text-[#00ab55]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 15a3 3 0 100-6 3 3 0 000 6z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.65 10c.02.66-.08 1.3-.27 1.9a7 7 0 11-14.76 0A6.87 6.87 0 014.35 10 7 7 0 0112 3a7 7 0 017.65 7z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8.21 13.89L7 21l5-1.5 5 1.5-1.21-7.11" />
+              </svg>
+            </div>
+            <div className="space-y-0.5">
+              <h2 className="text-xl font-black uppercase tracking-tight text-[var(--text-primary)]">
+                Loyalty Progression
+              </h2>
+              <p className="text-[9px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-60">
+                Track your rank and point multipliers
+              </p>
+            </div>
           </div>
-          <div className="space-y-0.5">
-            <h2 className="text-xl font-black uppercase tracking-tight text-[var(--text-primary)]">
-              Loyalty Progression
-            </h2>
-            <p className="text-[9px] font-bold uppercase tracking-widest text-[var(--text-secondary)] opacity-60">
-              Track your rank and point multipliers
-            </p>
-          </div>
-        </div>
 
-        <div className="relative mb-6">
-          {/* Background Line (Gray) */}
-          <div
-            className="absolute top-[48px] left-[7.14%] h-[3px] -translate-y-1/2 z-0 hidden lg:block bg-zinc-200"
-            style={{ 
-              width: pointsTiers.length > 1 
-                ? `${(pointsTiers.length - 1) * (100 / pointsTiers.length)}%` 
-                : "0%"
-            }}
-          />
+          <div className="relative mb-6">
+            {/* Background Line (Gray) */}
+            <div
+              className="absolute top-[48px] left-[7.14%] h-[3px] -translate-y-1/2 z-0 hidden lg:block bg-zinc-200"
+              style={{ 
+                width: pointsTiers.length > 1 
+                  ? `${(pointsTiers.length - 1) * (100 / pointsTiers.length)}%` 
+                  : "0%"
+              }}
+            />
 
-          {/* Active Progress Line (Green) */}
-          <div
-            className="absolute top-[48px] left-[7.14%] h-[3px] -translate-y-1/2 z-0 hidden lg:block transition-all duration-700 ease-in-out bg-[#00ab55]"
-            style={{
-              width: pointsTiers.length > 1 
-                ? `${userStats.currentIndex * (100 / pointsTiers.length)}%` 
-                : "0%",
-              boxShadow: "0 0 8px rgba(0, 171, 85, 0.4)"
-            }}
-          />
+            {/* Active Progress Line (Green) */}
+            <div
+              className="absolute top-[48px] left-[7.14%] h-[3px] -translate-y-1/2 z-0 hidden lg:block transition-all duration-700 ease-in-out bg-[#00ab55]"
+              style={{
+                width: pointsTiers.length > 1 
+                  ? `${userStats.currentIndex * (100 / pointsTiers.length)}%` 
+                  : "0%",
+                boxShadow: "0 0 8px rgba(0, 171, 85, 0.4)"
+              }}
+            />
 
-          {/* Lock Badges on Connecting Lines (Donor Only) */}
-          {role === "donor" && pointsTiers.map((tier, idx) => {
-            if (idx === 0) return null;
-            // Only show lock if the destination tier idx is locked and is beyond the next immediate tier
-            const isLockedSegment = idx > userStats.currentIndex + 1;
-            if (!isLockedSegment) return null;
+            {/* Lock Badges on Connecting Lines (Donor Only) */}
+            {role === "donor" && pointsTiers.map((_, idx) => {
+              if (idx === 0) return null;
+              const isLockedSegment = idx > userStats.currentIndex + 1;
+              if (!isLockedSegment) return null;
 
-            const segmentMidpointPercent = (100 / pointsTiers.length) * (idx - 0.5) + 100 / (2 * pointsTiers.length);
-
-            return (
-              <div
-                key={`lock-line-${idx}`}
-                className="absolute top-[48px] -translate-y-1/2 -translate-x-1/2 w-6 h-6 rounded-full border border-slate-200 bg-white flex items-center justify-center z-10 shadow-sm"
-                style={{ left: `${segmentMidpointPercent}%` }}
-              >
-                <Lock size={10} className="text-slate-400" />
-              </div>
-            );
-          })}
-
-          <div className={`grid grid-cols-2 md:grid-cols-4 lg:grid-cols-${pointsTiers.length} gap-4 relative z-10`}>
-            {pointsTiers.map((tier, idx) => {
-              const isCurrent = tier.name === userStats.currentTier;
-              const isPast = idx < userStats.currentIndex;
-              const isFuture = idx > userStats.currentIndex;
+              const segmentMidpointPercent = (100 / pointsTiers.length) * (idx - 0.5) + 100 / (2 * pointsTiers.length);
 
               return (
-                <div key={tier.name} className="flex flex-col items-center relative">
-                  <div className="h-24 flex items-center justify-center mb-3 relative">
-                    {isCurrent ? (
-                      <div className="relative">
-                        <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-[#00ab55] text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-sm whitespace-nowrap z-30 shadow-md">
-                          Current Tier
-                          <div className="absolute bottom-[-3px] left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#00ab55] rotate-45" />
-                        </div>
-                        <div className="w-24 h-24 border border-[#00ab55] p-1 bg-white rounded-full flex items-center justify-center z-20 shadow-md">
-                          {tier.image ? (
-                            <img src={tier.image} alt={tier.name} className="w-full h-full object-contain rounded-full" />
-                          ) : (
-                            <div className="w-full h-full bg-[#00ab55] rounded-full flex items-center justify-center">
-                              {getIcon(tier.icon, 28, "text-white")}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ) : isPast ? (
-                      <div className="relative w-20 h-20 border border-[#00ab55] bg-white rounded-full flex items-center justify-center z-20 shadow-sm p-1">
-                        {tier.image ? (
-                          <img src={tier.image} alt={tier.name} className="w-full h-full object-contain rounded-full" />
-                        ) : (
-                          <div className="w-full h-full bg-white rounded-full flex items-center justify-center">
-                            {getIcon(tier.icon, 24, "text-[#00ab55]")}
-                          </div>
-                        )}
-                        <div className="absolute -top-1 -right-1 bg-[#00ab55] border border-white rounded-full w-5 h-5 flex items-center justify-center z-30 shadow-sm">
-                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="w-20 h-20 border border-slate-200 bg-slate-50 rounded-full flex items-center justify-center z-20 opacity-60 p-1">
-                        {tier.image ? (
-                          <img src={tier.image} alt={tier.name} className="w-full h-full object-contain rounded-full" />
-                        ) : (
-                          <div className="w-full h-full rounded-full flex items-center justify-center">
-                            <Lock className="text-slate-400" size={20} strokeWidth={2} />
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <p
-                    className="text-[10px] font-black uppercase tracking-widest mt-1 text-center"
-                    style={{ color: tier.textColor || (isFuture ? "var(--text-muted)" : "#00ab55") }}
-                  >
-                    {tier.name}
-                  </p>
-                  
-                  {role === "donor" ? (
-                    <p 
-                      className="text-[8px] font-bold mt-0.5 text-center leading-normal"
-                      style={{ color: isFuture ? "var(--text-muted)" : "var(--text-secondary)" }}
-                    >
-                      {tier.maxPoints === null || tier.maxPoints === undefined
-                        ? `${tier.minPoints.toLocaleString()}+ kg`
-                        : `${tier.minPoints.toLocaleString()} - ${tier.maxPoints.toLocaleString()} kg`}
-                      <br />
-                      donated
-                    </p>
-                  ) : (
-                    <p 
-                      className="text-[8px] font-bold mt-0.5 text-center"
-                      style={{ color: isFuture ? "var(--text-muted)" : "var(--text-secondary)" }}
-                    >
-                      {tier.maxPoints === null || tier.maxPoints === undefined
-                        ? `${tier.minPoints.toLocaleString()}+`
-                        : `${tier.minPoints.toLocaleString()} - ${tier.maxPoints.toLocaleString()}`}
-                    </p>
-                  )}
+                <div
+                  key={`lock-line-${idx}`}
+                  className="absolute top-[48px] -translate-y-1/2 -translate-x-1/2 w-6 h-6 rounded-full border border-slate-200 bg-white flex items-center justify-center z-10 shadow-sm"
+                  style={{ left: `${segmentMidpointPercent}%` }}
+                >
+                  <Lock size={10} className="text-slate-400" />
                 </div>
               );
             })}
-          </div>
-        </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 sm:p-6 rounded-2xl border border-dashed mt-8 gap-4 bg-[#f9fefb] border-[#b6eed0]">
-          <div className="flex items-center gap-4">
-            <div className="bg-white border border-slate-100 p-3 rounded-xl shadow-sm shrink-0 flex items-center justify-center">
-              <Sparkles className="text-[#00ab55]" size={20} />
+            <div className={`grid grid-cols-2 md:grid-cols-4 lg:grid-cols-${pointsTiers.length} gap-4 relative z-10`}>
+              {pointsTiers.map((tier, idx) => {
+                const isCurrent = tier.name === userStats.currentTier;
+                const isPast = idx < userStats.currentIndex;
+                const isFuture = idx > userStats.currentIndex;
+
+                return (
+                  <div key={tier.name} className="flex flex-col items-center relative">
+                    <div className="h-24 flex items-center justify-center mb-3 relative">
+                      {isCurrent ? (
+                        <div className="relative">
+                          <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-[#00ab55] text-white text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-sm whitespace-nowrap z-30 shadow-md">
+                            Current Tier
+                            <div className="absolute bottom-[-3px] left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-[#00ab55] rotate-45" />
+                          </div>
+                          <div className="w-24 h-24 border border-[#00ab55] p-1 bg-white rounded-full flex items-center justify-center z-20 shadow-md">
+                            {tier.image ? (
+                              <img src={tier.image} alt={tier.name} className="w-full h-full object-contain rounded-full" />
+                            ) : (
+                              <div className="w-full h-full bg-[#00ab55] rounded-full flex items-center justify-center">
+                                {getIcon(tier.icon, 28, "text-white")}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ) : isPast ? (
+                        <div className="relative w-20 h-20 border border-[#00ab55] bg-white rounded-full flex items-center justify-center z-20 shadow-sm p-1">
+                          {tier.image ? (
+                            <img src={tier.image} alt={tier.name} className="w-full h-full object-contain rounded-full" />
+                          ) : (
+                            <div className="w-full h-full bg-white rounded-full flex items-center justify-center">
+                              {getIcon(tier.icon, 24, "text-[#00ab55]")}
+                            </div>
+                          )}
+                          <div className="absolute -top-1 -right-1 bg-[#00ab55] border border-white rounded-full w-5 h-5 flex items-center justify-center z-30 shadow-sm">
+                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-20 h-20 border border-slate-200 bg-slate-50 rounded-full flex items-center justify-center z-20 opacity-60 p-1">
+                          {tier.image ? (
+                            <img src={tier.image} alt={tier.name} className="w-full h-full object-contain rounded-full" />
+                          ) : (
+                            <div className="w-full h-full rounded-full flex items-center justify-center">
+                              <Lock className="text-slate-400" size={20} strokeWidth={2} />
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <p
+                      className="text-[10px] font-black uppercase tracking-widest mt-1 text-center"
+                      style={{ color: tier.textColor || (isFuture ? "var(--text-muted)" : "#00ab55") }}
+                    >
+                      {tier.name}
+                    </p>
+                    
+                    {role === "donor" ? (
+                      <p 
+                        className="text-[8px] font-bold mt-0.5 text-center leading-normal"
+                        style={{ color: isFuture ? "var(--text-muted)" : "var(--text-secondary)" }}
+                      >
+                        {tier.maxPoints === null || tier.maxPoints === undefined
+                          ? `${tier.minPoints.toLocaleString()}+ kg`
+                          : `${tier.minPoints.toLocaleString()} - ${tier.maxPoints.toLocaleString()} kg`}
+                        <br />
+                        donated
+                      </p>
+                    ) : (
+                      <p 
+                        className="text-[8px] font-bold mt-0.5 text-center"
+                        style={{ color: isFuture ? "var(--text-muted)" : "var(--text-secondary)" }}
+                      >
+                        {tier.maxPoints === null || tier.maxPoints === undefined
+                          ? `${tier.minPoints.toLocaleString()}+`
+                          : `${tier.minPoints.toLocaleString()} - ${tier.maxPoints.toLocaleString()}`}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-            <div className="text-start space-y-1">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-tight">
-                STATUS: <span className="text-[#00ab55] font-black">{userStats.currentTier}</span>
-              </p>
-              {userStats.pointsToNextTier > 0 ? (
-                <p className="text-[11px] font-semibold leading-none text-slate-400">
-                  {userStats.pointsToNextTier.toLocaleString()} points left to{" "}
-                  <span className="font-black text-[#00ab55]">{userStats.nextTier}</span>
-                </p>
-              ) : (
-                <p className="text-[11px] font-black leading-none text-[#00ab55]">
-                  You have achieved the highest tier!
-                </p>
-              )}
-            </div>
           </div>
-        </div>
-      </section>
 
-      {/* Points System Info Section */}
-      <div
-        className="border rounded-sm p-8 flex flex-col lg:flex-row items-center justify-between gap-10"
-        style={{
-          backgroundColor: "var(--bg-primary)",
-          borderColor: "var(--border-color)",
-        }}
-      >
-        <div className="space-y-3 max-w-md w-full text-left">
-          <h2
-            className="text-2xl font-black uppercase tracking-tight"
-            style={{ color: "var(--text-primary)" }}
-          >
-            {previewTier} Tier
-          </h2>
-          <p
-            className="text-sm font-medium leading-relaxed"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            {previewDescription}
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-          {calculatorItems.map((item, idx) => {
-            const bonusPercent = previewTierObj.bonus || 0;
-            const multipliedPoints = Math.floor(
-              item.base * (1 + bonusPercent / 100)
-            );
-
-            return (
-              <div
-                key={idx}
-                className="flex-1 border border-dashed rounded-sm p-5 min-w-[180px]"
-                style={{
-                  backgroundColor: "var(--bg-primary)",
-                  borderColor: "var(--border-color)",
-                }}
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <p
-                    className="text-[10px] font-black uppercase tracking-widest"
-                    style={{ color: "var(--text-muted)" }}
-                  >
-                    {item.label}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-5 sm:p-6 rounded-2xl border border-dashed mt-8 gap-4 bg-[#f9fefb] border-[#b6eed0]">
+            <div className="flex items-center gap-4">
+              <div className="bg-white border border-slate-100 p-3 rounded-xl shadow-sm shrink-0 flex items-center justify-center">
+                <Sparkles className="text-[#00ab55]" size={20} />
+              </div>
+              <div className="text-start space-y-1">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-tight">
+                  STATUS: <span className="text-[#00ab55] font-black">{userStats.currentTier}</span>
+                </p>
+                {userStats.pointsToNextTier > 0 ? (
+                  <p className="text-[11px] font-semibold leading-none text-slate-400">
+                    {userStats.pointsToNextTier.toLocaleString()} points left to{" "}
+                    <span className="font-black text-[#00ab55]">{userStats.nextTier}</span>
                   </p>
-                </div>
-                <div className="flex items-baseline gap-1">
-                  <span
-                    className="text-2xl font-black tabular-nums"
-                    style={{
-                      color: previewTierObj.bonus > 0 ? "#00ab55" : "var(--text-primary)",
-                    }}
-                  >
-                    {multipliedPoints}
-                  </span>
-                  <span
-                    className="text-[10px] font-black uppercase"
-                    style={{ color: "var(--text-muted)" }}
-                  >
-                    PTS
-                  </span>
-                </div>
-                {bonusPercent > 0 && (
-                  <p className="text-[9px] font-black text-[#00ab55] opacity-80 uppercase tracking-tighter mt-1">
-                    +{bonusPercent}% {calculatorTitle}
+                ) : (
+                  <p className="text-[11px] font-black leading-none text-[#00ab55]">
+                    You have achieved the highest tier!
                   </p>
                 )}
               </div>
-            );
-          })}
-        </div>
-      </div>
+            </div>
+          </div>
+        </section>
+      ) : (
+        /* All Tier Perks & Cards View */
+        <div className="space-y-10">
+          {/* Points System Info Section */}
+          <div
+            className="border rounded-sm p-8 flex flex-col lg:flex-row items-center justify-between gap-10"
+            style={{
+              backgroundColor: "var(--bg-primary)",
+              borderColor: "var(--border-color)",
+            }}
+          >
+            <div className="space-y-3 max-w-md w-full text-left">
+              <h2
+                className="text-2xl font-black uppercase tracking-tight"
+                style={{ color: "var(--text-primary)" }}
+              >
+                {previewTier} Tier
+              </h2>
+              <p
+                className="text-sm font-medium leading-relaxed"
+                style={{ color: "var(--text-secondary)" }}
+              >
+                {previewDescription}
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+              {calculatorItems.map((item, idx) => {
+                const bonusPercent = previewTierObj.bonus || 0;
+                const multipliedPoints = Math.floor(
+                  item.base * (1 + bonusPercent / 100)
+                );
+
+                return (
+                  <div
+                    key={idx}
+                    className="flex-1 border border-dashed rounded-sm p-5 min-w-[180px]"
+                    style={{
+                      backgroundColor: "var(--bg-primary)",
+                      borderColor: "var(--border-color)",
+                    }}
+                  >
+                    <div className="flex justify-between items-start mb-3">
+                      <p
+                        className="text-[10px] font-black uppercase tracking-widest"
+                        style={{ color: "var(--text-muted)" }}
+                      >
+                        {item.label}
+                      </p>
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                      <span
+                        className="text-2xl font-black tabular-nums"
+                        style={{
+                          color: previewTierObj.bonus > 0 ? "#00ab55" : "var(--text-primary)",
+                        }}
+                      >
+                        {multipliedPoints}
+                      </span>
+                      <span
+                        className="text-[10px] font-black uppercase"
+                        style={{ color: "var(--text-muted)" }}
+                      >
+                        PTS
+                      </span>
+                    </div>
+                    {bonusPercent > 0 && (
+                      <p className="text-[9px] font-black text-[#00ab55] opacity-80 uppercase tracking-tighter mt-1">
+                        +{bonusPercent}% {calculatorTitle}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
 
       {/* Tiers Detail Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
@@ -619,6 +720,8 @@ export const GlobalTiersOverview: React.FC<GlobalTiersOverviewProps> = ({
           </div>
         </div>
       </div>
+      </div>
+    )}
     </div>
   );
 };

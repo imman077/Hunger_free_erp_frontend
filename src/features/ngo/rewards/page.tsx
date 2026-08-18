@@ -36,62 +36,64 @@ const NGORewards = () => {
         className="mb-8"
         showPointsCard={false}
       >
-        {/* Beneficiaries Card */}
-        <div
-          className="flex items-center gap-4 border border-[var(--border-color)] bg-[var(--bg-primary)] p-3 px-5 rounded-md text-left relative overflow-hidden shrink-0"
-        >
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 w-full sm:w-auto">
+          {/* Beneficiaries Card */}
           <div
-            className="w-12 h-12 bg-blue-500/8 border border-blue-500/20 rounded-[14px] flex items-center justify-center shrink-0 text-blue-500"
+            className="flex items-center gap-4 border border-[var(--border-color)] bg-[var(--bg-primary)] p-3.5 px-5 rounded-2xl text-left relative overflow-hidden shrink-0 flex-1 sm:flex-initial shadow-sm"
           >
-            <Users size={24} />
-          </div>
-          <div className="text-start">
-            <div className="flex items-center gap-1.5 mb-1">
-              <p
-                className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] opacity-70 leading-none"
-              >
-                PEOPLE SERVED
-              </p>
+            <div
+              className="w-11 h-11 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center justify-center shrink-0 text-blue-500"
+            >
+              <Users size={22} />
             </div>
-            <div className="flex items-baseline gap-1">
-              <span
-                className="text-2xl font-black tabular-nums leading-none text-[var(--text-primary)]"
-              >
-                {userStats.beneficiariesServed.toLocaleString()}
-              </span>
-              <span className="text-xs font-black text-blue-500 uppercase tracking-wide">
-                Impact
-              </span>
+            <div className="text-start">
+              <div className="flex items-center gap-1.5 mb-1">
+                <p
+                  className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] opacity-70 leading-none"
+                >
+                  PEOPLE SERVED
+                </p>
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                <span
+                  className="text-2xl font-black tabular-nums leading-none text-[var(--text-primary)]"
+                >
+                  {userStats.beneficiariesServed.toLocaleString()}
+                </span>
+                <span className="text-xs font-black text-blue-500 uppercase tracking-wide">
+                  Impact
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Donations Card */}
-        <div
-          className="flex items-center gap-4 border border-[var(--border-color)] bg-[var(--bg-primary)] p-3 px-5 rounded-md text-left relative overflow-hidden shrink-0"
-        >
+          {/* Donations Card */}
           <div
-            className="w-12 h-12 bg-orange-500/8 border border-orange-500/20 rounded-[14px] flex items-center justify-center shrink-0 text-orange-500"
+            className="flex items-center gap-4 border border-[var(--border-color)] bg-[var(--bg-primary)] p-3.5 px-5 rounded-2xl text-left relative overflow-hidden shrink-0 flex-1 sm:flex-initial shadow-sm"
           >
-            <Package size={24} />
-          </div>
-          <div className="text-start">
-            <div className="flex items-center gap-1.5 mb-1">
-              <p
-                className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] opacity-70 leading-none"
-              >
-                TOTAL RESCUES
-              </p>
+            <div
+              className="w-11 h-11 bg-orange-500/10 border border-orange-500/20 rounded-xl flex items-center justify-center shrink-0 text-orange-500"
+            >
+              <Package size={22} />
             </div>
-            <div className="flex items-baseline gap-1">
-              <span
-                className="text-2xl font-black tabular-nums leading-none text-[var(--text-primary)]"
-              >
-                {userStats.donationsAccepted.toLocaleString()}
-              </span>
-              <span className="text-xs font-black text-orange-500 uppercase tracking-wide">
-                Donated
-              </span>
+            <div className="text-start">
+              <div className="flex items-center gap-1.5 mb-1">
+                <p
+                  className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--text-secondary)] opacity-70 leading-none"
+                >
+                  TOTAL RESCUES
+                </p>
+              </div>
+              <div className="flex items-baseline gap-1.5">
+                <span
+                  className="text-2xl font-black tabular-nums leading-none text-[var(--text-primary)]"
+                >
+                  {userStats.donationsAccepted.toLocaleString()}
+                </span>
+                <span className="text-xs font-black text-orange-500 uppercase tracking-wide">
+                  Donated
+                </span>
+              </div>
             </div>
           </div>
         </div>

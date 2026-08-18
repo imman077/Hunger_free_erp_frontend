@@ -718,8 +718,17 @@ export const AcceptDonationModal = ({ user }: RequestsComponentProps) => {
                       {/* Counter Decrement Button */}
                       <button
                         type="button"
-                        onClick={() => setRequestsStateValue("supportQty", Math.max(1, (parseInt(supportQty) || 0) - 1).toString())}
-                        className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 flex items-center justify-center font-black hover:bg-slate-100 transition-colors shadow-sm shrink-0"
+                        disabled={(() => {
+                          const maxVal = Math.max(0, (acceptingDonation?.quantity_num || 0) - (acceptingDonation?.fulfilled_quantity || 0));
+                          return maxVal <= 0 || (parseInt(supportQty) || 0) <= (maxVal > 0 ? 1 : 0);
+                        })()}
+                        onClick={() => {
+                          const maxVal = Math.max(0, (acceptingDonation?.quantity_num || 0) - (acceptingDonation?.fulfilled_quantity || 0));
+                          const cur = parseInt(supportQty) || 0;
+                          const nextVal = Math.max(maxVal > 0 ? 1 : 0, cur - 1);
+                          setRequestsStateValue("supportQty", nextVal.toString());
+                        }}
+                        className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 flex items-center justify-center font-black hover:bg-slate-100 transition-colors shadow-sm shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         —
                       </button>
@@ -729,10 +738,14 @@ export const AcceptDonationModal = ({ user }: RequestsComponentProps) => {
                         <Box size={13} className="text-slate-400 mr-2 shrink-0" />
                         <input
                           type="number"
+                          min={0}
+                          max={Math.max(0, (acceptingDonation?.quantity_num || 0) - (acceptingDonation?.fulfilled_quantity || 0))}
                           value={supportQty}
+                          disabled={Math.max(0, (acceptingDonation?.quantity_num || 0) - (acceptingDonation?.fulfilled_quantity || 0)) <= 0}
                           onChange={(e) => {
-                            const val = parseInt(e.target.value) || 0;
                             const maxVal = Math.max(0, (acceptingDonation?.quantity_num || 0) - (acceptingDonation?.fulfilled_quantity || 0));
+                            let val = parseInt(e.target.value) || 0;
+                            if (val < 0) val = 0;
                             if (val > maxVal) {
                               addToast({
                                 title: "Quantity Exceeded",
@@ -755,7 +768,7 @@ export const AcceptDonationModal = ({ user }: RequestsComponentProps) => {
                               setRequestsStateValue("supportQty", val.toString());
                             }
                           }}
-                          className="w-full bg-transparent border-none text-[12px] font-black text-slate-800 dark:text-slate-100 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          className="w-full bg-transparent border-none text-[12px] font-black text-slate-800 dark:text-slate-100 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 disabled:cursor-not-allowed"
                           placeholder="0"
                         />
                         <span className="ml-auto text-[8px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/20 px-1.5 py-0.5 rounded shrink-0">
@@ -766,6 +779,10 @@ export const AcceptDonationModal = ({ user }: RequestsComponentProps) => {
                       {/* Counter Increment Button */}
                       <button
                         type="button"
+                        disabled={(() => {
+                          const maxVal = Math.max(0, (acceptingDonation?.quantity_num || 0) - (acceptingDonation?.fulfilled_quantity || 0));
+                          return maxVal <= 0 || (parseInt(supportQty) || 0) >= maxVal;
+                        })()}
                         onClick={() => {
                           const maxVal = Math.max(0, (acceptingDonation?.quantity_num || 0) - (acceptingDonation?.fulfilled_quantity || 0));
                           const nextVal = (parseInt(supportQty) || 0) + 1;
@@ -791,7 +808,7 @@ export const AcceptDonationModal = ({ user }: RequestsComponentProps) => {
                             setRequestsStateValue("supportQty", nextVal.toString());
                           }
                         }}
-                        className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 flex items-center justify-center font-black hover:bg-slate-100 transition-colors shadow-sm shrink-0"
+                        className="w-9 h-9 rounded-full border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 flex items-center justify-center font-black hover:bg-slate-100 transition-colors shadow-sm shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         +
                       </button>
@@ -855,9 +872,17 @@ export const AcceptDonationModal = ({ user }: RequestsComponentProps) => {
                 Cancel
               </button>
               <button
-                disabled={isAccepting}
+                disabled={(() => {
+                  if (isAccepting) return true;
+                  if (acceptingDonation?.origin === "NEED") {
+                    const maxVal = Math.max(0, (acceptingDonation?.quantity_num || 0) - (acceptingDonation?.fulfilled_quantity || 0));
+                    const currentQty = parseInt(supportQty) || 0;
+                    return maxVal <= 0 || currentQty <= 0 || currentQty > maxVal;
+                  }
+                  return false;
+                })()}
                 onClick={() => handleConfirmAccept(user)}
-                className="px-6 py-3 bg-[#22c55e] hover:bg-green-600 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+                className="px-6 py-3 bg-[#22c55e] hover:bg-green-600 text-white rounded-xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/10 transition-all cursor-pointer active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-400 dark:disabled:bg-slate-700"
               >
                 {isAccepting ? (
                   <>

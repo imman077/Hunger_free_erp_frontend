@@ -15,7 +15,7 @@ export const ngoRewardsService = {
    */
   getRewards: async (): Promise<GetRewardsResponse> => {
     try {
-      const response = await axiosInstance.get("rewards/");
+      const response = await axiosInstance.get("rewards/?role=NGO");
       return GetRewardsResponseSchema.parse(response.data);
     } catch (error) {
       console.error("Error fetching NGO rewards:", error);
@@ -69,7 +69,7 @@ export const ngoRewardsService = {
   /**
    * Claims a reward.
    */
-  claimReward: async (rewardId: number, claimDetails: any): Promise<any> => {
+  claimReward: async (rewardId: string | number, claimDetails: any): Promise<any> => {
     try {
       const validatedInput = ClaimRewardInputSchema.parse({ rewardId, claimDetails });
       const response = await axiosInstance.post("reward-claims/", {

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   MapPin,
   Search,
-  Eye,
   LayoutGrid,
   Table,
   Clock,
@@ -15,8 +14,13 @@ import {
   TrendingUp,
   X,
   Package,
-  Droplet,
   CalendarDays,
+  ShieldCheck,
+  AlertTriangle,
+  HeartHandshake,
+  Tag,
+  Phone,
+  Info,
 } from "lucide-react";
 import { Button } from "@heroui/react";
 import ReusableTable, {
@@ -26,8 +30,6 @@ import ResuableDrawer from "../../../../global/components/reusable-components/Dr
 import ResuableModal from "../../../../global/components/reusable-components/Modal";
 import PageHeader from "../../../../global/components/reusable-components/PageHeader";
 import { getCategoryImage } from "../../../../global/constants/donation_config";
-import ResuableInput from "../../../../global/components/reusable-components/Input";
-import ResuableButton from "../../../../global/components/reusable-components/Button";
 import { useAuthStore } from "../../../../global/store/auth-store";
 import { ngoPostsInputModel } from "../store/ngo_posts_store";
 import { getNeedsApiOutputModel } from "../api/get_needs/get_needs_store";
@@ -361,29 +363,30 @@ export const NgoPostsGrid = ({ filteredNeeds }: { filteredNeeds: any[] }) => {
             </div>
 
             {/* Detail: Requested By & Category */}
-            <div className="bg-slate-50/90 dark:bg-slate-800/40 rounded-2xl p-3.5 border border-slate-100 dark:border-slate-800/60 grid grid-cols-2 gap-3 divide-x divide-slate-200/60 mb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-emerald-100/70 text-[#22c55e] flex items-center justify-center shrink-0">
-                  <Building2 size={16} />
+            <div className="bg-slate-50/90 dark:bg-slate-800/40 rounded-2xl p-3.5 border border-slate-100 dark:border-slate-800/60 flex flex-col gap-3.5 mb-3">
+              <div className="flex items-center gap-3 w-full">
+                <div className="w-8 h-8 rounded-xl bg-emerald-100/70 text-[#22c55e] flex items-center justify-center shrink-0">
+                  <Building2 size={15} />
                 </div>
                 <div className="flex flex-col min-w-0">
                   <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 leading-none mb-1">
                     ORGANIZATION
                   </span>
-                  <span className="text-xs font-black text-[var(--text-primary)] truncate">
+                  <span className="text-xs font-black text-[var(--text-primary)]">
                     {need.ngo_name || "Authorized NGO"}
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-3 pl-3">
-                <div className="w-9 h-9 rounded-xl bg-emerald-100/70 text-[#22c55e] flex items-center justify-center shrink-0">
-                  <LayoutGrid size={16} />
+              <div className="h-[1px] bg-slate-200/60 dark:bg-slate-700/50 w-full" />
+              <div className="flex items-center gap-3 w-full">
+                <div className="w-8 h-8 rounded-xl bg-emerald-100/70 text-[#22c55e] flex items-center justify-center shrink-0">
+                  <LayoutGrid size={15} />
                 </div>
                 <div className="flex flex-col min-w-0">
                   <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 leading-none mb-1">
                     CATEGORY
                   </span>
-                  <span className="text-xs font-black text-[var(--text-primary)] truncate">
+                  <span className="text-xs font-black text-[var(--text-primary)]">
                     {need.category || "Cooked Food"}
                   </span>
                 </div>
@@ -391,10 +394,10 @@ export const NgoPostsGrid = ({ filteredNeeds }: { filteredNeeds: any[] }) => {
             </div>
 
             {/* Detail: Progress & Location / Date */}
-            <div className="bg-slate-50/90 dark:bg-slate-800/40 rounded-2xl p-3.5 border border-slate-100 dark:border-slate-800/60 grid grid-cols-12 gap-3 divide-x divide-slate-200/60 items-center mb-5">
-              <div className="col-span-7 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-emerald-100/70 text-[#22c55e] flex items-center justify-center shrink-0">
-                  <Box size={16} />
+            <div className="bg-slate-50/90 dark:bg-slate-800/40 rounded-2xl p-3.5 border border-slate-100 dark:border-slate-800/60 flex flex-col gap-3.5 mb-5">
+              <div className="flex items-start gap-3 w-full">
+                <div className="w-8 h-8 rounded-xl bg-emerald-100/70 text-[#22c55e] flex items-center justify-center shrink-0 mt-0.5">
+                  <Box size={15} />
                 </div>
                 <div className="flex flex-col min-w-0 w-full">
                   <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-wider text-slate-400 leading-none mb-1">
@@ -403,10 +406,10 @@ export const NgoPostsGrid = ({ filteredNeeds }: { filteredNeeds: any[] }) => {
                       {Math.round(((need.fulfilled_quantity || 0) / need.quantity) * 100)}%
                     </span>
                   </div>
-                  <span className="text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate">
+                  <span className="text-[11px] font-black text-slate-700 dark:text-slate-250">
                     {need.fulfilled_quantity || 0} / {need.quantity} {need.unit}
                   </span>
-                  <div className="w-full h-1.5 bg-slate-200/80 rounded-full overflow-hidden mt-1.5">
+                  <div className="w-full h-1.5 bg-slate-200/80 dark:bg-slate-800 rounded-full overflow-hidden mt-1.5">
                     <div
                       className="h-full bg-[#22c55e] rounded-full transition-all duration-500"
                       style={{
@@ -419,9 +422,10 @@ export const NgoPostsGrid = ({ filteredNeeds }: { filteredNeeds: any[] }) => {
                   </div>
                 </div>
               </div>
-              <div className="col-span-5 flex items-center gap-3 pl-3">
-                <div className="w-9 h-9 rounded-xl bg-amber-100/70 text-amber-600 flex items-center justify-center shrink-0">
-                  <CalendarDays size={16} />
+              <div className="h-[1px] bg-slate-200/60 dark:bg-slate-700/50 w-full" />
+              <div className="flex items-center gap-3 w-full">
+                <div className="w-8 h-8 rounded-xl bg-amber-100/70 text-amber-600 flex items-center justify-center shrink-0">
+                  <CalendarDays size={15} />
                 </div>
                 <div className="flex flex-col min-w-0">
                   <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 leading-none mb-1">
@@ -446,9 +450,9 @@ export const NgoPostsGrid = ({ filteredNeeds }: { filteredNeeds: any[] }) => {
             </p>
 
             {/* Action Bar */}
-            <div className="pt-2 flex items-center justify-between gap-3 w-full mt-auto">
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-3.5 w-full mt-auto">
               <Button
-                className={`flex-grow font-black text-xs uppercase tracking-widest h-12 rounded-2xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 ${
+                className={`w-full font-black text-xs uppercase tracking-widest h-12 rounded-2xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 ${
                   isMine
                     ? "bg-blue-500 hover:bg-blue-600 shadow-blue-500/20"
                     : "bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/20"
@@ -457,15 +461,17 @@ export const NgoPostsGrid = ({ filteredNeeds }: { filteredNeeds: any[] }) => {
               >
                 {isMine ? (
                   <>
-                    <Clock size={14} />
-                    Track Progress
+                    <Clock size={14} className="shrink-0" />
+                    <span>Track Progress</span>
                   </>
                 ) : (
                   <>Support Need</>
                 )}
               </Button>
 
-              {renderSupportersStack(need.supporters, need)}
+              <div className="w-full flex justify-center mt-1">
+                {renderSupportersStack(need.supporters, need)}
+              </div>
             </div>
           </div>
         );
@@ -697,101 +703,248 @@ export const NgoPostsModals = () => {
         )}
       </ResuableDrawer>
 
+      {/* --- CONFIRM ACCEPTANCE / SUPPORT THIS NEED MODAL --- */}
       <ResuableModal
         isOpen={isFulfillModalOpen}
         onOpenChange={(open) =>
           ngoPostsInputModel.update({ isFulfillModalOpen: open })
         }
-        title="Help with this request"
         size="2xl"
+        classNames={{
+          header: "!hidden",
+          body: "!p-6",
+          base: "max-w-[580px] rounded-[32px]"
+        }}
       >
         <form
           onSubmit={(e) => handleFulfillSubmit(e, user)}
-          className="space-y-6 text-start"
+          className="flex flex-col text-start space-y-5"
         >
-          <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/10 flex items-center gap-4 text-start">
-            <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white shrink-0">
-              <Heart size={20} fill="currentColor" />
+          {/* Top Header Block */}
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-full bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 flex items-center justify-center text-[#10B981] shrink-0 shadow-xs">
+                <ShieldCheck size={22} className="stroke-[2.2]" />
+              </div>
+              <div className="flex flex-col">
+                <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight leading-snug">
+                  Confirm Acceptance
+                </h2>
+                <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 mt-0.5">
+                  Please review the donation details before accepting.
+                </p>
+              </div>
             </div>
-            <div className="text-start">
-              <h3 className="text-[10px] font-black uppercase tracking-tight text-emerald-600">
-                Helping NGO
-              </h3>
-              <p className="text-[11px] font-bold text-emerald-700/80 uppercase tracking-widest mt-0.5">
-                Providing {selectedNeed?.item_name}
+            <button
+              type="button"
+              onClick={() => ngoPostsInputModel.update({ isFulfillModalOpen: false })}
+              className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all cursor-pointer border border-slate-100 dark:border-slate-800 shrink-0"
+            >
+              <X size={16} className="stroke-[2.5]" />
+            </button>
+          </div>
+
+          {/* Item Banner Card */}
+          <div className="w-full bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 rounded-2xl p-4 flex items-center gap-4 shadow-xs">
+            <img
+              src={selectedNeed?.image || getCategoryImage(selectedNeed?.category || "cooked_food")}
+              alt={selectedNeed?.item_name || "Surplus Item"}
+              className="w-20 h-20 rounded-2xl object-cover bg-slate-100 dark:bg-slate-800 border border-slate-200/60 dark:border-slate-800 shrink-0"
+            />
+            <div className="min-w-0 flex-1">
+              <h4 className="text-base font-extrabold text-slate-900 dark:text-slate-100 leading-snug truncate">
+                {selectedNeed?.item_name || "Disposable Eco Plates"}
+              </h4>
+              <p className="flex items-center gap-1.5 text-xs font-bold text-slate-400 dark:text-slate-500 mt-1">
+                <Building2 size={13} className="text-[#10B981] shrink-0" />
+                <span className="truncate">{selectedNeed?.ngo_name || selectedNeed?.ngo || "Feed The Needy"}</span>
+              </p>
+              <div className="flex flex-wrap items-center gap-2 mt-2.5">
+                <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400 px-2.5 py-1 rounded-lg border border-emerald-100 dark:border-emerald-900/30">
+                  <AlertTriangle size={10} className="shrink-0" />
+                  {selectedNeed?.category?.replace("_", " ") || "COOKED FOOD"}
+                </span>
+                <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider bg-purple-50 text-purple-600 dark:bg-purple-950/20 dark:text-purple-400 px-2.5 py-1 rounded-lg border border-purple-100 dark:border-purple-900/30">
+                  <Tag size={10} className="shrink-0" />
+                  VEG
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* 3 Metric Cards Grid */}
+          <div className="grid grid-cols-3 gap-3">
+            {/* Metric 1: Urgency */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 rounded-2xl p-3.5 flex items-center gap-3 shadow-xs">
+              <div className="w-9 h-9 rounded-full bg-amber-50 dark:bg-amber-950/20 flex items-center justify-center text-amber-500 shrink-0">
+                <AlertTriangle size={16} className="stroke-[2.2]" />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-400 leading-none mb-1">
+                  URGENCY
+                </span>
+                <span className="text-xs font-black uppercase tracking-tight text-amber-500 truncate">
+                  {selectedNeed?.urgency || "Medium"}
+                </span>
+              </div>
+            </div>
+
+            {/* Metric 2: Quantity */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 rounded-2xl p-3.5 flex items-center gap-3 shadow-xs">
+              <div className="w-9 h-9 rounded-full bg-blue-50 dark:bg-blue-950/20 flex items-center justify-center text-blue-500 shrink-0">
+                <Box size={16} className="stroke-[2.2]" />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-400 leading-none mb-1">
+                  QUANTITY
+                </span>
+                <span className="text-xs font-black uppercase tracking-tight text-slate-800 dark:text-slate-100 truncate">
+                  {selectedNeed?.quantity || 450} {selectedNeed?.unit?.toUpperCase() || "PCS"}
+                </span>
+              </div>
+            </div>
+
+            {/* Metric 3: Expiry */}
+            <div className="bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 rounded-2xl p-3.5 flex items-center gap-3 shadow-xs">
+              <div className="w-9 h-9 rounded-full bg-purple-50 dark:bg-purple-950/20 flex items-center justify-center text-purple-500 shrink-0">
+                <Clock size={16} className="stroke-[2.2]" />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[9px] font-extrabold uppercase tracking-widest text-slate-400 leading-none mb-1">
+                  EXPIRY
+                </span>
+                <span className="text-xs font-black uppercase tracking-tight text-slate-800 dark:text-slate-100 truncate">
+                  {selectedNeed?.required_by || "No Expiry"}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* FULFILLMENT DETAILS Section Header */}
+          <div className="pt-2">
+            <span className="text-[#10B981] font-black text-xs uppercase tracking-wider block mb-3">
+              FULFILLMENT DETAILS
+            </span>
+
+            {/* Form Fields Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Enter Quantity to Accept */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-600 dark:text-slate-400 flex items-center gap-1">
+                  Enter quantity to accept
+                  <Info size={12} className="text-slate-400 cursor-pointer" />
+                </label>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const cur = parseInt(fulfillForm.quantity) || 1;
+                      const nextVal = Math.max(1, cur - 10);
+                      handleValueChange("quantity", nextVal.toString());
+                    }}
+                    className="w-10 h-10 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 transition-colors flex items-center justify-center text-base shrink-0"
+                  >
+                    —
+                  </button>
+
+                  <div className="flex-1 relative flex items-center border border-slate-200/80 dark:border-slate-800 rounded-2xl px-3 py-2 bg-white dark:bg-slate-900 h-10 shadow-xs">
+                    <Box size={14} className="text-slate-400 mr-2 shrink-0" />
+                    <input
+                      type="number"
+                      min={1}
+                      max={selectedNeed ? Math.max(1, (selectedNeed.quantity || 0) - (selectedNeed.fulfilled_quantity || 0)) : 450}
+                      value={fulfillForm.quantity}
+                      onChange={(e) => handleValueChange("quantity", e.target.value)}
+                      className="w-full bg-transparent border-none text-sm font-extrabold text-slate-800 dark:text-slate-100 focus:outline-none"
+                      placeholder="100"
+                    />
+                    <span className="ml-auto text-[10px] font-black uppercase text-[#10B981] bg-emerald-50 dark:bg-emerald-950/20 px-2 py-0.5 rounded-md shrink-0">
+                      {selectedNeed?.unit || "PCS"}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const maxVal = selectedNeed ? Math.max(1, (selectedNeed.quantity || 0) - (selectedNeed.fulfilled_quantity || 0)) : 450;
+                      const cur = parseInt(fulfillForm.quantity) || 0;
+                      const nextVal = Math.min(maxVal, cur + 10);
+                      handleValueChange("quantity", nextVal.toString());
+                    }}
+                    className="w-10 h-10 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 transition-colors flex items-center justify-center text-base shrink-0"
+                  >
+                    +
+                  </button>
+                </div>
+                <p className="text-[11px] font-bold text-slate-400 mt-1">
+                  Max available: <span className="font-extrabold text-slate-600 dark:text-slate-300">
+                    {selectedNeed ? Math.max(0, (selectedNeed.quantity || 0) - (selectedNeed.fulfilled_quantity || 0)) : 450} {selectedNeed?.unit || "PCS"}
+                  </span>
+                </p>
+              </div>
+
+              {/* Direct Contact Input */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-600 dark:text-slate-400">
+                  Direct contact
+                </label>
+                <div className="relative flex items-center border border-slate-200/80 dark:border-slate-800 rounded-2xl px-3.5 py-2 bg-white dark:bg-slate-900 h-10 shadow-xs">
+                  <Phone size={14} className="text-slate-400 mr-2 shrink-0" />
+                  <input
+                    type="tel"
+                    value={fulfillForm.contactPhone || "9876543220"}
+                    onChange={(e) => handleValueChange("contactPhone", e.target.value)}
+                    className="w-full bg-transparent border-none text-sm font-extrabold text-slate-800 dark:text-slate-100 focus:outline-none"
+                    placeholder="9876543220"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Impact Message Banner */}
+          <div className="w-full bg-[#F2FBF6] dark:bg-emerald-950/20 border border-emerald-200/70 dark:border-emerald-900/40 rounded-2xl p-4 flex items-center gap-3.5 text-start">
+            <div className="w-10 h-10 rounded-full border border-dashed border-[#10B981] flex items-center justify-center text-[#10B981] shrink-0 bg-emerald-50 dark:bg-emerald-950/40">
+              <HeartHandshake size={20} className="stroke-[2.2]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-extrabold text-emerald-800 dark:text-emerald-400 leading-snug">
+                Your acceptance helps reduce food waste and feeds those in need.
+              </p>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+                Thank you for making a difference! 💚
               </p>
             </div>
           </div>
 
-          {selectedNeed && (
-            <div className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] flex items-center justify-between text-start">
-              <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-muted)]">
-                How much they need remaining
-              </span>
-              <span className="text-sm font-black text-emerald-500">
-                {selectedNeed.quantity -
-                  (selectedNeed.fulfilled_quantity || 0)}{" "}
-                {selectedNeed.unit}
-              </span>
+          {/* Footer Buttons Bar */}
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-col items-center gap-2">
+            <div className="flex items-center justify-end gap-3 w-full">
+              <button
+                type="button"
+                onClick={() => ngoPostsInputModel.update({ isFulfillModalOpen: false })}
+                className="h-11 px-6 rounded-2xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 font-extrabold text-xs hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                disabled={isFulfilling}
+                className="h-11 px-7 rounded-2xl bg-[#059669] hover:bg-[#047857] text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md shadow-emerald-500/10 transition-all disabled:opacity-50"
+              >
+                {isFulfilling ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <Check size={16} strokeWidth={3} />
+                )}
+                <span>{isFulfilling ? "Saving..." : "Confirm Acceptance"}</span>
+              </button>
             </div>
-          )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-start">
-            <ResuableInput
-              label="How many can you give?"
-              type="number"
-              value={fulfillForm.quantity}
-              onChange={(val) => handleValueChange("quantity", val)}
-              required
-              placeholder={`Max ${
-                selectedNeed
-                  ? selectedNeed.quantity -
-                    (selectedNeed.fulfilled_quantity || 0)
-                  : 0
-              }`}
-              min={1}
-              max={
-                selectedNeed
-                  ? selectedNeed.quantity -
-                    (selectedNeed.fulfilled_quantity || 0)
-                  : 0
-              }
-              align="left"
-            />
-            <ResuableInput
-              label="Your phone number"
-              type="tel"
-              value={fulfillForm.contactPhone}
-              onChange={(val) => handleValueChange("contactPhone", val)}
-              required
-              placeholder="9876543210"
-              align="left"
-            />
-          </div>
-
-          <div className="pt-4 flex justify-end gap-4 border-t border-[var(--border-color)]">
-            <ResuableButton
-              variant="secondary"
-              onClick={() =>
-                ngoPostsInputModel.update({ isFulfillModalOpen: false })
-              }
-              className="font-black text-[10px] uppercase tracking-widest"
-            >
-              Go back
-            </ResuableButton>
-            <ResuableButton
-              type="submit"
-              variant="dark"
-              disabled={isFulfilling}
-              className="min-w-[180px] !bg-emerald-500 hover:!bg-emerald-600"
-              startContent={
-                isFulfilling && <Loader2 size={16} className="animate-spin" />
-              }
-            >
-              <span className="text-[10px] font-black uppercase tracking-widest">
-                {isFulfilling ? "Saving..." : "I will help"}
-              </span>
-            </ResuableButton>
+            <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 mt-1">
+              🔒 Secure & Confidential • Valid for this session only
+            </span>
           </div>
         </form>
       </ResuableModal>

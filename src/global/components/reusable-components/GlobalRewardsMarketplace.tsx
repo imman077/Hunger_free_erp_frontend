@@ -5,6 +5,8 @@ import {
   ChevronRight,
   Check as CheckIcon,
   Lock,
+  Coins,
+  Sparkles,
 } from "lucide-react";
 import ResuableDrawer from "./Drawer";
 import ResuableDatePicker from "./DatePicker";
@@ -180,83 +182,132 @@ export const GlobalRewardsMarketplace: React.FC<GlobalRewardsMarketplaceProps> =
               >
                 {categories.cash.title}
               </h4>
-              <p className="text-[10px] font-black text-green-500 uppercase tracking-widest">
+              <p className="text-[10px] font-black text-hf-green uppercase tracking-widest">
                 {categories.cash.subtitle}
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {rewards.cash.map((c) => {
                 const isLocked = totalPoints < c.points;
+                const isAvailable = c.available !== false;
+                const neededPoints = Math.max(0, c.points - totalPoints);
+                const progressPercent = Math.min(100, Math.max(0, Math.round((totalPoints / c.points) * 100)));
+                const isPending = pendingClaims.includes(c.id);
+
                 return (
                   <div
                     key={c.id}
-                    className="border p-6 flex items-center justify-between group hover:border-green-500/30 transition-all rounded-sm shadow-sm"
+                    className={`group relative border rounded-sm p-6 transition-all duration-300 flex flex-col justify-between gap-5 overflow-hidden ${
+                      !isAvailable
+                        ? "opacity-60 grayscale"
+                        : isLocked
+                        ? "hover:border-amber-500/40 shadow-sm"
+                        : "hover:border-hf-green/40 shadow-sm hover:-translate-y-0.5"
+                    }`}
                     style={{
                       backgroundColor: "var(--bg-primary)",
                       borderColor: "var(--border-color)",
                     }}
                   >
-                    <div className="text-start">
-                      <div className="flex items-center gap-3 mb-1">
-                        <span
-                          className="text-2xl font-black tabular-nums leading-none"
-                          style={{ color: "var(--text-primary)" }}
-                        >
-                          {c.amount}
-                        </span>
-                        <span
-                          className="text-[9px] font-black text-green-600 uppercase px-2 py-0.5 rounded-sm border"
-                          style={{
-                            backgroundColor: "rgba(34, 197, 94, 0.08)",
-                            borderColor: "rgba(34, 197, 94, 0.2)",
-                          }}
-                        >
-                          {categories.cash.tag}
-                        </span>
-                      </div>
-                      <p
-                        className="text-[10px] font-black uppercase tracking-widest"
-                        style={{ color: "var(--text-muted)" }}
-                      >
-                        {c.name}
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <span
-                        className="text-[10px] font-black mb-1 uppercase tabular-nums"
-                        style={{ color: "var(--text-primary)" }}
-                      >
-                        {c.points.toLocaleString()} PTS
-                      </span>
-                      {pendingClaims.includes(c.id) ? (
-                        <div
-                          className="px-4 py-2 text-[8px] font-black uppercase tracking-wider rounded-sm border cursor-default flex items-center gap-1.5 translate-y-[-2px]"
-                          style={{
-                            backgroundColor: "var(--bg-secondary)",
-                            borderColor: "var(--border-color)",
-                            color: "var(--text-muted)",
-                          }}
-                        >
-                          <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                          In Vault
+                    {/* Top Accent bar */}
+                    <div
+                      className={`absolute top-0 left-0 right-0 h-[3px] transition-all ${
+                        isPending
+                          ? "bg-blue-500"
+                          : !isLocked
+                          ? "bg-hf-green"
+                          : "bg-slate-200 dark:bg-slate-800"
+                      }`}
+                    />
+
+                    {/* Card Content Header */}
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-1.5 text-start">
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                          <span
+                            className="text-2xl font-black tabular-nums tracking-tight leading-none"
+                            style={{ color: "var(--text-primary)" }}
+                          >
+                            {c.amount || c.name}
+                          </span>
+                          <span
+                            className="text-[9px] font-black text-hf-green uppercase px-2 py-0.5 rounded-sm border"
+                            style={{
+                              backgroundColor: "rgba(34, 197, 94, 0.08)",
+                              borderColor: "rgba(34, 197, 94, 0.2)",
+                            }}
+                          >
+                            {categories.cash.tag}
+                          </span>
                         </div>
-                      ) : !isLocked ? (
+                        {c.amount && c.name && (
+                          <p
+                            className="text-[10px] font-black uppercase tracking-widest opacity-80"
+                            style={{ color: "var(--text-secondary)" }}
+                          >
+                            {c.name}
+                          </p>
+                        )}
+                        {c.desc && (
+                          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 line-clamp-2">
+                            {c.desc}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Points Required Badge */}
+                      <div
+                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm border text-[10px] font-black tracking-wide shrink-0 shadow-sm"
+                        style={{
+                          backgroundColor: "var(--bg-secondary)",
+                          borderColor: "var(--border-color)",
+                          color: "var(--text-primary)",
+                        }}
+                      >
+                        <Coins size={12} className="text-amber-500" />
+                        <span>{c.points.toLocaleString()} PTS</span>
+                      </div>
+                    </div>
+
+                    {/* Footer Action / Points Needed Section */}
+                    <div className="pt-3 border-t border-[var(--border-color)] flex flex-col gap-2.5">
+                      {isPending ? (
+                        <div
+                          className="w-full py-2.5 px-4 rounded-sm text-[10px] font-black uppercase tracking-widest border cursor-default flex items-center justify-center gap-2"
+                          style={{
+                            backgroundColor: "rgba(59, 130, 246, 0.08)",
+                            borderColor: "rgba(59, 130, 246, 0.2)",
+                            color: "#3b82f6",
+                          }}
+                        >
+                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+                          Processing Claim
+                        </div>
+                      ) : !isLocked && isAvailable ? (
                         <button
                           onClick={() => handleClaim(c)}
-                          className="px-6 py-2 bg-green-500 text-white text-[10px] font-black uppercase tracking-widest rounded-sm hover:bg-green-600 transition-all active:scale-95 shadow-lg shadow-green-500/10"
+                          className="w-full py-2.5 px-6 bg-hf-green hover:bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-sm transition-all active:scale-95 shadow-md shadow-hf-green/10 flex items-center justify-center gap-2 group/btn"
                         >
-                          REDEEM
+                          <Sparkles size={12} className="group-hover/btn:rotate-12 transition-transform" />
+                          <span>REDEEM NOW</span>
                         </button>
                       ) : (
-                        <div
-                          className="px-6 py-2 text-[10px] font-black uppercase tracking-widest rounded-sm border"
-                          style={{
-                            backgroundColor: "var(--bg-secondary)",
-                            borderColor: "var(--border-color)",
-                            color: "var(--text-muted)",
-                          }}
-                        >
-                          Locked
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <span className="inline-flex items-center gap-1 text-[9px] font-black text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-sm">
+                              <Lock size={10} />
+                              Need {neededPoints.toLocaleString()} more pts to unlock
+                            </span>
+                            <span className="text-[10px] font-black text-slate-400 tracking-wider">
+                              {progressPercent}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-sm overflow-hidden">
+                            <div
+                              className="bg-hf-green h-full rounded-sm transition-all duration-500"
+                              style={{ width: `${progressPercent}%` }}
+                            />
+                          </div>
                         </div>
                       )}
                     </div>
@@ -277,87 +328,120 @@ export const GlobalRewardsMarketplace: React.FC<GlobalRewardsMarketplaceProps> =
               >
                 {categories.tours.title}
               </h4>
-              <p className="text-[10px] font-black text-green-500 uppercase tracking-widest">
+              <p className="text-[10px] font-black text-hf-green uppercase tracking-widest">
                 {categories.tours.subtitle}
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {rewards.tours.map((t) => {
                 const isLocked = totalPoints < t.points;
+                const isAvailable = t.available !== false;
+                const neededPoints = Math.max(0, t.points - totalPoints);
+                const progressPercent = Math.min(100, Math.max(0, Math.round((totalPoints / t.points) * 100)));
+                const isPending = pendingClaims.includes(t.id);
+
                 return (
                   <div
                     key={t.id}
-                    className={`border p-6 flex items-center justify-between group hover:border-green-500/30 transition-all rounded-sm ${
-                      !t.available ? "opacity-60 grayscale" : "shadow-sm"
+                    className={`group relative border rounded-sm p-6 transition-all duration-300 flex flex-col justify-between gap-5 overflow-hidden ${
+                      !isAvailable
+                        ? "opacity-60 grayscale"
+                        : isLocked
+                        ? "hover:border-amber-500/40 shadow-sm"
+                        : "hover:border-hf-green/40 shadow-sm hover:-translate-y-0.5"
                     }`}
                     style={{
-                      backgroundColor: t.available
-                        ? "var(--bg-primary)"
-                        : "var(--bg-secondary)",
+                      backgroundColor: "var(--bg-primary)",
                       borderColor: "var(--border-color)",
                     }}
                   >
-                    <div className="text-start">
-                      <div className="flex items-center gap-3 mb-1">
-                        <span
-                          className="text-xl font-black uppercase tracking-tight leading-none"
-                          style={{ color: "var(--text-primary)" }}
-                        >
-                          {t.name}
-                        </span>
-                        <span
-                          className="text-[9px] font-black text-green-600 uppercase px-2 py-0.5 rounded-sm border"
-                          style={{
-                            backgroundColor: "rgba(34, 197, 94, 0.08)",
-                            borderColor: "rgba(34, 197, 94, 0.2)",
-                          }}
-                        >
-                          {categories.tours.tag}
-                        </span>
+                    <div
+                      className={`absolute top-0 left-0 right-0 h-[3px] transition-all ${
+                        isPending
+                          ? "bg-blue-500"
+                          : !isLocked
+                          ? "bg-hf-green"
+                          : "bg-slate-200 dark:bg-slate-800"
+                      }`}
+                    />
+
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-1.5 text-start">
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                          <span
+                            className="text-xl sm:text-2xl font-black uppercase tracking-tight leading-none"
+                            style={{ color: "var(--text-primary)" }}
+                          >
+                            {t.name}
+                          </span>
+                          <span
+                            className="text-[9px] font-black text-hf-green uppercase px-2 py-0.5 rounded-sm border"
+                            style={{
+                              backgroundColor: "rgba(34, 197, 94, 0.08)",
+                              borderColor: "rgba(34, 197, 94, 0.2)",
+                            }}
+                          >
+                            {categories.tours.tag}
+                          </span>
+                        </div>
+                        {t.desc && (
+                          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 line-clamp-2">
+                            {t.desc}
+                          </p>
+                        )}
                       </div>
-                      <p
-                        className="text-[10px] font-black uppercase tracking-widest"
-                        style={{ color: "var(--text-muted)" }}
+
+                      <div
+                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm border text-[10px] font-black tracking-wide shrink-0 shadow-sm"
+                        style={{
+                          backgroundColor: "var(--bg-secondary)",
+                          borderColor: "var(--border-color)",
+                          color: "var(--text-primary)",
+                        }}
                       >
-                        {t.desc}
-                      </p>
+                        <Coins size={12} className="text-amber-500" />
+                        <span>{t.points.toLocaleString()} PTS</span>
+                      </div>
                     </div>
-                    <div className="flex flex-col items-center">
-                      <span
-                        className="text-[10px] font-black mb-1 uppercase tabular-nums"
-                        style={{ color: "var(--text-primary)" }}
-                      >
-                        {t.points.toLocaleString()} PTS
-                      </span>
-                      {pendingClaims.includes(t.id) ? (
+
+                    <div className="pt-3 border-t border-[var(--border-color)] flex flex-col gap-2.5">
+                      {isPending ? (
                         <div
-                          className="px-4 py-2 text-[8px] font-black uppercase tracking-wider rounded-sm border cursor-default flex items-center gap-1.5 translate-y-[-2px]"
+                          className="w-full py-2.5 px-4 rounded-sm text-[10px] font-black uppercase tracking-widest border cursor-default flex items-center justify-center gap-2"
                           style={{
-                            backgroundColor: "var(--bg-secondary)",
-                            borderColor: "var(--border-color)",
-                            color: "var(--text-muted)",
+                            backgroundColor: "rgba(59, 130, 246, 0.08)",
+                            borderColor: "rgba(59, 130, 246, 0.2)",
+                            color: "#3b82f6",
                           }}
                         >
-                          <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
                           Requested
                         </div>
-                      ) : t.available && !isLocked ? (
+                      ) : !isLocked && isAvailable ? (
                         <button
                           onClick={() => handleClaim(t)}
-                          className="px-6 py-2 bg-green-500 text-white text-[10px] font-black uppercase tracking-widest rounded-sm hover:bg-green-600 transition-all active:scale-95 shadow-lg shadow-green-500/10"
+                          className="w-full py-2.5 px-6 bg-hf-green hover:bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-sm transition-all active:scale-95 shadow-md shadow-hf-green/10 flex items-center justify-center gap-2 group/btn"
                         >
-                          REDEEM
+                          <Sparkles size={12} className="group-hover/btn:rotate-12 transition-transform" />
+                          <span>REDEEM NOW</span>
                         </button>
                       ) : (
-                        <div
-                          className="px-6 py-2 text-[10px] font-black uppercase tracking-widest rounded-sm border"
-                          style={{
-                            backgroundColor: "var(--bg-secondary)",
-                            borderColor: "var(--border-color)",
-                            color: "var(--text-muted)",
-                          }}
-                        >
-                          {isLocked ? "Locked" : "Unavailable"}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <span className="inline-flex items-center gap-1 text-[9px] font-black text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-sm">
+                              <Lock size={10} />
+                              Need {neededPoints.toLocaleString()} more pts to unlock
+                            </span>
+                            <span className="text-[10px] font-black text-slate-400 tracking-wider">
+                              {progressPercent}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-sm overflow-hidden">
+                            <div
+                              className="bg-hf-green h-full rounded-sm transition-all duration-500"
+                              style={{ width: `${progressPercent}%` }}
+                            />
+                          </div>
                         </div>
                       )}
                     </div>
@@ -378,87 +462,120 @@ export const GlobalRewardsMarketplace: React.FC<GlobalRewardsMarketplaceProps> =
               >
                 {categories.youth.title}
               </h4>
-              <p className="text-[10px] font-black text-green-500 uppercase tracking-widest">
+              <p className="text-[10px] font-black text-hf-green uppercase tracking-widest">
                 {categories.youth.subtitle}
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {rewards.youth.map((y) => {
                 const isLocked = totalPoints < y.points;
+                const isAvailable = y.available !== false;
+                const neededPoints = Math.max(0, y.points - totalPoints);
+                const progressPercent = Math.min(100, Math.max(0, Math.round((totalPoints / y.points) * 100)));
+                const isPending = pendingClaims.includes(y.id);
+
                 return (
                   <div
                     key={y.id}
-                    className={`border p-6 flex items-center justify-between group hover:border-green-500/30 transition-all rounded-sm ${
-                      !y.available ? "opacity-60 grayscale" : "shadow-sm"
+                    className={`group relative border rounded-sm p-6 transition-all duration-300 flex flex-col justify-between gap-5 overflow-hidden ${
+                      !isAvailable
+                        ? "opacity-60 grayscale"
+                        : isLocked
+                        ? "hover:border-amber-500/40 shadow-sm"
+                        : "hover:border-hf-green/40 shadow-sm hover:-translate-y-0.5"
                     }`}
                     style={{
-                      backgroundColor: y.available
-                        ? "var(--bg-primary)"
-                        : "var(--bg-secondary)",
+                      backgroundColor: "var(--bg-primary)",
                       borderColor: "var(--border-color)",
                     }}
                   >
-                    <div className="text-start">
-                      <div className="flex items-center gap-3 mb-1">
-                        <span
-                          className="text-xl font-black uppercase tracking-tight leading-none"
-                          style={{ color: "var(--text-primary)" }}
-                        >
-                          {y.name}
-                        </span>
-                        <span
-                          className="text-[9px] font-black text-green-600 uppercase px-2 py-0.5 rounded-sm border"
-                          style={{
-                            backgroundColor: "rgba(34, 197, 94, 0.08)",
-                            borderColor: "rgba(34, 197, 94, 0.2)",
-                          }}
-                        >
-                          {categories.youth.tag}
-                        </span>
+                    <div
+                      className={`absolute top-0 left-0 right-0 h-[3px] transition-all ${
+                        isPending
+                          ? "bg-blue-500"
+                          : !isLocked
+                          ? "bg-hf-green"
+                          : "bg-slate-200 dark:bg-slate-800"
+                      }`}
+                    />
+
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="space-y-1.5 text-start">
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                          <span
+                            className="text-xl sm:text-2xl font-black uppercase tracking-tight leading-none"
+                            style={{ color: "var(--text-primary)" }}
+                          >
+                            {y.name}
+                          </span>
+                          <span
+                            className="text-[9px] font-black text-hf-green uppercase px-2 py-0.5 rounded-sm border"
+                            style={{
+                              backgroundColor: "rgba(34, 197, 94, 0.08)",
+                              borderColor: "rgba(34, 197, 94, 0.2)",
+                            }}
+                          >
+                            {categories.youth.tag}
+                          </span>
+                        </div>
+                        {y.desc && (
+                          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 line-clamp-2">
+                            {y.desc}
+                          </p>
+                        )}
                       </div>
-                      <p
-                        className="text-[10px] font-black uppercase tracking-widest"
-                        style={{ color: "var(--text-muted)" }}
+
+                      <div
+                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-sm border text-[10px] font-black tracking-wide shrink-0 shadow-sm"
+                        style={{
+                          backgroundColor: "var(--bg-secondary)",
+                          borderColor: "var(--border-color)",
+                          color: "var(--text-primary)",
+                        }}
                       >
-                        {y.desc}
-                      </p>
+                        <Coins size={12} className="text-amber-500" />
+                        <span>{y.points.toLocaleString()} PTS</span>
+                      </div>
                     </div>
-                    <div className="flex flex-col items-center">
-                      <span
-                        className="text-[10px] font-black mb-1 uppercase tabular-nums"
-                        style={{ color: "var(--text-primary)" }}
-                      >
-                        {y.points.toLocaleString()} PTS
-                      </span>
-                      {pendingClaims.includes(y.id) ? (
+
+                    <div className="pt-3 border-t border-[var(--border-color)] flex flex-col gap-2.5">
+                      {isPending ? (
                         <div
-                          className="px-4 py-2 text-[8px] font-black uppercase tracking-wider rounded-sm border cursor-default flex items-center gap-1.5 translate-y-[-2px]"
+                          className="w-full py-2.5 px-4 rounded-sm text-[10px] font-black uppercase tracking-widest border cursor-default flex items-center justify-center gap-2"
                           style={{
-                            backgroundColor: "var(--bg-secondary)",
-                            borderColor: "var(--border-color)",
-                            color: "var(--text-muted)",
+                            backgroundColor: "rgba(59, 130, 246, 0.08)",
+                            borderColor: "rgba(59, 130, 246, 0.2)",
+                            color: "#3b82f6",
                           }}
                         >
-                          <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                          <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
                           Requested
                         </div>
-                      ) : y.available && !isLocked ? (
+                      ) : !isLocked && isAvailable ? (
                         <button
                           onClick={() => handleClaim(y)}
-                          className="px-6 py-2 bg-green-500 text-white text-[10px] font-black uppercase tracking-widest rounded-sm hover:bg-green-600 transition-all active:scale-95 shadow-lg shadow-green-500/10"
+                          className="w-full py-2.5 px-6 bg-hf-green hover:bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-sm transition-all active:scale-95 shadow-md shadow-hf-green/10 flex items-center justify-center gap-2 group/btn"
                         >
-                          REDEEM
+                          <Sparkles size={12} className="group-hover/btn:rotate-12 transition-transform" />
+                          <span>REDEEM NOW</span>
                         </button>
                       ) : (
-                        <div
-                          className="px-6 py-2 text-[10px] font-black uppercase tracking-widest rounded-sm border"
-                          style={{
-                            backgroundColor: "var(--bg-secondary)",
-                            borderColor: "var(--border-color)",
-                            color: "var(--text-muted)",
-                          }}
-                        >
-                          {isLocked ? "Locked" : "Unavailable"}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <span className="inline-flex items-center gap-1 text-[9px] font-black text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-sm">
+                              <Lock size={10} />
+                              Need {neededPoints.toLocaleString()} more pts to unlock
+                            </span>
+                            <span className="text-[10px] font-black text-slate-400 tracking-wider">
+                              {progressPercent}%
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-sm overflow-hidden">
+                            <div
+                              className="bg-hf-green h-full rounded-sm transition-all duration-500"
+                              style={{ width: `${progressPercent}%` }}
+                            />
+                          </div>
                         </div>
                       )}
                     </div>

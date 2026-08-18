@@ -2,25 +2,31 @@ import { z } from "zod";
 
 export const RewardItemSchema = z
   .object({
-    id: z.number(),
+    id: z.union([z.string(), z.number()]),
     name: z.string(),
     amount: z.string().optional().nullable(),
     desc: z.string().optional().nullable(),
-    points: z.number(),
-    available: z.boolean(),
+    points: z.union([z.string(), z.number()]).optional().nullable(),
+    pointsRequired: z.union([z.string(), z.number()]).optional().nullable(),
+    points_required: z.union([z.string(), z.number()]).optional().nullable(),
+    available: z.boolean().optional().nullable(),
     category: z.string().optional().nullable(),
   })
   .passthrough();
 
-export const RewardTierSchema = z.object({
-  id: z.union([z.string(), z.number()]).optional(),
-  name: z.string(),
-  points: z.string().optional().nullable(),
-  color: z.string().optional().nullable(),
-});
+export const RewardTierSchema = z
+  .object({
+    id: z.union([z.string(), z.number()]).optional(),
+    name: z.string(),
+    points: z.string().optional().nullable(),
+    min_points: z.union([z.string(), z.number()]).optional().nullable(),
+    max_points: z.union([z.string(), z.number()]).optional().nullable(),
+    color: z.string().optional().nullable(),
+  })
+  .passthrough();
 
 export const SpinPrizeSchema = z.object({
-  id: z.number(),
+  id: z.union([z.string(), z.number()]),
   label: z.string(),
   icon: z.string().optional().nullable(),
   color: z.string().optional().nullable(),

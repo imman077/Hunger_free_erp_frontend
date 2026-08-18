@@ -27,6 +27,9 @@ export const myInventoryStateSchema = z.object({
     quantity: z.string().default(""),
     status: z.string().default("Stored"),
   }),
+  isDeleteModalOpen: z.boolean().default(false),
+  deleteItemId: z.union([z.string(), z.number()]).nullable().default(null),
+  deleteItemName: z.string().default(""),
 });
 
 export const myInventoryPersistenceConfig = {
@@ -37,6 +40,9 @@ export const myInventoryPersistenceConfig = {
   isUpdating: false,
   isEditing: false,
   editFormData: false,
+  isDeleteModalOpen: false,
+  deleteItemId: false,
+  deleteItemName: false,
 };
 
 export const myInventorySchemas = createSchemaBundle(myInventoryStateSchema, {

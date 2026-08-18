@@ -2,11 +2,16 @@ import { useEffect } from "react";
 import { useVolunteerStore } from "../../store/volunteer_store";
 import { volunteerRewardsService } from "../../rewards/api/rewards/rewards_api";
 
+let isFetchingProfile = false;
+let hasFetchedProfile = false;
+
 export const useVolunteerProfile = () => {
   const { profile, isLoading, error, setProfile, setLoading, setError } = useVolunteerStore();
 
   useEffect(() => {
     const fetchProfile = async () => {
+      if (isFetchingProfile || hasFetchedProfile) return;
+      isFetchingProfile = true;
       setLoading(true);
       try {
         const data = await volunteerRewardsService.getVolunteerProfile();
@@ -23,10 +28,12 @@ export const useVolunteerProfile = () => {
           accountNumber: data.accountNumber || null,
           upiId: data.upiId || null,
         });
+        hasFetchedProfile = true;
       } catch (err: any) {
         console.error("Failed to fetch volunteer profile:", err);
         setError("Failed to load profile data.");
       } finally {
+        isFetchingProfile = false;
         setLoading(false);
       }
     };

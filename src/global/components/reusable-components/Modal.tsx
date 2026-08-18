@@ -50,6 +50,7 @@ interface ResuableModalProps {
   // Trending Specific Props
   data?: any;
   showTrendingLayout?: boolean;
+  iconWrapperClassName?: string;
 }
 
 const ResuableModal: React.FC<ResuableModalProps> = ({
@@ -75,6 +76,7 @@ const ResuableModal: React.FC<ResuableModalProps> = ({
   data,
   showTrendingLayout = false,
   radius = "md",
+  iconWrapperClassName = "",
 }) => {
   const [activeTab, setActiveTab] = useState<"Profile" | "History">("Profile");
 
@@ -143,8 +145,12 @@ const ResuableModal: React.FC<ResuableModalProps> = ({
               <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
                 {icon && (
                   <div
-                    className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-sm border shrink-0"
-                    style={{
+                    className={
+                      iconWrapperClassName
+                        ? `flex items-center justify-center shrink-0 ${iconWrapperClassName}`
+                        : "flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-sm border shrink-0"
+                    }
+                    style={iconWrapperClassName ? undefined : {
                       backgroundColor: "var(--bg-secondary)",
                       borderColor: "var(--border-color)",
                       color: "var(--text-muted)",
@@ -212,7 +218,9 @@ const ResuableModal: React.FC<ResuableModalProps> = ({
               className={`flex-1 overflow-y-auto p-4 sm:p-6 no-scrollbar min-h-[120px] sm:min-h-[150px] ${
                 classNames.body || ""
               }`}
-              style={{ backgroundColor: "var(--bg-secondary)" }}
+              style={{
+                backgroundColor: classNames.body?.includes("bg-") ? undefined : "var(--bg-secondary)"
+              }}
             >
               {showTrendingLayout ? (
                 <div className="space-y-8 animate-in fade-in duration-500">

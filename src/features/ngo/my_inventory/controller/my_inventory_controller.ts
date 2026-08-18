@@ -80,17 +80,34 @@ export const setIsDrawerOpen = (isDrawerOpen: boolean) => {
   myInventoryInputModel.update({ isDrawerOpen });
 };
 
-export const handleDeleteItem = async (itemId: string | number, itemName: string) => {
-  if (window.confirm(`Are you sure you want to delete ${itemName}?`)) {
-    try {
-      await ngoInventoryService.deleteItem(itemId);
-      toast.success("Item Deleted", {
-        description: `${itemName} has been removed from inventory.`,
-      });
-      await fetchInventory();
-    } catch (error) {
-      toast.error("Failed to delete item");
-    }
+export const handleDeleteItem = (itemId: string | number, itemName: string) => {
+  myInventoryInputModel.update({
+    isDeleteModalOpen: true,
+    deleteItemId: itemId,
+    deleteItemName: itemName,
+  });
+};
+
+export const confirmDelete = async () => {
+  const state = myInventoryInputModel.useStore.getState().myInventoryState;
+  const itemId = state.deleteItemId;
+  const itemName = state.deleteItemName;
+  if (!itemId) return;
+
+  try {
+    await ngoInventoryService.deleteItem(itemId);
+    toast.success("Item Deleted", {
+      description: `${itemName} has been removed from inventory.`,
+    });
+    await fetchInventory();
+  } catch (error) {
+    toast.error("Failed to delete item");
+  } finally {
+    myInventoryInputModel.update({
+      isDeleteModalOpen: false,
+      deleteItemId: null,
+      deleteItemName: "",
+    });
   }
 };
 

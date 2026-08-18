@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from "react";
 import {
   RotateCw,
   Gift,
-  Star,
   MousePointerClick,
   CheckCircle2,
 } from "lucide-react";
@@ -16,6 +15,7 @@ export interface Prize {
   icon: string | React.ReactNode;
   color: string;
   isJackpot?: boolean;
+  subtitle?: string;
 }
 
 interface PrizeModalProps {
@@ -23,36 +23,110 @@ interface PrizeModalProps {
   prize: Prize;
   reaction: string;
   onClose: () => void;
+  onViewHistory?: () => void;
 }
 
 const PrizeModal: React.FC<PrizeModalProps> = ({
   isOpen,
   prize,
-  reaction,
+  reaction: _reaction,
   onClose,
+  onViewHistory,
 }) => {
+  const [isClaimed, setIsClaimed] = useState(false);
+  const [showVideoIntro, setShowVideoIntro] = useState(true);
+  const [isCardRevealed, setIsCardRevealed] = useState(false);
+  const hasTriggeredRef = React.useRef(false);
+
+  const skipVideoIntro = () => {
+    if (!hasTriggeredRef.current) {
+      hasTriggeredRef.current = true;
+      setShowVideoIntro(false);
+      setIsCardRevealed(true);
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      hasTriggeredRef.current = false;
+      setShowVideoIntro(true);
+      setIsCardRevealed(false);
+
+      // Cut video intro at exactly 5 seconds to pop up card with ZERO lag
+      const timer = setTimeout(() => {
+        if (!hasTriggeredRef.current) {
+          hasTriggeredRef.current = true;
+          setShowVideoIntro(false);
+          setIsCardRevealed(true);
+        }
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
   if (!prize) return null;
 
-  const isJackpot =
-    prize.isJackpot ||
-    prize.label?.toUpperCase() === "GRAND JACKPOT" ||
-    prize.label?.toUpperCase() === "GRAND GRANT" ||
-    prize.label?.toUpperCase() === "GRAND PRIZE" ||
-    prize.label?.toUpperCase() === "MEGA BONUS";
+  const isTryAgain =
+    prize.label?.toUpperCase().includes("TRY AGAIN") ||
+    prize.label?.toUpperCase().includes("BETTER LUCK") ||
+    prize.label?.toUpperCase().includes("NO LUCK") ||
+    prize.label?.toUpperCase().includes("MISS");
 
-  const renderPrizeLabel = () => {
-    if (prize.label?.toUpperCase() === "GRAND JACKPOT") {
-      return (
-        <h3 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-2 text-slate-800 dark:text-white">
-          GRAND <span className="text-[#22c55e]">JACKPOT</span>
-        </h3>
-      );
+  const isJackpot =
+    !isTryAgain &&
+    (prize.isJackpot ||
+      prize.label?.toUpperCase() === "GRAND JACKPOT" ||
+      prize.label?.toUpperCase() === "GRAND GRANT" ||
+      prize.label?.toUpperCase() === "GRAND PRIZE" ||
+      prize.label?.toUpperCase() === "MEGA BONUS");
+
+  // Parse prize label so number and "POINTS" unit don't duplicate
+  const rawLabel = prize.label || "";
+  const isPointsLabel = /points?/i.test(rawLabel);
+  const displayValue = isPointsLabel ? rawLabel.replace(/ points?/i, "") : rawLabel;
+  const subtextLabel = isTryAgain
+    ? "BETTER LUCK NEXT TIME"
+    : isJackpot
+    ? "GRAND JACKPOT REWARD"
+    : isPointsLabel
+    ? "POINTS"
+    : prize.subtitle || "REWARD UNLOCKED";
+
+  const handleCollect = () => {
+    if (isTryAgain) {
+      onClose();
+      return;
     }
-    return (
-      <h3 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-2 text-slate-800 dark:text-white">
-        {prize.label}
-      </h3>
-    );
+    if (isClaimed) {
+      onClose();
+      return;
+    }
+    setIsClaimed(true);
+
+    confetti({
+      particleCount: 140,
+      spread: 110,
+      origin: { y: 0.5 },
+      colors: ["#22c55e", "#16a34a", "#34d399", "#fef08a", "#ffffff"],
+    });
+
+    setTimeout(() => {
+      confetti({
+        particleCount: 80,
+        angle: 60,
+        spread: 80,
+        origin: { x: 0 },
+        colors: ["#22c55e", "#fbbf24", "#ffffff"],
+      });
+      confetti({
+        particleCount: 80,
+        angle: 120,
+        spread: 80,
+        origin: { x: 1 },
+        colors: ["#22c55e", "#fbbf24", "#ffffff"],
+      });
+    }, 150);
   };
 
   return (
@@ -62,98 +136,191 @@ const PrizeModal: React.FC<PrizeModalProps> = ({
       placement="center"
       backdrop="blur"
       hideCloseButton
-      size="sm"
+      isDismissable={false}
+      isKeyboardDismissDisabled={true}
+      size="3xl"
       classNames={{
-        backdrop: "bg-slate-900/40 backdrop-blur-xl",
-        base: "rounded-sm border shadow-2xl overflow-visible",
-        body: "p-0",
-        wrapper: "z-[100]",
-      }}
-      style={{
-        backgroundColor: "var(--bg-primary)",
-        borderColor: "var(--border-color)",
+        backdrop: "bg-slate-950/85 backdrop-blur-2xl",
+        base: "bg-transparent border-0 shadow-none overflow-visible max-w-2xl w-full",
+        body: "p-0 overflow-visible",
+        wrapper: "z-[100] items-center justify-center p-3 sm:p-6",
       }}
     >
-      <ModalContent className="bg-transparent overflow-visible">
-        <ModalBody className="p-8 text-center overflow-visible relative">
-          {/* Floating Circle Icon */}
-          <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 rounded-full bg-[var(--bg-primary)] border-4 border-[var(--border-color)] shadow-xl flex items-center justify-center z-50">
-            <div className="w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center text-4xl animate-bounce">
-              {prize.icon || "🎁"}
+      <ModalContent className="bg-transparent overflow-visible border-0 shadow-none">
+        <ModalBody className="p-0 text-center overflow-visible relative flex flex-col items-center justify-center">
+          <style>{`
+            @keyframes lightBeam {
+              0% { transform: translateX(-100%) rotate(25deg); opacity: 0; }
+              50% { opacity: 0.8; }
+              100% { transform: translateX(200%) rotate(25deg); opacity: 0; }
+            }
+            @keyframes mountainCurveReveal {
+              0% {
+                clip-path: polygon(
+                  0% 100%, 25% 85%, 50% 40%, 75% 85%, 100% 100%,
+                  100% 100%, 75% 100%, 50% 100%, 25% 100%, 0% 100%
+                );
+                opacity: 0;
+                transform: scale(0.75) translateY(30px);
+                filter: brightness(2.5) drop-shadow(0 0 80px #22c55e);
+              }
+              40% {
+                clip-path: polygon(
+                  0% 50%, 25% 25%, 50% 0%, 75% 25%, 100% 50%,
+                  100% 100%, 75% 100%, 50% 100%, 25% 100%, 0% 100%
+                );
+                opacity: 0.85;
+                transform: scale(1.03) translateY(-5px);
+                filter: brightness(1.4);
+              }
+              75% {
+                clip-path: polygon(
+                  0% 10%, 25% 3%, 50% 0%, 75% 3%, 100% 10%,
+                  100% 100%, 75% 100%, 50% 100%, 25% 100%, 0% 100%
+                );
+                opacity: 0.98;
+                transform: scale(1.01) translateY(0);
+                filter: brightness(1.1);
+              }
+              100% {
+                clip-path: inset(0% 0% 0% 0% round 36px);
+                opacity: 1;
+                transform: scale(1) translateY(0);
+                filter: brightness(1);
+              }
+            }
+          `}</style>
+
+          {/* Full Screen Intro Video Reveal Before Card (Tap to skip) */}
+          {showVideoIntro && (
+            <div
+              onClick={skipVideoIntro}
+              onTouchStart={skipVideoIntro}
+              className="fixed inset-0 z-[160] bg-slate-950 flex flex-col items-center justify-center overflow-hidden transition-all duration-700 cursor-pointer select-none transform-gpu translate-z-0"
+            >
+              <video
+                src="/intro_for_reward.mp4"
+                autoPlay
+                muted
+                playsInline
+                preload="auto"
+                onEnded={skipVideoIntro}
+                className="w-full h-full object-cover opacity-90 pointer-events-none transform-gpu translate-z-0 will-change-transform"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950 pointer-events-none" />
+
+              <div className="absolute top-6 right-6 bg-slate-900/80 backdrop-blur-md text-[#22c55e] border border-[#22c55e]/40 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-lg animate-pulse">
+                <span>Tap to skip</span>
+                <span className="font-extrabold">&gt;&gt;</span>
+              </div>
+
+              <div className="absolute bottom-16 text-center text-[#22c55e] font-extrabold text-sm sm:text-base tracking-[0.25em] uppercase animate-pulse">
+                {isTryAgain ? "🌿 SPIN RESULT 🌿" : "🌿 REVEALING YOUR REWARD... 🌿"}
+              </div>
             </div>
+          )}
+
+          {/* Full Screen Ambient Bokeh Background Effects */}
+          <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#22c55e]/20 rounded-full blur-[120px] animate-pulse pointer-events-none" />
+            <div className="absolute top-12 left-10 text-3xl opacity-80 animate-[bounce_4s_infinite]">🌿</div>
+            <div className="absolute top-20 right-16 text-4xl opacity-70 animate-[pulse_3s_infinite] rotate-45">🍃</div>
+            <div className="absolute bottom-24 left-16 text-4xl opacity-75 animate-[spin_12s_linear_infinite]">🍃</div>
+            <div className="absolute bottom-16 right-12 text-3xl opacity-80 animate-[bounce_5s_infinite] -rotate-12">🌿</div>
+            <div className="absolute top-1/3 left-1/4 w-3 h-3 bg-emerald-300 rounded-full blur-xs animate-ping" />
+            <div className="absolute top-1/4 right-1/3 w-4 h-4 bg-lime-300 rounded-full blur-xs animate-pulse" />
+            <div className="absolute bottom-1/3 right-1/4 w-3 h-3 bg-emerald-200 rounded-full blur-xs animate-ping" />
+            <div className="absolute bottom-1/4 left-1/3 w-4 h-4 bg-[#22c55e] rounded-full blur-xs animate-pulse" />
           </div>
 
-          {/* Spacer for Floating Icon */}
-          <div className="h-10"></div>
-
-          {/* Subtitle: DRAW RESULT */}
-          <h2
-            className="text-[10px] font-extrabold tracking-[0.25em] uppercase mb-1 text-emerald-600 dark:text-emerald-400"
+          {/* THE HUNGER CARD (Borderless with claim_card_reward_bg.png & Rounded Clips) */}
+          <div
+            className={`relative z-10 w-full max-w-xl bg-[url('/claim_card_reward_bg.png')] bg-cover bg-center bg-no-repeat border-0 rounded-[36px] p-8 sm:p-12 transition-all duration-500 overflow-hidden shadow-[0_0_70px_rgba(34,197,94,0.4)] flex flex-col items-center justify-center text-center ${
+              isCardRevealed
+                ? "animate-[mountainCurveReveal_1.1s_cubic-bezier(0.16,1,0.3,1)_forwards]"
+                : "opacity-0"
+            } ${
+              isClaimed
+                ? "scale-[1.02] shadow-[0_0_90px_rgba(34,197,94,0.8)]"
+                : ""
+            }`}
           >
-            Draw Result
-          </h2>
-
-          {/* Big Header (e.g. GRAND JACKPOT) */}
-          <div className="mb-2">
-            {renderPrizeLabel()}
-          </div>
-
-          {/* Divider with Star */}
-          <div className="flex items-center justify-center gap-3 my-4 w-full opacity-60">
-            <div className="h-[1px] bg-[var(--border-color)] flex-1"></div>
-            <Star className="text-emerald-500 fill-emerald-500" size={12} />
-            <div className="h-[1px] bg-[var(--border-color)] flex-1"></div>
-          </div>
-
-          {/* Congratulations & Description */}
-          <div className="mb-6">
-            <div className="flex items-center gap-2 justify-center mb-1 text-slate-800 dark:text-white">
-              <span className="text-base text-emerald-500">🌿</span>
-              <span className="text-sm font-black tracking-tight uppercase">Congratulations!</span>
-              <span className="text-base text-emerald-500">🌿</span>
+            
+            {/* Sweeping Light Beam Overlay */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+              <div 
+                className="absolute -inset-[100%] bg-gradient-to-r from-transparent via-[#22c55e]/25 to-transparent rotate-45"
+                style={{ animation: "lightBeam 3.5s infinite" }}
+              />
             </div>
-            <p
-              className="text-xs font-semibold px-4 italic leading-relaxed"
-              style={{ color: "var(--text-secondary)" }}
-            >
-              "{reaction || "You hit the Grand Jackpot!"}"
-            </p>
-          </div>
 
-          {/* Inner Won Banner/Card */}
-          <div className="w-full bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/20 rounded-sm p-4 flex items-center gap-4 mb-6 text-left shadow-inner">
-            <div className="w-14 h-14 rounded-full bg-emerald-500 text-white flex items-center justify-center text-3xl shadow-md shadow-emerald-500/20 shrink-0">
-              {prize.icon || "🎁"}
+            {/* Top Center Glowing Double-Ring Circle Icon Badge */}
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-slate-950/90 border-2 border-[#22c55e] shadow-[0_0_35px_rgba(34,197,94,0.7)] flex items-center justify-center mb-5 relative z-10">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-[#16a34a] to-[#15803d] flex items-center justify-center text-2xl sm:text-3xl shadow-inner border border-white/30">
+                🍃
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[9px] font-black tracking-widest text-[#22c55e] uppercase leading-none mb-1.5">
-                You Won
-              </p>
-              <h4 className="text-2xl font-black text-slate-800 dark:text-white leading-tight">
-                {prize.label}
-              </h4>
-              <p className="text-[10px] font-bold text-[var(--text-secondary)] mt-0.5">
-                {isJackpot ? "Mega Draw Reward" : "Draw Reward"}
-              </p>
-            </div>
-          </div>
 
-          {/* Button Actions */}
-          <div className="flex flex-col items-center w-full gap-3">
+            {/* Header Line: — YOU WON — */}
+            <div className="flex items-center gap-3 my-2 text-[#22c55e] font-black text-xs sm:text-sm tracking-[0.3em] uppercase relative z-10">
+              <span className="w-8 h-[1.5px] bg-gradient-to-r from-transparent to-[#22c55e]" />
+              <span>{isTryAgain ? "DRAW RESULT" : "YOU WON"}</span>
+              <span className="w-8 h-[1.5px] bg-gradient-to-l from-transparent to-[#22c55e]" />
+            </div>
+
+            {/* Giant Prize Display Text (e.g. 2,000) */}
+            <h2 className="text-5xl sm:text-7xl font-black text-white tracking-tight my-2 drop-shadow-[0_0_30px_rgba(255,255,255,0.85)] relative z-10">
+              {displayValue}
+            </h2>
+
+            {/* Subtext Line: 🍃 POINTS 🍃 */}
+            <div className="flex items-center gap-2 text-[#22c55e] font-black text-xs sm:text-sm tracking-[0.25em] uppercase mb-8 relative z-10">
+              <span>🍃</span>
+              <span>{subtextLabel}</span>
+              <span>🍃</span>
+            </div>
+
+            {/* Claimed Toast Banner */}
+            {isClaimed && !isTryAgain && (
+              <div className="mb-6 px-5 py-2 rounded-full bg-[#16a34a]/30 text-white flex items-center gap-2 text-xs font-black uppercase tracking-wider shadow-lg border border-[#22c55e]/60 animate-[bounce_0.5s_ease-in-out] relative z-10">
+                <CheckCircle2 size={16} className="text-[#22c55e]" />
+                <span>Successfully Added To Your Wallet!</span>
+              </div>
+            )}
+
+            {/* Vibrant Hunger Green Pill Action Button INSIDE Card */}
             <button
-              onClick={onClose}
-              className="w-full py-4 bg-[#22c55e] text-white font-black uppercase tracking-[0.15em] rounded-sm hover:bg-green-600 active:scale-95 shadow-lg shadow-green-500/20 transition-all text-xs"
+              onClick={handleCollect}
+              className={`w-full max-w-md py-4 px-8 rounded-full font-black uppercase tracking-[0.15em] text-sm sm:text-base shadow-[0_0_40px_rgba(34,197,94,0.6)] transition-all cursor-pointer flex items-center justify-center gap-3 border relative z-10 ${
+                isTryAgain
+                  ? "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white border-amber-300/40"
+                  : isClaimed
+                  ? "bg-gradient-to-r from-[#16a34a] via-[#22c55e] to-[#16a34a] text-white border-white/40 shadow-[0_0_50px_rgba(34,197,94,0.8)]"
+                  : "bg-gradient-to-r from-[#16a34a] via-[#22c55e] to-[#16a34a] hover:from-[#15803d] hover:to-[#16a34a] text-white border-white/40 active:scale-95"
+              }`}
             >
-              Collect Reward
+              <span>
+                {isTryAgain
+                  ? "SPIN AGAIN"
+                  : isClaimed
+                  ? "✓ REWARD COLLECTED!"
+                  : "COLLECT REWARD"}
+              </span>
+              <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-white font-black text-base">
+                →
+              </div>
             </button>
 
+            {/* View Rewards Link below button inside card */}
             <button
-              onClick={onClose}
-              className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 transition-all mt-1"
+              onClick={onViewHistory || onClose}
+              className="mt-5 text-xs font-black uppercase tracking-widest text-[#22c55e] hover:text-white hover:underline flex items-center gap-1.5 transition-all cursor-pointer relative z-10"
             >
-              View Rewards <span className="font-bold">&gt;</span>
+              VIEW REWARDS <span className="font-extrabold">&gt;</span>
             </button>
+
           </div>
+
         </ModalBody>
       </ModalContent>
     </Modal>
@@ -165,15 +332,45 @@ interface WheelProps {
   rotation: number;
   isSpinning: boolean;
   onSpin: () => void;
+  availableSpins?: number;
+  formattedTime?: string;
 }
+
+const renderIcon = (icon: any) => {
+  if (typeof icon !== "string") return icon || "🎁";
+  const name = icon.toLowerCase().trim();
+  if (name === "star") return "⭐";
+  if (name === "gift") return "🎁";
+  if (name === "zap") return "⚡";
+  if (name === "cash" || name === "money") return "💰";
+  if (name === "trophy") return "🏆";
+  if (name === "leaf") return "🍃";
+  return icon;
+};
 
 const Wheel: React.FC<WheelProps> = ({
   prizes,
   rotation,
   isSpinning,
   onSpin,
+  availableSpins = 1,
+  formattedTime = "12:00:00",
 }) => {
-  const numPrizes = prizes.length;
+  const activePrizes = useMemo(() => {
+    if (prizes && prizes.length > 0) return prizes;
+    return [
+      { id: "1", label: "100 Points", icon: "⭐", color: "#ffffff" },
+      { id: "2", label: "₹200 Voucher", icon: "🎁", color: "#f1f5f9" },
+      { id: "3", label: "50 Points", icon: "⚡", color: "#ffffff" },
+      { id: "4", label: "GRAND JACKPOT", icon: "🎁", color: "#22c55e", isJackpot: true },
+      { id: "5", label: "Try Again", icon: "🍃", color: "#f1f5f9" },
+      { id: "6", label: "500 Points", icon: "⭐", color: "#ffffff" },
+      { id: "7", label: "₹500 Cash", icon: "💰", color: "#f1f5f9" },
+      { id: "8", label: "20 Points", icon: "⚡", color: "#ffffff" },
+    ];
+  }, [prizes]);
+
+  const numPrizes = activePrizes.length;
   const segmentAngle = 360 / numPrizes;
 
   const lightIndicators = useMemo(() => {
@@ -189,20 +386,42 @@ const Wheel: React.FC<WheelProps> = ({
   }, []);
 
   return (
-    <div className="relative w-[260px] h-[260px] sm:w-[300px] sm:h-[300px] md:w-[360px] md:h-[360px] lg:w-[400px] lg:h-[400px] xl:w-[440px] xl:h-[440px] 2xl:w-[480px] 2xl:h-[480px] mx-auto select-none font-sans">
-      {/* Outer Ring boundary with glowing green gradient */}
-      <div
-        className="absolute inset-[-10px] sm:inset-[-12px] md:inset-[-15px] lg:inset-[-18px] xl:inset-[-20px] 2xl:inset-[-22px] rounded-full border-[10px] sm:border-[12px] md:border-[15px] lg:border-[18px] xl:border-[20px] 2xl:border-[22px] shadow-[0_20px_50px_rgba(0,0,0,0.15)] z-10 pointer-events-none"
+    <div className="relative w-[320px] h-[320px] sm:w-[380px] sm:h-[380px] md:w-[440px] md:h-[440px] lg:w-[480px] lg:h-[480px] xl:w-[540px] xl:h-[540px] 2xl:w-[580px] 2xl:h-[580px]">
+      {/* Outer Glow Ring */}
+      <div 
+        className="absolute inset-[-12px] sm:inset-[-16px] md:inset-[-20px] rounded-full opacity-60 blur-xl pointer-events-none"
+        style={{
+          background: "radial-gradient(circle, rgba(34,197,94,0.4) 0%, transparent 70%)",
+        }}
+      />
+
+      {/* Outer Border & Chassis */}
+      <div 
+        className="absolute inset-0 rounded-full border-[10px] sm:border-[14px] md:border-[18px] lg:border-[22px] shadow-[0_10px_40px_rgba(0,0,0,0.3),inset_0_2px_10px_rgba(255,255,255,0.2)] z-10 pointer-events-none overflow-hidden"
         style={{
           borderColor: "#22c55e",
-          boxShadow:
-            "0 0 30px rgba(34, 197, 94, 0.4), inset 0 0 15px rgba(34, 197, 94, 0.3)",
+          background: "linear-gradient(135deg, rgba(34,197,94,0.1) 0%, rgba(0,0,0,0.2) 100%)",
         }}
-      ></div>
+      >
+        {/* Decorative Bulbs on Chassis */}
+        {lightIndicators.map((light, i) => (
+          <div
+            key={i}
+            className={`absolute w-2 h-2 sm:w-2.5 sm:h-2.5 md:w-3 md:h-3 rounded-full -translate-x-1/2 -translate-y-1/2 transition-colors duration-300 ${
+              isSpinning
+                ? i % 2 === 0
+                  ? "bg-yellow-300 shadow-[0_0_10px_#fde047]"
+                  : "bg-white shadow-[0_0_10px_#ffffff]"
+                : "bg-amber-400 shadow-[0_0_6px_#f59e0b]"
+            }`}
+            style={{ left: `${light.x}%`, top: `${light.y}%` }}
+          />
+        ))}
+      </div>
 
-      {/* Spinning Wheel Body */}
+      {/* Rotating Wheel Container */}
       <div
-        className="relative w-full h-full rounded-full overflow-hidden transition-transform cubic-bezier(0.15, 0, 0.05, 1)"
+        className="w-full h-full rounded-full overflow-hidden transition-transform cubic-bezier(0.15, 0, 0.05, 1)"
         style={{
           transform: `rotate(${rotation}deg)`,
           transitionDuration: isSpinning ? "5s" : "0s",
@@ -217,7 +436,7 @@ const Wheel: React.FC<WheelProps> = ({
             </radialGradient>
           </defs>
 
-          {prizes.map((prize, i) => {
+          {activePrizes.map((prize, i) => {
             const startAngle = i * segmentAngle;
             const endAngle = (i + 1) * segmentAngle;
 
@@ -240,7 +459,7 @@ const Wheel: React.FC<WheelProps> = ({
                 : "#f1f5f9";
 
             return (
-              <g key={prize.id}>
+              <g key={prize.id || i}>
                 <path
                   d={`M 50 50 L ${x1} ${y1} A 50 50 0 0 1 ${x2} ${y2} Z`}
                   fill={segmentColor}
@@ -312,7 +531,7 @@ const Wheel: React.FC<WheelProps> = ({
                         textAnchor="middle"
                         dominantBaseline="middle"
                       >
-                        {prize.icon}
+                        {renderIcon(prize.icon)}
                       </text>
                     )}
                   </g>
@@ -320,21 +539,6 @@ const Wheel: React.FC<WheelProps> = ({
               </g>
             );
           })}
-
-          {lightIndicators.map((light) => (
-            <circle
-              key={light.id}
-              cx={light.x}
-              cy={light.y}
-              r="0.8"
-              fill="#fef08a"
-              className={isSpinning ? "animate-pulse" : ""}
-              style={{
-                filter: "drop-shadow(0 0 1px #eab308)",
-                animationDuration: isSpinning ? "0.3s" : "1.5s",
-              }}
-            />
-          ))}
 
           <circle
             cx="50"
@@ -375,19 +579,23 @@ const Wheel: React.FC<WheelProps> = ({
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
         <button
           onClick={onSpin}
-          disabled={isSpinning}
-          className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 xl:w-36 xl:h-36 2xl:w-40 2xl:h-40 rounded-full bg-[#22c55e] border-[6px] sm:border-[8px] md:border-[10px] lg:border-[12px] shadow-[0_20px_40px_rgba(34,197,94,0.25),inset_0_2px_8px_rgba(255,255,255,0.2)] flex items-center justify-center transition-all hover:scale-105 active:scale-95 disabled:opacity-100 disabled:cursor-not-allowed group text-center"
-          style={{ borderColor: "#ffffff" }}
+          disabled={isSpinning || availableSpins <= 0}
+          className={`relative w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 xl:w-36 xl:h-36 2xl:w-40 2xl:h-40 rounded-full border-[6px] sm:border-[8px] md:border-[10px] lg:border-[12px] shadow-[0_20px_40px_rgba(34,197,94,0.25),inset_0_2px_8px_rgba(255,255,255,0.2)] flex items-center justify-center transition-all ${
+            availableSpins <= 0 && !isSpinning
+              ? "bg-slate-700 opacity-80 cursor-not-allowed border-slate-300 shadow-none"
+              : "bg-[#22c55e] hover:scale-105 active:scale-95 border-white disabled:cursor-not-allowed group text-center"
+          }`}
+          style={{ borderColor: availableSpins <= 0 && !isSpinning ? "#cbd5e1" : "#ffffff" }}
         >
-          <div className="flex flex-col items-center relative z-10 text-center">
-            <span className="text-white font-black text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl tracking-widest leading-none">
-              SPIN
+          <div className="flex flex-col items-center relative z-10 text-center px-1">
+            <span className="text-white font-black text-xs sm:text-sm md:text-base lg:text-lg xl:text-xl 2xl:text-2xl tracking-widest leading-none">
+              {availableSpins <= 0 && !isSpinning ? "NO SPINS" : "SPIN"}
             </span>
             <span className="text-white/80 font-bold text-[7px] sm:text-[8px] md:text-[9px] lg:text-[10px] xl:text-[11px] 2xl:text-[12px] uppercase tracking-wider mt-1 sm:mt-1.5 whitespace-nowrap">
-              Tap to Spin
+              {availableSpins <= 0 && !isSpinning ? `RESETS ${formattedTime}` : "Tap to Spin"}
             </span>
           </div>
-          {!isSpinning && (
+          {!isSpinning && availableSpins > 0 && (
             <div className="absolute inset-[-4px] border-2 border-white/60 rounded-full animate-ping opacity-25"></div>
           )}
         </button>
@@ -423,20 +631,25 @@ export const LuckyPrizeBody: React.FC<LuckyPrizeBodyProps> = ({
   reaction,
   userName,
 }) => {
-  // Time & Reset States
+  // Time & Available Spins State
+  const [availableSpins, setAvailableSpins] = useState(1);
   const [timeLeft, setTimeLeft] = useState({ hrs: 10, mins: 30, secs: 45 });
   const [isResetting, setIsResetting] = useState(false);
   const [showDrawModal, setShowDrawModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [userSpinHistory, setUserSpinHistory] = useState<SpinHistoryItem[]>(mockSpinHistory);
 
-  // Countdown timer simulation
+  // Countdown timer simulation with auto-reset
   useEffect(() => {
     const interval = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev.secs > 0) return { ...prev, secs: prev.secs - 1 };
         if (prev.mins > 0) return { hrs: prev.hrs, mins: prev.mins - 1, secs: 59 };
         if (prev.hrs > 0) return { hrs: prev.hrs - 1, mins: 59, secs: 59 };
-        return { hrs: 23, mins: 59, secs: 59 };
+        
+        // Timer reached 00:00:00 -> Refresh available spins automatically
+        setAvailableSpins(1);
+        return { hrs: 12, mins: 0, secs: 0 };
       });
     }, 1000);
     return () => clearInterval(interval);
@@ -449,9 +662,39 @@ export const LuckyPrizeBody: React.FC<LuckyPrizeBodyProps> = ({
     return `${hh}:${mm}:${ss}`;
   }, [timeLeft]);
 
+  // Handle spin button click with spin deduction
+  const handleSpinAction = () => {
+    if (availableSpins > 0 && !isSpinning) {
+      setAvailableSpins((prev) => Math.max(0, prev - 1));
+      onSpin();
+    }
+  };
+
   useEffect(() => {
     if (wonPrize && !isSpinning) {
       setShowDrawModal(true);
+
+      // Dynamically record won prize into spin history list
+      const isTryAgain =
+        wonPrize.label?.toUpperCase().includes("TRY AGAIN") ||
+        wonPrize.label?.toUpperCase().includes("BETTER LUCK") ||
+        wonPrize.label?.toUpperCase().includes("MISS");
+
+      const newEntry: SpinHistoryItem = {
+        id: String(Date.now()),
+        prizeName: wonPrize.label,
+        date: "Just now",
+        type: isTryAgain
+          ? "miss"
+          : wonPrize.isJackpot || wonPrize.label.toUpperCase().includes("JACKPOT")
+          ? "jackpot"
+          : wonPrize.label.toUpperCase().includes("PTS") || wonPrize.label.toUpperCase().includes("POINTS")
+          ? "points"
+          : "voucher",
+        value: wonPrize.label,
+      };
+
+      setUserSpinHistory((prev) => [newEntry, ...prev]);
 
       const duration = 3 * 1000;
       const end = Date.now() + duration;
@@ -484,6 +727,7 @@ export const LuckyPrizeBody: React.FC<LuckyPrizeBodyProps> = ({
     setIsResetting(true);
     setTimeout(() => {
       setTimeLeft({ hrs: 12, mins: 0, secs: 0 });
+      setAvailableSpins(1); // Refresh spin count back to 1 free spin!
       setIsResetting(false);
     }, 800);
   };
@@ -520,7 +764,8 @@ export const LuckyPrizeBody: React.FC<LuckyPrizeBodyProps> = ({
               <button
                 onClick={handleTimerReset}
                 disabled={isResetting}
-                className={`p-1.5 rounded-sm border border-[var(--border-color)] hover:border-green-200 text-[var(--text-muted)] hover:text-green-500 hover:bg-[var(--bg-hover)] transition-all ${
+                title="Refresh Free Spins"
+                className={`p-1.5 rounded-sm border border-[var(--border-color)] hover:border-green-200 text-[var(--text-muted)] hover:text-green-500 hover:bg-[var(--bg-hover)] transition-all cursor-pointer ${
                   isResetting ? "animate-spin" : ""
                 }`}
               >
@@ -530,10 +775,10 @@ export const LuckyPrizeBody: React.FC<LuckyPrizeBodyProps> = ({
 
             <div className="flex items-baseline gap-2">
               <span className="text-3xl font-black text-[var(--text-primary)] tracking-tight">
-                1
+                {availableSpins}
               </span>
               <span className="text-xs font-black uppercase text-[#22c55e] tracking-wide">
-                FREE SPIN
+                {availableSpins === 1 ? "FREE SPIN" : availableSpins > 1 ? "FREE SPINS" : "SPINS (WAIT FOR RESET)"}
               </span>
             </div>
 
@@ -638,7 +883,9 @@ export const LuckyPrizeBody: React.FC<LuckyPrizeBodyProps> = ({
               prizes={prizes}
               rotation={rotation}
               isSpinning={isSpinning}
-              onSpin={onSpin}
+              onSpin={handleSpinAction}
+              availableSpins={availableSpins}
+              formattedTime={formattedTime}
             />
           </div>
         </div>
@@ -733,6 +980,11 @@ export const LuckyPrizeBody: React.FC<LuckyPrizeBodyProps> = ({
           onClosePrizeModal();
           setShowDrawModal(false);
         }}
+        onViewHistory={() => {
+          onClosePrizeModal();
+          setShowDrawModal(false);
+          setShowHistoryModal(true);
+        }}
       />
 
       {/* Spin History Modal */}
@@ -740,6 +992,7 @@ export const LuckyPrizeBody: React.FC<LuckyPrizeBodyProps> = ({
         isOpen={showHistoryModal}
         onClose={() => setShowHistoryModal(false)}
         userName={userName}
+        historyItems={userSpinHistory}
       />
     </div>
   );
@@ -765,7 +1018,8 @@ const SpinHistoryModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   userName?: string;
-}> = ({ isOpen, onClose, userName }) => {
+  historyItems?: SpinHistoryItem[];
+}> = ({ isOpen, onClose, userName, historyItems = mockSpinHistory }) => {
   return (
     <Modal
       isOpen={isOpen}
@@ -814,7 +1068,7 @@ const SpinHistoryModal: React.FC<{
 
           {/* List */}
           <div className="space-y-3.5 max-h-[360px] overflow-y-auto pr-1 no-scrollbar text-start">
-            {mockSpinHistory.map((item) => {
+            {historyItems.map((item) => {
               let badgeColor = "bg-slate-100 text-slate-600 dark:bg-slate-800/40 dark:text-slate-400";
               if (item.type === "jackpot") badgeColor = "bg-green-100 text-green-700 dark:bg-green-950/20 dark:text-green-400";
               else if (item.type === "voucher") badgeColor = "bg-blue-100 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400";

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const ClaimRewardInputSchema = z.object({
-  rewardId: z.number(),
+  rewardId: z.union([z.string(), z.number()]),
   claimDetails: z.any(),
 });
 

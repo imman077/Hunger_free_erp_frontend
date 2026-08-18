@@ -113,6 +113,7 @@ const AddItem = () => {
                   value={formData.name}
                   onChange={(val) => handleFormValueChange("name", val)}
                   required
+                  disabled={isEdit}
                 />
 
                 <div className="relative">
@@ -121,24 +122,28 @@ const AddItem = () => {
                     options={categories}
                     value={formData.category}
                     onChange={(val) => handleFormValueChange("category", val)}
+                    disabled={isEdit}
                   />
-                  <button
-                    type="button"
-                    onClick={openSuggestModal}
-                    className="flex items-center gap-1.5 text-[8px] font-black text-hf-green hover:underline underline-offset-4 decoration-2 uppercase tracking-[0.2em] px-1 mt-1.5 transition-colors"
-                  >
-                    Request new category
-                  </button>
+                  {!isEdit && (
+                    <button
+                      type="button"
+                      onClick={openSuggestModal}
+                      className="flex items-center gap-1.5 text-[8px] font-black text-hf-green hover:underline underline-offset-4 decoration-2 uppercase tracking-[0.2em] px-1 mt-1.5 transition-colors"
+                    >
+                      Request new category
+                    </button>
+                  )}
                 </div>
 
                 {formData.category === "other" && (
                   <div className="md:col-span-1">
                     <ResuableInput
-                      label="Specify Classification"
-                      placeholder="Enter custom classification"
+                      label="Specify Category"
+                      placeholder="Enter custom category"
                       value={formData.otherCategory}
                       onChange={(val) => handleFormValueChange("otherCategory", val)}
                       required
+                      disabled={isEdit}
                     />
                   </div>
                 )}
@@ -157,6 +162,7 @@ const AddItem = () => {
                     options={units}
                     value={formData.unit}
                     onChange={(val) => handleFormValueChange("unit", val)}
+                    disabled={isEdit}
                   />
                 </div>
 

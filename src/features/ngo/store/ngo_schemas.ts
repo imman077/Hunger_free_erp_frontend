@@ -41,14 +41,14 @@ export const NgoDocumentSchema = z.object({
 });
 
 export const PrizeSchema = z.object({
-  id: z.number(),
+  id: z.union([z.string(), z.number()]),
   label: z.string(),
   icon: z.any(),
   color: z.string(),
 });
 
 export const RewardSchema = z.object({
-  id: z.number(),
+  id: z.union([z.string(), z.number()]),
   name: z.string(),
   amount: z.string().optional(),
   points: z.number(),
@@ -92,7 +92,7 @@ export const NgoDataSchema = z.object({
     })
   ).optional(),
   myRequests: z.array(z.object({
-    id: z.number(),
+    id: z.union([z.string(), z.number()]),
     foodType: z.string(),
     quantity: z.string(),
     donor: z.string(),

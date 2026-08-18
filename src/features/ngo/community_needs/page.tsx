@@ -253,8 +253,9 @@ const NGOCommunityNeeds = () => {
       {/* Detail: Progress & Posted */}
       {(() => {
         const totalQty = donation.quantity_num || 0;
-        const fulfilledQty = donation.fulfilled_quantity || 0;
-        const progressPct = totalQty > 0 ? Math.round((fulfilledQty / totalQty) * 100) : 0;
+        const rawFulfilled = donation.fulfilled_quantity || 0;
+        const fulfilledQty = totalQty > 0 ? Math.min(totalQty, rawFulfilled) : rawFulfilled;
+        const progressPct = totalQty > 0 ? Math.min(100, Math.round((fulfilledQty / totalQty) * 100)) : 0;
         return (
           <div className="bg-slate-50/90 dark:bg-slate-800/40 rounded-2xl p-3.5 border border-slate-100 dark:border-slate-800/60 grid grid-cols-12 gap-3 divide-x divide-slate-200/60 items-center mb-5">
             <div className="col-span-7 flex items-center gap-3">

@@ -279,6 +279,29 @@ export const handleConfirmAccept = async (user: any) => {
   const { acceptingDonation, supportQty, supportPhone } = state;
   if (!acceptingDonation) return;
 
+  if (acceptingDonation.origin === "NEED") {
+    const totalQty = acceptingDonation.quantity_num || 0;
+    const fulfilledQty = acceptingDonation.fulfilled_quantity || 0;
+    const maxVal = Math.max(0, totalQty - fulfilledQty);
+    const enteredQty = parseFloat(supportQty) || 0;
+
+    if (maxVal <= 0) {
+      toast.error("This community need is already 100% fulfilled.");
+      return;
+    }
+
+    if (enteredQty <= 0) {
+      toast.error("Please enter a valid quantity to accept.");
+      return;
+    }
+
+    if (enteredQty > maxVal) {
+      toast.error(`Cannot accept more than the remaining quantity needed (${maxVal} ${acceptingDonation.unit || "Units"}).`);
+      requestsInputModel.update({ supportQty: maxVal.toString() });
+      return;
+    }
+  }
+
   requestsInputModel.update({ isAccepting: true });
   try {
     if (acceptingDonation.origin === "NEED") {

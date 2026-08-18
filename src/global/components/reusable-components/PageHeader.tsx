@@ -73,10 +73,10 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   const defaultIcon = <Star className="text-green-500" size={24} fill="currentColor" />;
 
   return (
-    <div className={`flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shrink-0 ${className}`}>
+    <div className={`flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 w-full ${className}`}>
       <div className="text-start space-y-2">
         <h1
-          className="text-4xl md:text-5xl font-black tracking-tighter leading-none flex items-center"
+          className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tighter leading-none flex items-center flex-wrap"
           style={{ color: "var(--text-primary)" }}
         >
           {words.length === 1 ? (
@@ -109,7 +109,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
         )}
       </div>
       {(showPointsCard || children || buttonText) && (
-        <div className="w-full sm:w-auto flex items-center gap-4 flex-wrap sm:flex-nowrap shrink-0">
+        <div className="w-full lg:w-auto flex items-center gap-3 sm:gap-4 flex-wrap shrink-0">
           {showPointsCard && typeof points === "number" && (
             <div className="flex items-center gap-4 border border-[var(--border-color)] bg-[var(--bg-primary)] p-3 px-5 rounded-md text-left relative overflow-hidden shrink-0">
               <div className="w-12 h-12 bg-green-500/8 border border-green-500/20 rounded-[14px] flex items-center justify-center shrink-0">

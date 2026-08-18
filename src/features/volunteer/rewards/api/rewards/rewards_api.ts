@@ -12,7 +12,7 @@ import type { GetRewardsResponse, GetTiersResponse, GetLuckySpinPrizesResponse }
 export const volunteerRewardsService = {
   getRewards: async (): Promise<GetRewardsResponse> => {
     try {
-      const response = await axiosInstance.get("rewards/");
+      const response = await axiosInstance.get("rewards/?role=VOLUNTEER");
       return GetRewardsResponseSchema.parse(response.data);
     } catch (error) {
       console.error("Error fetching volunteer rewards:", error);
@@ -54,7 +54,7 @@ export const volunteerRewardsService = {
     }
   },
 
-  claimReward: async (rewardId: number, claimDetails: any): Promise<any> => {
+  claimReward: async (rewardId: string | number, claimDetails: any): Promise<any> => {
     try {
       const validatedInput = ClaimRewardInputSchema.parse({ rewardId, claimDetails });
       const response = await axiosInstance.post("reward-claims/", {

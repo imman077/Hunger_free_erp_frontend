@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Plus, Eye, Search, Table, LayoutGrid, MapPin, ShieldCheck,
   Package, Utensils, Clock, X, Edit3, Trash2,
-  Droplet, Leaf
+  Droplet, Leaf, AlertTriangle
 } from "lucide-react";
 import { Button } from "@heroui/react";
 import { ImpactCards } from "../../../global/components/reusable-components/ImpactCards";
@@ -14,12 +14,14 @@ import ResuableButton from "../../../global/components/reusable-components/Butto
 import Tabs from "../../../global/components/reusable-components/Tabs";
 import { getCategoryImage } from "../../../global/constants/donation_config";
 import { Loader } from "../../../global/components/reusable-components/Loader";
+import ResuableModal from "../../../global/components/reusable-components/Modal";
 
 import { myInventoryInputModel } from "./store/my_inventory_store";
 import {
   fetchInventory,
   handleViewDetails,
   handleDeleteItem,
+  confirmDelete,
   onDestroy,
 } from "./controller/my_inventory_controller";
 import { StockUpdateDrawer } from "./components/my_inventory_component";
@@ -30,6 +32,8 @@ const NGOInventory = () => {
 
   const items = myInventoryInputModel.useSelector((state) => state.myInventoryState.items);
   const isLoading = myInventoryInputModel.useSelector((state) => state.myInventoryState.isLoading);
+  const isDeleteModalOpen = myInventoryInputModel.useSelector((state) => state.myInventoryState.isDeleteModalOpen);
+  const deleteItemName = myInventoryInputModel.useSelector((state) => state.myInventoryState.deleteItemName);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"card" | "table">("card");
@@ -620,6 +624,65 @@ const NGOInventory = () => {
 
       {/* Stock Update Drawer */}
       <StockUpdateDrawer />
+
+      {/* Delete Confirmation Modal */}
+      <ResuableModal
+        isOpen={isDeleteModalOpen}
+        onOpenChange={(open) =>
+          myInventoryInputModel.update({ isDeleteModalOpen: open })
+        }
+        title="Delete Inventory Item"
+        subtitle="This action will permanently remove the item from storage."
+        icon={<Trash2 size={18} className="text-red-500" />}
+        iconWrapperClassName="w-10 h-10 rounded-full bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30 text-red-500"
+        size="md"
+        classNames={{
+          body: "bg-white dark:bg-slate-900"
+        }}
+      >
+        <div className="p-5.5 space-y-5 text-start">
+          {/* Warning Banner */}
+          <div className="p-4 rounded-2xl border border-red-100 dark:border-red-950/30 bg-red-50/20 dark:bg-red-950/10 flex items-start gap-3">
+            <div className="w-10 h-10 rounded-full bg-red-50 dark:bg-red-950/40 text-red-500 flex items-center justify-center shrink-0 border border-red-100 dark:border-red-900/30">
+              <AlertTriangle size={18} />
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-red-600 dark:text-red-400">CRITICAL ACTION REQUIRED</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-normal">
+                Deleting this inventory item will also remove all associated tracking history. You cannot retrieve this data later.
+              </p>
+            </div>
+          </div>
+
+          {/* Item Details Preview Card */}
+          <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 flex items-center gap-3.5 shadow-sm">
+            <div className="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/30 flex items-center justify-center shrink-0">
+              <Package size={18} className="text-emerald-500" />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-0.5">ITEM SELECTED</span>
+              <span className="text-base font-bold text-slate-800 dark:text-slate-100 truncate">{deleteItemName}</span>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <Button
+              onClick={() => myInventoryInputModel.update({ isDeleteModalOpen: false })}
+              className="px-6 py-2.5 text-sm font-medium bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm active:scale-95 transition-all cursor-pointer"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmDelete}
+              className="px-5 py-2.5 text-sm font-medium bg-red-650 hover:bg-red-700 text-white rounded-xl shadow-lg shadow-red-500/20 active:scale-95 transition-all cursor-pointer flex items-center gap-2"
+            >
+              <Trash2 size={16} />
+              Confirm Delete
+            </Button>
+          </div>
+        </div>
+      </ResuableModal>
     </div>
   );
 };

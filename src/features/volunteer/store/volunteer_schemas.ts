@@ -59,7 +59,7 @@ export const VolunteerPrizeSchema = z.object({
 });
 
 export const VolunteerRewardSchema = z.object({
-  id: z.number(),
+  id: z.union([z.string(), z.number()]),
   name: z.string(),
   amount: z.string().optional(),
   desc: z.string().optional(),

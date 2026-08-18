@@ -21,11 +21,11 @@ export const Loader: React.FC<LoaderProps> = ({
 
   return (
     <div 
-      className="flex flex-col items-center justify-center w-full gap-4"
-      style={{ minHeight }}
+      className="flex flex-col items-center justify-center w-full h-full gap-4 py-16 mx-auto text-center self-center"
+      style={{ minHeight: minHeight || "60vh" }}
     >
       {animationData ? (
-        <div className="w-56 h-56 flex items-center justify-center">
+        <div className="w-56 h-56 flex items-center justify-center shrink-0 mx-auto relative">
           <Lottie 
             animationData={animationData} 
             loop={true} 
@@ -34,9 +34,9 @@ export const Loader: React.FC<LoaderProps> = ({
           />
         </div>
       ) : (
-        <div className="w-12 h-12 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin" />
+        <div className="w-12 h-12 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin mx-auto" />
       )}
-      <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest animate-pulse mt-2">
+      <span className="text-xs font-black text-emerald-500 uppercase tracking-widest animate-pulse text-center block">
         {text}
       </span>
     </div>

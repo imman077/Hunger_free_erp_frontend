@@ -2,12 +2,17 @@ import { useEffect } from "react";
 import { useVolunteerStore } from "../../store/volunteer_store";
 import { volunteerRewardsService } from "../api/rewards/rewards_api";
 
+let isFetchingVolunteerRewards = false;
+let hasFetchedVolunteerRewards = false;
+
 export const useVolunteerRewards = () => {
   const { stats, prizes, rewards, badges, isLoading, error, setStats, setLoading, setError, setRewardsData } =
     useVolunteerStore();
 
   useEffect(() => {
     const fetchVolunteerData = async () => {
+      if (isFetchingVolunteerRewards || hasFetchedVolunteerRewards) return;
+      isFetchingVolunteerRewards = true;
       setLoading(true);
       try {
         const [rewardsRes, , , profileRes] = await Promise.all([
@@ -17,57 +22,54 @@ export const useVolunteerRewards = () => {
           volunteerRewardsService.getVolunteerProfile(),
         ]);
 
-        const volunteerRewards = Array.isArray(rewardsRes) ? rewardsRes.filter((r: any) => r && r.role === "VOLUNTEER") : [];
+        const volunteerRewards = Array.isArray(rewardsRes) ? rewardsRes : [];
+
+        const mapVolunteerCategory = (cat: string): "grants" | "mega" | "social" => {
+          const c = (cat || "").toLowerCase();
+          if (c === "fuel" || c === "cash" || c === "voucher") return "grants";
+          if (c === "tours" || c === "travel" || c === "grants") return "mega";
+          return "social";
+        };
+
+        const sanitizeReward = (r: any) => ({
+          id: r?.id,
+          name: r?.name || "Unnamed Reward",
+          amount: r?.amount || r?.name || "N/A",
+          points: Number(r?.pointsRequired ?? r?.points_required ?? r?.points ?? 0),
+          available: r?.available !== false,
+          desc: r?.description || r?.desc || "",
+          details: Array.isArray(r?.details) ? r.details : [],
+        });
 
         // Map rewards to categories for volunteer
         const mappedRewards = {
           grants: volunteerRewards
-            .filter((r: any) => r && r.category === "cash")
-            .map((r: any) => ({
-              id: r?.id,
-              name: r?.name || "Unnamed Reward",
-              amount: r?.amount || r?.name || "N/A",
-              points: r?.points_required || 0,
-              available: !!r?.available,
-              desc: r?.description || "",
-            })),
+            .filter((r: any) => r && mapVolunteerCategory(r.category) === "grants")
+            .map(sanitizeReward),
           mega: volunteerRewards
-            .filter((r: any) => r && r.category === "grants")
-            .map((r: any) => ({
-              id: r?.id,
-              name: r?.name || "Unnamed Reward",
-              amount: r?.amount || r?.name || "N/A",
-              points: r?.points_required || 0,
-              available: !!r?.available,
-              desc: r?.description || "",
-            })),
+            .filter((r: any) => r && mapVolunteerCategory(r.category) === "mega")
+            .map(sanitizeReward),
           social: volunteerRewards
-            .filter((r: any) => r && r.category === "social")
-            .map((r: any) => ({
-              id: r?.id,
-              name: r?.name || "Unnamed Reward",
-              points: r?.points_required || 0,
-              available: !!r?.available,
-              desc: r?.description || "",
-              details: Array.isArray(r?.details) ? r.details : [],
-            })),
+            .filter((r: any) => r && mapVolunteerCategory(r.category) === "social")
+            .map(sanitizeReward),
         };
 
+        const currentStats = useVolunteerStore.getState().stats;
         setStats({
-          ...stats,
-          impactPoints: profileRes?.donation_points || 0,
+          ...currentStats,
+          impactPoints: profileRes?.donation_points ?? profileRes?.points ?? currentStats.impactPoints,
         });
 
-        // We need a setRewardsData action in the store or just use setVolunteerData pattern
-        // For now I'll just use what's available or add an action
         if (setRewardsData) {
-           setRewardsData(mappedRewards);
+          setRewardsData(mappedRewards);
         }
 
+        hasFetchedVolunteerRewards = true;
       } catch (err) {
         console.error("Failed to fetch volunteer rewards:", err);
         setError("Could not load rewards data.");
       } finally {
+        isFetchingVolunteerRewards = false;
         setLoading(false);
       }
     };
